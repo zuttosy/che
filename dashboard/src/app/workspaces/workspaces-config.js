@@ -39,6 +39,8 @@ import {WorkspaceStatusIndicator} from './workspace-status-indicator/workspace-s
 import {CheStackLibraryFilterCtrl} from './create-workspace/select-stack/stack-library/stack-library-filter/che-stack-library-filter.controller';
 import {CheStackLibraryFilter}     from './create-workspace/select-stack/stack-library/stack-library-filter/che-stack-library-filter.directive';
 import {CreateProjectStackLibrarySelectedStackFilter} from './create-workspace/select-stack/stack-library/create-project-stack-library-selected-stack.filter.js';
+
+import {SnapshotsConfig} from './workspace-details/snapshots/snapshots-config';
 /**
  * @ngdoc controller
  * @name workspaces:WorkspacesConfig
@@ -108,5 +110,7 @@ export class WorkspacesConfig {
           controllerAs: 'createWorkspaceCtrl'
         });
     });
+
+    new SnapshotsConfig(register);
   }
 }

@@ -81,6 +81,7 @@
         </che-panel>
         <export-workspace workspace-id="{{workspaceDetailsCtrl.workspaceId}}"
                           workspace-details="workspaceDetailsCtrl.workspaceDetails"></export-workspace>
+        <snapshot-workspace workspace="workspaceDetailsCtrl.workspaceDetails"></snapshot-workspace>
         <che-panel che-title="Delete Workspace" class="workspace-details-content">
           <div layout="row" flex layout-align="space-around start">
             <label flex="15" class="workspace-details-description">
@@ -102,6 +103,15 @@
       </md-tab-label>
       <md-tab-body>
         <workspace-details-projects></workspace-details-projects>
+      </md-tab-body>
+    </md-tab>
+    <md-tab>
+      <md-tab-label>
+        <md-icon md-font-icon="material-design icon-ic_inbox_24px" class="che-tab-label-icon"></md-icon>
+        <span class="che-tab-label-title">Snapshots</span>
+      </md-tab-label>
+      <md-tab-body>
+        Snapshots
       </md-tab-body>
     </md-tab>
   </md-tabs>

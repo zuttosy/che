@@ -1,0 +1,10 @@
+<che-panel che-title="Snapshot Workspace" class="workspace-details-content">
+  <div layout="row" flex layout-align="space-around start">
+    <label flex="15" class="workspace-details-description">
+      Snapshot your workspace.
+    </label>
+    <div layout="row" flex="85">
+      <che-button-default che-button-title="snapshot" ng-click="snapshotWorkspaceCtrl.doSnapshot()" ng-disabled="'RUNNING' !== snapshotWorkspaceCtrl.getWorkspaceStatus()"></che-button-default>
+    </div>
+  </div>
+</che-panel>

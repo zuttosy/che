@@ -24,6 +24,8 @@ export class CheWorkspace {
    * @ngInject for Dependency injection
    */
   constructor ($resource, $q, cheUser, cheWebsocket, lodash) {
+    this.workspaceStatuses = ['RUNNING', 'STOPPED', 'PAUSED', 'STARTING', 'STOPPING', 'ERROR'];
+
     // keep resource
     this.$resource = $resource;
 
@@ -44,6 +46,9 @@ export class CheWorkspace {
     //Workspace agents per workspace id:
     this.workspaceAgents = new Map();
 
+    //Machine snapshots per workspace id:
+    this.workspaceSnapshots = new Map();
+
     // listeners if workspaces are changed/updated
     this.listeners = [];
 
@@ -61,7 +66,9 @@ export class CheWorkspace {
         deleteProject: {method: 'DELETE', url : '/api/workspace/:workspaceId/project/:path'},
         stopWorkspace: {method: 'DELETE', url : '/api/workspace/:workspaceId/runtime'},
         startWorkspace: {method: 'POST', url : '/api/workspace/:workspaceId/runtime?environment=:envName'},
-        addCommand: {method: 'POST', url: '/api/workspace/:workspaceId/command'}
+        addCommand: {method: 'POST', url: '/api/workspace/:workspaceId/command'},
+        getSnapshots: {method: 'GET', url: '/api/workspace/:workspaceId/snapshot', isArray: true},
+        createSnapshot: {method: 'POST', url: '/api/workspace/:workspaceId/snapshot'}
       }
     );
   }
@@ -378,7 +385,10 @@ export class CheWorkspace {
       this.websocketBusByWorkspaceId.set(workspaceId, bus);
 
       bus.subscribe('workspace:' + workspaceId, (message) => {
-        this.getWorkspaceById(workspaceId).status = message.eventType;
+        //Filter workspace events, which really indicate the status change:
+        if (this.workspaceStatuses.indexOf(message.eventType) >= 0) {
+          this.getWorkspaceById(workspaceId).status = message.eventType;
+        }
 
         if (!this.statusDefers[workspaceId] || !this.statusDefers[workspaceId][message.eventType]) {
           return;
@@ -388,5 +398,24 @@ export class CheWorkspace {
         this.statusDefers[workspaceId][message.eventType].length = 0;
       });
     }
+  }
+
+  createSnapshot(workspaceId) {
+    alert(workspaceId);
+    let promise = this.remoteWorkspaceAPI.createSnapshot({workspaceId : workspaceId}, {}).$promise;
+    return promise;
+  }
+
+  fetchSnapshots(workspaceId) {
+    let promise = this.remoteWorkspaceAPI.getSnapshots({workspaceId : workspaceId}).$promise;
+    let updatedPromise = promise.then((snapshots) => {
+        this.workspaceSnapshots.set(workspaceId, snapshots);
+      });
+
+    return updatedPromise;
+  }
+
+  getSnapshots(workspaceId) {
+    return this.workspaceSnapshots.get(workspaceId);
   }
 }
