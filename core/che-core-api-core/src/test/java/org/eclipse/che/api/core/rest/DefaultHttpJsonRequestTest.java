@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.core.rest;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
@@ -51,6 +52,7 @@ import static java.util.Collections.singletonList;
 import static org.eclipse.che.api.core.util.LinksHelper.createLink;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -97,11 +99,17 @@ public class DefaultHttpJsonRequestTest {
         final Link link = createLink("POST", DEFAULT_URL, "rel");
         final DefaultHttpJsonRequest request = spy(new DefaultHttpJsonRequest(link));
         doReturn(new DefaultHttpJsonResponse("", 200)).when(request)
-                                                      .doRequest(anyInt(), anyString(), anyString(), anyObject(), any(), anyString());
+                                                      .doRequest(anyInt(),
+                                                                 anyString(),
+                                                                 anyString(),
+                                                                 anyObject(),
+                                                                 any(),
+                                                                 anyString(),
+                                                                 anyString());
 
         request.request();
 
-        verify(request).doRequest(0, DEFAULT_URL, "POST", null, null, null);
+        verify(request).doRequest(0, DEFAULT_URL, "POST", null, null, null, null);
     }
 
     @Test
@@ -120,6 +128,7 @@ public class DefaultHttpJsonRequestTest {
                                   "PUT",
                                   body,
                                   asList(Pair.of("name", "value"), Pair.of("name2", "value2")),
+                                  null,
                                   null);
     }
 
@@ -138,6 +147,7 @@ public class DefaultHttpJsonRequestTest {
                                   eq("POST"),
                                   mapCaptor.capture(),
                                   eq(null),
+                                  eq(null),
                                   eq(null));
         assertTrue(mapCaptor.getValue() instanceof JsonStringMap);
         assertEquals(mapCaptor.getValue(), body);
@@ -155,6 +165,7 @@ public class DefaultHttpJsonRequestTest {
                                   eq("http://localhost:8080"),
                                   eq("POST"),
                                   listCaptor.capture(),
+                                  eq(null),
                                   eq(null),
                                   eq(null));
         assertTrue(listCaptor.getValue() instanceof JsonArray);
@@ -321,6 +332,26 @@ public class DefaultHttpJsonRequestTest {
         new DefaultHttpJsonRequest(getUrl(ctx) + "/token").usePostMethod().request();
     }
 
+    @Test
+    public void shouldUseCSRFTokeForModifyingRequests(ITestContext ctx) throws Exception {
+        final List<String> modifyingMethods = ImmutableList.of("PUT", "POST", "DELETE");
+        final String csrfToken = "123stopcsrf456";
+
+        for (String method : modifyingMethods) {
+            final Link link = LinksHelper.createLink(method, getUrl(ctx) + "/application-json", "rel");
+            final DefaultHttpJsonRequest request = spy(new DefaultHttpJsonRequest(link));
+            request.setCsrfTokenHeader(csrfToken).request();
+            verify(request).doRequest(eq(0),
+                                     anyString(),
+                                     eq(method),
+                                     anyList(),
+                                     eq(null),
+                                     eq(null),
+                                     eq(csrfToken));
+            //TODO: how to check that header really set in HttpConn?
+        }
+    }
+
     @Filter
     public static class EnvironmentFilter implements RequestFilter {
 
@@ -335,6 +366,6 @@ public class DefaultHttpJsonRequestTest {
     }
 
     private void prepareResponse(String response) throws Exception {
-        doReturn(new DefaultHttpJsonResponse(response, 200)).when(request).doRequest(anyInt(), anyString(), anyString(), anyObject(), any(), anyString());
+        doReturn(new DefaultHttpJsonResponse(response, 200)).when(request).doRequest(anyInt(), anyString(), anyString(), anyObject(), any(), anyString(), anyString());
     }
 }

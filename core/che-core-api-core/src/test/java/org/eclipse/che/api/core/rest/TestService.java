@@ -18,6 +18,7 @@ import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.dto.server.JsonArrayImpl;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -77,6 +78,19 @@ public class TestService extends Service {
     @Path("/application-json")
     @Produces(APPLICATION_JSON)
     public List<Link> receiveJsonObject(List<Link> elements) {
+        return elements;
+    }
+
+    @DELETE
+    @Path("/application-json")
+    public Response receiveJsonObjectPut() {
+        return Response.noContent().build();
+    }
+
+    @PUT
+    @Path("/application-json")
+    @Produces(APPLICATION_JSON)
+    public List<Link> receiveJsonObjectPut(List<Link> elements) {
         return elements;
     }
 
