@@ -72,6 +72,7 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
     private Object                body;
     private List<Pair<String, ?>> queryParams;
     private String                authorizationHeaderValue;
+    private String                csrfTokenValue;
 
     DefaultHttpJsonRequest(String url) {
         this.url = requireNonNull(url, "Required non-null url");
@@ -125,6 +126,13 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
     }
 
     @Override
+    public HttpJsonRequest setCsrfTokenHeader(@NotNull String value) {
+        requireNonNull(value, "Required non-null header value");
+        csrfTokenValue = value;
+        return this;
+    }
+
+    @Override
     public HttpJsonRequest setTimeout(int timeout) {
         this.timeout = timeout;
         return this;
@@ -152,7 +160,7 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
         if (method == null) {
             throw new IllegalStateException("Could not perform request, request method wasn't set");
         }
-        return doRequest(timeout, url, method, body, queryParams, authorizationHeaderValue);
+        return doRequest(timeout, url, method, body, queryParams, authorizationHeaderValue, csrfTokenValue);
     }
 
     /**
@@ -174,6 +182,8 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
      *         query parameters, may be null
      * @param authorizationHeaderValue
      *         value of authorization header, may be null
+     * @param csrfTokenValue
+     *         value of csrf prevention token header, may be null
      * @return response to this request
      * @throws IOException
      *         when connection content type is not "application/json"
@@ -195,13 +205,14 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
                                       String method,
                                       Object body,
                                       List<Pair<String, ?>> parameters,
-                                      String authorizationHeaderValue) throws IOException,
-                                                                              ServerException,
-                                                                              ForbiddenException,
-                                                                              NotFoundException,
-                                                                              UnauthorizedException,
-                                                                              ConflictException,
-                                                                              BadRequestException {
+                                      String authorizationHeaderValue,
+                                      String csrfTokenValue) throws IOException,
+                                                                    ServerException,
+                                                                    ForbiddenException,
+                                                                    NotFoundException,
+                                                                    UnauthorizedException,
+                                                                    ConflictException,
+                                                                    BadRequestException {
         final String authToken = getAuthenticationToken();
         final boolean hasQueryParams = parameters != null && !parameters.isEmpty();
         if (hasQueryParams || authToken != null) {
@@ -223,6 +234,12 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
             conn.setRequestMethod(method);
             //drop a hint for server side that we want to receive application/json
             conn.addRequestProperty(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+            // set csrf prevention token for modifying requests
+            if ((HttpMethod.DELETE.equals(method) ||
+                 HttpMethod.POST.equals(method) ||
+                 HttpMethod.PUT.equals(method)) && !isNullOrEmpty(csrfTokenValue)) {
+                conn.setRequestProperty("X-CSRF-Token", csrfTokenValue);
+            }
             if (!isNullOrEmpty(authorizationHeaderValue)) {
                 conn.setRequestProperty(HttpHeaders.AUTHORIZATION, authorizationHeaderValue);
             } else if (authToken != null) {

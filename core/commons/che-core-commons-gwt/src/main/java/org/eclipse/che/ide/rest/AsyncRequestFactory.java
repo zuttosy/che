@@ -10,13 +10,17 @@
  *******************************************************************************/
 package org.eclipse.che.ide.rest;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.Response;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.MimeType;
+import org.eclipse.che.ide.commons.exception.UnmarshallerException;
 import org.eclipse.che.ide.dto.DtoFactory;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -28,10 +32,46 @@ import java.util.List;
 public class AsyncRequestFactory {
     private static final String DTO_CONTENT_TYPE = MimeType.APPLICATION_JSON;
     private final DtoFactory dtoFactory;
+    private final String restContext;
+    private String csrfToken;
 
     @Inject
-    public AsyncRequestFactory(DtoFactory dtoFactory) {
+    public AsyncRequestFactory(DtoFactory dtoFactory, @RestContext String restContext) {
         this.dtoFactory = dtoFactory;
+        this.restContext = restContext;
+        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                fetchCsrfToken();
+            }
+        });
+    }
+
+    private void fetchCsrfToken() {
+        AsyncRequest asyncRequest = new AsyncRequest(RequestBuilder.GET, restContext, false);
+        asyncRequest.header("X-CSRF-Token", "fetch");
+        asyncRequest.send(new AsyncRequestCallback<Void>(new Unmarshallable<Void>() {
+            @Override
+            public void unmarshal(Response response) throws UnmarshallerException {
+                AsyncRequestFactory.this.csrfToken = response.getHeader("X-CSRF-Token");
+            }
+
+            @Override
+            public Void getPayload() {
+                return null;
+            }
+        }) {
+
+            @Override
+            protected void onSuccess(Void result) {
+
+            }
+
+            @Override
+            protected void onFailure(Throwable exception) {
+
+            }
+        });
     }
 
     /**
@@ -210,6 +250,9 @@ public class AsyncRequestFactory {
                 asyncRequest.data(dtoFactory.toJson(dtoBody));
             }
             asyncRequest.header(HTTPHeader.CONTENT_TYPE, DTO_CONTENT_TYPE);
+        }
+        if (method.equals(RequestBuilder.POST) || method.equals(RequestBuilder.PUT) || method.equals(RequestBuilder.DELETE)) {
+            asyncRequest.header("X-CSRF-Token", csrfToken);
         }
         return asyncRequest;
     }

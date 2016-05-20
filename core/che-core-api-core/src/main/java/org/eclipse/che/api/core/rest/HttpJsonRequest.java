@@ -133,6 +133,17 @@ public interface HttpJsonRequest {
     HttpJsonRequest setAuthorizationHeader(@NotNull String value);
 
     /**
+     * Adds csrf prevention token header to the request.
+     *
+     * @param value
+     *         csrf header value
+     * @return this request instance
+     * @throws NullPointerException
+     *         when value is null
+     */
+    HttpJsonRequest setCsrfTokenHeader(@NotNull String value);
+
+    /**
      * Sets request timeout in milliseconds.
      *
      * @param timeoutMs
