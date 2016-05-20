@@ -26,29 +26,87 @@ export class SnapshotWorkspaceController {
     this.cheWorkspace = cheWorkspace;
     this.notification = cheNotification;
     this.snapshotInProgress = false;
+
+    this.isAutoSnapshot = this.getAutoSnapshotWorkspace();
+    this.isAutoRestore = this.getAutoRestoreWorkspace();
   }
 
   doSnapshot() {
     this.snapshotInProgress = true;
-    let workspaceName = this.workspace.config.name;
-    this.cheWorkspace.createSnapshot(this.workspace.id).then(() => {
+
+    this.cheWorkspace.createSnapshot(this.workspaceId).then(() => {
+      this.processSnapshotState();
     }, (error) => {
-      this.snapshotInProgress = false;
-      this.notification.showError(error.data.message ? error.data.message : 'Failed to snapshot ' + workspaceName + ' workspace.');
+      this.handleError(error.data.message);
     });
   }
 
   processSnapshotState() {
-    //this.cheWorkspace.fetchStatusChange(this.workspace.id, 'SNAPSHOT_CREATION_ERROR').then()
+    this.cheWorkspace.fetchStatusChange(this.workspaceId, 'SNAPSHOT_CREATION_ERROR').then((message) => {
+      this.handleError(message.error);
+    }, (error) => {
+      this.handleError(error.data.message);
+    });
+
+    this.cheWorkspace.fetchStatusChange(this.workspaceId, 'SNAPSHOT_CREATED').then((message) => {
+      this.snapshotInProgress = false;
+      alert('created');
+    }, (error) => {
+      this.handleError(error.data.message);
+    });
   }
 
+  handleError(message) {
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
+    let workspaceName = workspace.config.name;
+    this.snapshotInProgress = false;
+    this.notification.showError(message ? message : 'Failed to snapshot ' + workspaceName + ' workspace.');
+  }
 
   /**
    * Returns current status of workspace
    * @returns {String}
    */
   getWorkspaceStatus() {
-    let workspace = this.cheWorkspace.getWorkspaceById(this.workspace.id);
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
     return workspace ? workspace.status : null;
   }
+
+  onAutoSnapshotChanged() {
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
+    let workspaceData = angular.copy(workspace);
+    workspaceData.attributes['auto_snapshot'] = this.isAutoSnapshot;
+    this.updateWorkspace(workspaceData);
+  }
+
+  getAutoSnapshotWorkspace() {
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
+    let autoSnapshot = workspace.attributes['auto_snapshot'];
+    return autoSnapshot ? autoSnapshot === 'true' : false;
+  }
+
+  onAutoRestoreChanged() {
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
+    let workspaceData = angular.copy(workspace);
+    workspaceData.attributes['auto_restore'] = this.isAutoRestore;
+    this.updateWorkspace(workspaceData);
+  }
+
+  getAutoRestoreWorkspace() {
+    let workspace = this.cheWorkspace.getWorkspaceById(this.workspaceId);
+    let autoRestore = workspace.attributes['auto_restore'];
+    return autoRestore ? autoRestore === 'true' : false;
+  }
+
+  updateWorkspace(workspaceData) {
+    let promise = this.cheWorkspace.updateWorkspace(this.workspaceId, workspaceData);
+    promise.then((data) => {
+    //  this.isAutoSnapshot = this.getAutoSnapshotWorkspace();
+    //  this.isAutoRestore = this.getAutoRestoreWorkspace();
+    }, (error) => {
+      this.notification.showError(error.data.message !== null ? error.data.message : 'Failed to update workspace.');
+    });
+  }
+
+
 }

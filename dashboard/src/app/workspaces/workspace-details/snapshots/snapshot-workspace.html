@@ -1,10 +1,21 @@
 <che-panel che-title="Snapshot Workspace" class="workspace-details-content">
+  <che-label-container flex layout="row" che-label-name="Auto snapshot workspace">
+    {{snapshotWorkspaceCtrl.isAutoSnapshot}}
+    <md-switch ng-change="snapshotWorkspaceCtrl.onAutoSnapshotChanged()"
+               ng-model="snapshotWorkspaceCtrl.isAutoSnapshot"></md-switch>
+  </che-label-container>
+  <che-label-container flex layout="row" che-label-name="Auto restore workspace">
+    <md-switch ng-change="snapshotWorkspaceCtrl.onAutoRestoreChanged()"
+               ng-model="snapshotWorkspaceCtrl.isAutoRestore"></md-switch>
+  </che-label-container>
   <div layout="row" flex layout-align="space-around start">
     <label flex="15" class="workspace-details-description">
       Snapshot your workspace.
     </label>
     <div layout="row" flex="85">
-      <che-button-default che-button-title="snapshot" ng-click="snapshotWorkspaceCtrl.doSnapshot()" ng-disabled="'RUNNING' !== snapshotWorkspaceCtrl.getWorkspaceStatus()"></che-button-default>
+      <che-button-default che-button-title="snapshot" ng-click="snapshotWorkspaceCtrl.doSnapshot()"
+                          ng-disabled="'RUNNING' !== snapshotWorkspaceCtrl.getWorkspaceStatus() || snapshotWorkspaceCtrl.snapshotInProgress">
+      </che-button-default>
     </div>
   </div>
 </che-panel>

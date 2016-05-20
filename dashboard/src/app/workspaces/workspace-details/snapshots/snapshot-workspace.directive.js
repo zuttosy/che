@@ -39,7 +39,7 @@ export class SnapshotWorkspace {
     this.bindToController = true;
 
     this.scope = {
-      workspace: '=workspace'
+      workspaceId: '@workspaceId'
     };
   }
 
