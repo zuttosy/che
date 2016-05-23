@@ -338,19 +338,22 @@ public class DefaultHttpJsonRequestTest {
         final String csrfToken = "123stopcsrf456";
 
         for (String method : modifyingMethods) {
-            final Link link = LinksHelper.createLink(method, getUrl(ctx) + "/application-json", "rel");
-            final DefaultHttpJsonRequest request = spy(new DefaultHttpJsonRequest(link));
-            request.setCsrfTokenHeader(csrfToken).request();
-            verify(request).doRequest(eq(0),
-                                     anyString(),
-                                     eq(method),
-                                     anyList(),
-                                     eq(null),
-                                     eq(null),
-                                     eq(csrfToken));
-            //TODO: how to check that header really set in HttpConn?
+            new DefaultHttpJsonRequest(getUrl(ctx) + "/csrf").setMethod(method).setCsrfTokenHeader(csrfToken).request();
         }
     }
+
+    @Test
+    public void shouldNotUseCSRFTokeForNonModifyingRequests(ITestContext ctx) throws Exception {
+        final List<String> nonModifyingMethods = ImmutableList.of("GET", "OPTIONS", "HEAD");
+        final String csrfToken = "123stopcsrf456";
+
+        for (String method : nonModifyingMethods) {
+            new DefaultHttpJsonRequest(getUrl(ctx) + "/csrf").setMethod(method)
+                                                             .setCsrfTokenHeader(csrfToken)
+                                                             .request();
+        }
+    }
+
 
     @Filter
     public static class EnvironmentFilter implements RequestFilter {

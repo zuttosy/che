@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.core.rest;
 
+import org.eclipse.che.api.core.BadRequestException;
 import org.eclipse.che.api.core.Page;
 import org.eclipse.che.api.core.UnauthorizedException;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
@@ -20,7 +21,9 @@ import org.eclipse.che.dto.server.JsonArrayImpl;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -81,19 +84,6 @@ public class TestService extends Service {
         return elements;
     }
 
-    @DELETE
-    @Path("/application-json")
-    public Response receiveJsonObjectPut() {
-        return Response.noContent().build();
-    }
-
-    @PUT
-    @Path("/application-json")
-    @Produces(APPLICATION_JSON)
-    public List<Link> receiveJsonObjectPut(List<Link> elements) {
-        return elements;
-    }
-
     @PUT
     @Path("/query-parameters")
     @Produces(APPLICATION_JSON)
@@ -140,4 +130,59 @@ public class TestService extends Service {
                        .header("Link", createLinkHeader(page, "getStringList", singletonMap("query-param", param), value))
                        .build();
     }
+
+    @GET
+    @Path("/csrf")
+    public Response csrfGet(@HeaderParam("X-CSRF-Token") String token) throws BadRequestException {
+        if (token != null) {
+            throw new BadRequestException("CSRF token must not be send to GET methods");
+        }
+        return Response.ok().build();
+    }
+
+    @OPTIONS
+    @Path("/csrf")
+    public Response csrfOptions(@HeaderParam("X-CSRF-Token") String token) throws BadRequestException {
+        if (token != null) {
+            throw new BadRequestException("CSRF token must not be send to OPTIONS methods");
+        }
+        return Response.ok().build();
+    }
+
+    @HEAD
+    @Path("/csrf")
+    public Response csrfHead(@HeaderParam("X-CSRF-Token") String token) throws BadRequestException {
+        if (token != null) {
+            throw new BadRequestException("CSRF token must not be send to HEAD methods");
+        }
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/csrf")
+    public Response csrfPost(@HeaderParam("X-CSRF-Token") String token) throws UnauthorizedException {
+        if (token == null) {
+            throw new UnauthorizedException("CSRF token must be send to POST methods");
+        }
+        return Response.ok().build();
+    }
+
+    @DELETE
+    @Path("/csrf")
+    public Response csrfDelete(@HeaderParam("X-CSRF-Token") String token) throws UnauthorizedException {
+        if (token == null) {
+            throw new UnauthorizedException("CSRF token must be send to DELETE methods");
+        }
+        return Response.ok().build();
+    }
+
+    @PUT
+    @Path("/csrf")
+    public Response csrfPut(@HeaderParam("X-CSRF-Token") String token) throws UnauthorizedException {
+        if (token == null) {
+            throw new UnauthorizedException("CSRF token must be send to PUT methods");
+        }
+        return Response.ok().build();
+    }
+
 }
