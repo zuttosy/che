@@ -112,6 +112,7 @@ public class CheCorsFilter implements Filter {
             filterParams.put(PARAM_CORS_ALLOWED_HEADERS, "Content-Type," +
                                                          "X-Requested-With," +
                                                          "accept," +
+                                                         "x-csrf-token," +
                                                          "Origin," +
                                                          "Authorization," +
                                                          "Access-Control-Request-Method," +

@@ -144,6 +144,17 @@ public interface HttpJsonRequest {
     HttpJsonRequest setCsrfTokenHeader(@NotNull String value);
 
     /**
+     * Adds session identifier header to the request.
+     *
+     * @param value
+     *         session identifier
+     * @return this request instance
+     * @throws NullPointerException
+     *         when value is null
+     */
+    HttpJsonRequest setSessionId(@NotNull String value);
+
+    /**
      * Sets request timeout in milliseconds.
      *
      * @param timeoutMs

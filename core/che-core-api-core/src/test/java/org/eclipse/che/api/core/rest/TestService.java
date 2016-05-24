@@ -19,6 +19,7 @@ import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.che.dto.server.JsonArrayImpl;
 
+import javax.ws.rs.CookieParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
@@ -31,6 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -129,6 +131,15 @@ public class TestService extends Service {
                        .entity(page.getItems())
                        .header("Link", createLinkHeader(page, "getStringList", singletonMap("query-param", param), value))
                        .build();
+    }
+
+    @GET
+    @Path("/session")
+    public Response getSession(@CookieParam("JSESSIONID") Cookie sessionId) throws BadRequestException {
+        if (sessionId.getValue() == null) {
+            throw new BadRequestException("JSESSIONID cookie must be set");
+        }
+        return Response.ok().build();
     }
 
     @GET

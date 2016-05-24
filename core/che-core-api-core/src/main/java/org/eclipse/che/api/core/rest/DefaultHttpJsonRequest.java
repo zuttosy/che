@@ -73,6 +73,7 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
     private List<Pair<String, ?>> queryParams;
     private String                authorizationHeaderValue;
     private String                csrfTokenValue;
+    private String                sessionId;
 
     DefaultHttpJsonRequest(String url) {
         this.url = requireNonNull(url, "Required non-null url");
@@ -133,6 +134,13 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
     }
 
     @Override
+    public HttpJsonRequest setSessionId(@NotNull String value) {
+        requireNonNull(value, "Required non-null session ID value");
+        sessionId = value;
+        return this;
+    }
+
+    @Override
     public HttpJsonRequest setTimeout(int timeout) {
         this.timeout = timeout;
         return this;
@@ -160,7 +168,7 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
         if (method == null) {
             throw new IllegalStateException("Could not perform request, request method wasn't set");
         }
-        return doRequest(timeout, url, method, body, queryParams, authorizationHeaderValue, csrfTokenValue);
+        return doRequest(timeout, url, method, body, queryParams, authorizationHeaderValue, csrfTokenValue, sessionId);
     }
 
     /**
@@ -184,6 +192,8 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
      *         value of authorization header, may be null
      * @param csrfTokenValue
      *         value of csrf prevention token header, may be null
+     * @param sessionIdValue
+     *         value of session identifier header, may be null
      * @return response to this request
      * @throws IOException
      *         when connection content type is not "application/json"
@@ -206,7 +216,8 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
                                       Object body,
                                       List<Pair<String, ?>> parameters,
                                       String authorizationHeaderValue,
-                                      String csrfTokenValue) throws IOException,
+                                      String csrfTokenValue,
+                                      String sessionIdValue) throws IOException,
                                                                     ServerException,
                                                                     ForbiddenException,
                                                                     NotFoundException,
@@ -234,10 +245,13 @@ public class DefaultHttpJsonRequest implements HttpJsonRequest {
             conn.setRequestMethod(method);
             //drop a hint for server side that we want to receive application/json
             conn.addRequestProperty(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+            if (!isNullOrEmpty(sessionIdValue)) {
+                conn.setRequestProperty(HttpHeaders.COOKIE, "JSESSIONID=" + sessionIdValue);
+            }
             // set csrf prevention token for modifying requests
             if ((HttpMethod.DELETE.equals(method) ||
                  HttpMethod.POST.equals(method) ||
-                 HttpMethod.PUT.equals(method)) && !isNullOrEmpty(csrfTokenValue)) {
+                 HttpMethod.PUT.equals(method)) && !isNullOrEmpty(sessionIdValue) && !isNullOrEmpty(csrfTokenValue)) {
                 conn.setRequestProperty("X-CSRF-Token", csrfTokenValue);
             }
             if (!isNullOrEmpty(authorizationHeaderValue)) {

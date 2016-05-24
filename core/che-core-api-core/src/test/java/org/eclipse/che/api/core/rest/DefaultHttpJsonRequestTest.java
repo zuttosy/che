@@ -105,11 +105,12 @@ public class DefaultHttpJsonRequestTest {
                                                                  anyObject(),
                                                                  any(),
                                                                  anyString(),
+                                                                 anyString(),
                                                                  anyString());
 
         request.request();
 
-        verify(request).doRequest(0, DEFAULT_URL, "POST", null, null, null, null);
+        verify(request).doRequest(0, DEFAULT_URL, "POST", null, null, null, null, null);
     }
 
     @Test
@@ -128,6 +129,7 @@ public class DefaultHttpJsonRequestTest {
                                   "PUT",
                                   body,
                                   asList(Pair.of("name", "value"), Pair.of("name2", "value2")),
+                                  null,
                                   null,
                                   null);
     }
@@ -148,6 +150,7 @@ public class DefaultHttpJsonRequestTest {
                                   mapCaptor.capture(),
                                   eq(null),
                                   eq(null),
+                                  eq(null),
                                   eq(null));
         assertTrue(mapCaptor.getValue() instanceof JsonStringMap);
         assertEquals(mapCaptor.getValue(), body);
@@ -165,6 +168,7 @@ public class DefaultHttpJsonRequestTest {
                                   eq("http://localhost:8080"),
                                   eq("POST"),
                                   listCaptor.capture(),
+                                  eq(null),
                                   eq(null),
                                   eq(null),
                                   eq(null));
@@ -333,12 +337,22 @@ public class DefaultHttpJsonRequestTest {
     }
 
     @Test
+    public void shouldUseSessionIdIfSet(ITestContext ctx) throws Exception {
+            new DefaultHttpJsonRequest(getUrl(ctx) + "/session").setMethod("GET")
+                                                                .setSessionId("session123")
+                                                                .request();
+    }
+
+    @Test
     public void shouldUseCSRFTokeForModifyingRequests(ITestContext ctx) throws Exception {
         final List<String> modifyingMethods = ImmutableList.of("PUT", "POST", "DELETE");
         final String csrfToken = "123stopcsrf456";
 
         for (String method : modifyingMethods) {
-            new DefaultHttpJsonRequest(getUrl(ctx) + "/csrf").setMethod(method).setCsrfTokenHeader(csrfToken).request();
+            new DefaultHttpJsonRequest(getUrl(ctx) + "/csrf").setMethod(method)
+                                                             .setCsrfTokenHeader(csrfToken)
+                                                             .setSessionId("session123")
+                                                             .request();
         }
     }
 
@@ -350,6 +364,7 @@ public class DefaultHttpJsonRequestTest {
         for (String method : nonModifyingMethods) {
             new DefaultHttpJsonRequest(getUrl(ctx) + "/csrf").setMethod(method)
                                                              .setCsrfTokenHeader(csrfToken)
+                                                             .setSessionId("session123")
                                                              .request();
         }
     }
@@ -369,6 +384,6 @@ public class DefaultHttpJsonRequestTest {
     }
 
     private void prepareResponse(String response) throws Exception {
-        doReturn(new DefaultHttpJsonResponse(response, 200)).when(request).doRequest(anyInt(), anyString(), anyString(), anyObject(), any(), anyString(), anyString());
+        doReturn(new DefaultHttpJsonResponse(response, 200)).when(request).doRequest(anyInt(), anyString(), anyString(), anyObject(), any(), anyString(), anyString(), anyString());
     }
 }
