@@ -12,9 +12,17 @@
 
 -->
 <module rename-to='_app'>
+
     <!-- Inherit the core Web Toolkit stuff.                        -->
     <inherits name='com.google.gwt.user.User'/>
     <inherits name="com.google.gwt.inject.Inject"/>
+
+    <set-property name="user.agent" value="safari"/>
+
+    <!-- Reduces compiler permutations through some GWT magic. -->
+    <!-- See https://code.google.com/p/google-web-toolkit/wiki/SoftPermutations. -->
+    <collapse-all-properties />
+
     <inherits name="com.google.gwt.json.JSON"/>
 
     <!-- Logging configuration -->
@@ -84,6 +92,9 @@
     <inherits name="org.eclipse.che.api.languageserver.LanguageServer"/>
 
     <inherits name="org.eclipse.che.plugin.svn.Subversion"/>
+
+    <!-- Plugin EclipseCon -->
+    <inherits name="examples.MyExtension"/>
 
     <stylesheet src="IDE.css"/>
 

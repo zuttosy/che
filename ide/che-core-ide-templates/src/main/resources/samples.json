@@ -61,6 +61,58 @@
     ]
   },
   {
+    "name": "jetty-project",
+    "displayName": "jetty-project",
+    "path": "/jetty-project",
+    "description": "A project managed with Jetty",
+    "projectType": "maven",
+    "mixins": [],
+    "attributes": {
+      "language": [
+        "java"
+      ]
+    },
+    "modules": [],
+    "problems": [],
+    "source": {
+      "type": "git",
+      "location": "https://github.com/benoitf/webapp-demo",
+      "parameters": {}
+    },
+    "commands": [
+      {
+        "name": "start",
+        "type": "custom",
+        "commandLine": "/home/user/jetty9/bin/jetty.sh start",
+        "attributes": {
+          "previewUrl": "http://${server.port.8080}"
+        }
+      },
+      {
+        "name": "stop",
+        "type": "custom",
+        "commandLine": "/home/user/jetty9/bin/jetty.sh stop",
+        "attributes": {
+          "previewUrl": ""
+        }
+      },
+      {
+        "name": "buildAndDeploy",
+        "type": "mvn",
+        "commandLine": "mvn -f ${current.project.path} clean install && cp ${current.project.path}/target/*.war /home/user/jetty9/webapps/ROOT.war && /home/user/jetty9/bin/jetty.sh  run",
+        "attributes": {
+          "previewUrl": "http://${server.port.8080}/spring/hello"
+        }
+      }],
+    "links": [],
+    "category": "Samples",
+    "tags": [
+      "maven",
+      "java",
+      "jetty"
+    ]
+  },
+  {
     "name": "che-in-che",
     "displayName": "eclipse-che",
     "path": "/che",

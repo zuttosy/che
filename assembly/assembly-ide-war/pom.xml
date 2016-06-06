@@ -27,6 +27,15 @@
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.eclipse.che.eclipsecon.demo</groupId>
+                <artifactId>che-examples-action</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -75,6 +84,10 @@
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>wsmaster-local</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.che.eclipsecon.demo</groupId>
+            <artifactId>che-examples-action</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.lib</groupId>

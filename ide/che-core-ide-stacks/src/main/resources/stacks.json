@@ -69,6 +69,102 @@
     }
   },
   {
+    "id": "jetty-stack",
+    "creator": "ide",
+    "name": "Jetty",
+    "description": "Stack with Jetty",
+    "scope": "general",
+    "tags": [
+      "Jetty"
+    ],
+    "components": [
+    ],
+    "source": {
+      "type": "image",
+      "origin": "florentbenoit/jetty-stack"
+    },
+    "workspaceConfig": {
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "org.eclipse.che.terminal", "org.eclipse.che.ws-agent", "org.eclipse.che.ssh"
+              ],
+              "servers": {},
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
+              }
+            }
+          },
+          "recipe": {
+            "location": "florentbenoit/jetty-stack",
+            "type": "dockerimage"
+          }
+        }
+      },
+      "name": "default",
+      "defaultEnv": "default",
+      "description": null,
+      "commands": [
+      ]
+    },
+    "stackIcon": {
+      "name": "jetty-logo.svg",
+      "mediaType": "image/svg+xml"
+    }
+  },
+  {
+    "id": "eclipsecon-default",
+    "creator": "ide",
+    "name": "eclipsecon-default",
+    "description": "Default go stack",
+    "scope": "general",
+    "tags": [
+      "Go"
+    ],
+    "components": [],
+    "source": {
+      "type": "image",
+      "origin": "florentbenoit/golang"
+    },
+    "workspaceConfig": {
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "org.eclipse.che.terminal", "org.eclipse.che.ws-agent", "org.eclipse.che.ssh"
+              ],
+              "servers": {},
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
+              }
+            }
+          },
+          "recipe": {
+            "location": "florentbenoit/golang",
+            "type": "dockerimage"
+          }
+        }
+      },
+      "name": "default",
+      "defaultEnv": "default",
+      "description": null,
+      "commands": [
+        {
+          "commandLine": "mvn clean install -f ${current.project.path}",
+          "name": "build",
+          "type": "mvn"
+        }
+      ]
+    },
+    "stackIcon": {
+      "name": "type-java.svg",
+      "mediaType": "image/svg+xml"
+    }
+  },
+  {
     "id": "java-default",
     "creator": "ide",
     "name": "Java",
@@ -895,8 +991,8 @@
           "machines": {
             "dev-machine": {
               "agents": [
-                "org.eclipse.che.terminal", 
-                "org.eclipse.che.ws-agent", 
+                "org.eclipse.che.terminal",
+                "org.eclipse.che.ws-agent",
                 "org.eclipse.che.ssh",
                 "org.eclipse.che.ls.csharp",
                 "org.eclipse.che.ls.json",
@@ -1440,7 +1536,7 @@
     "source": {
       "type": "image",
       "origin": "codenvy/ubuntu_jre"
-    }    
+    }
   },
   {
     "id": "bitnami-express",
@@ -1984,7 +2080,7 @@
       "name": "default",
       "defaultEnv": "default",
       "description": null,
-      "commands": [  
+      "commands": [
         {
           "name": "restart zend server",
           "type": "custom",
