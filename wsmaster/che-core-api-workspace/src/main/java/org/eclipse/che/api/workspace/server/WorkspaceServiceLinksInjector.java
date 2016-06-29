@@ -29,14 +29,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.core.util.LinksHelper.createLink;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_OUTPUT_CHANNEL;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_STATUS_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE;
+import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_STATUS_CHANNEL_TEMPLATE;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_STATUS_CHANNEL;
 import static org.eclipse.che.api.machine.shared.Constants.TERMINAL_REFERENCE;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_WEBSOCKET_REFERENCE;
@@ -135,17 +138,15 @@ public class WorkspaceServiceLinksInjector {
                                                 .withParameters(singletonList(
                                                         cloneDto(channelParameter).withDefaultValue("workspace:" + workspace.getId()))));
 
-        links.add(cloneDto(workspaceChannelLink).withRel(GET_ENVIRONMENT_OUTPUT_CHANNEL)
+        links.add(cloneDto(workspaceChannelLink).withRel(LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL)
                                                 .withParameters(singletonList(cloneDto(channelParameter)
-                                                                                      .withDefaultValue("workspace:" +
-                                                                                                        workspace.getId() +
-                                                                                                        ":environment_output"))));
+                                                                                      .withDefaultValue(format(ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE,
+                                                                                                               workspace.getId())))));
 
-        links.add(cloneDto(workspaceChannelLink).withRel(GET_ENVIRONMENT_STATUS_CHANNEL)
+        links.add(cloneDto(workspaceChannelLink).withRel(LINK_REL_ENVIRONMENT_STATUS_CHANNEL)
                                                 .withParameters(singletonList(cloneDto(channelParameter)
-                                                                                      .withDefaultValue("workspace:" +
-                                                                                                        workspace.getId() +
-                                                                                                        ":machines_statuses"))));
+                                                                                      .withDefaultValue(format(ENVIRONMENT_STATUS_CHANNEL_TEMPLATE,
+                                                                                                               workspace.getId())))));
 
         // add links for running workspace
         injectRuntimeLinks(workspace, ideUri, uriBuilder);

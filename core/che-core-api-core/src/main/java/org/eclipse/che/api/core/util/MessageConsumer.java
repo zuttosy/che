@@ -19,8 +19,5 @@ import java.io.IOException;
  * @author Alexander Garagatyi
  */
 public interface MessageConsumer<T> extends Closeable {
-    void write(T message) throws IOException;
-
-    @Override
-    default void close() throws IOException {}
+    void consume(T message) throws IOException;
 }

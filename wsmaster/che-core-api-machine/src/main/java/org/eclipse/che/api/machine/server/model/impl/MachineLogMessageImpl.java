@@ -15,7 +15,7 @@ import org.eclipse.che.api.core.model.machine.MachineLogMessage;
 import java.util.Objects;
 
 /**
- * author Alexander Garagatyi
+ * @author Alexander Garagatyi
  */
 public class MachineLogMessageImpl implements MachineLogMessage {
     private String machine;
@@ -29,7 +29,7 @@ public class MachineLogMessageImpl implements MachineLogMessage {
     }
 
     @Override
-    public String getMachine() {
+    public String getMachineName() {
         return machine;
     }
 
@@ -63,9 +63,7 @@ public class MachineLogMessageImpl implements MachineLogMessage {
 
     @Override
     public String toString() {
-        return "MachineLogMessageImpl{" +
-               "machine='" + machine + '\'' +
-               ", content='" + content + '\'' +
-               '}';
+        return "MachineLogMessageImpl{machine='" + machine +
+               "', content='" + content + "'}";
     }
 }

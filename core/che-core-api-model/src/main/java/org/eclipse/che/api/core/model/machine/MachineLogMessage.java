@@ -13,7 +13,7 @@ package org.eclipse.che.api.core.model.machine;
 /**
  * Represents log message from machine
  *
- * author Alexander Garagatyi
+ * @author Alexander Garagatyi
  */
 public interface MachineLogMessage {
     /**
@@ -24,5 +24,5 @@ public interface MachineLogMessage {
     /**
      * Machine name
      */
-    String getMachine();
+    String getMachineName();
 }

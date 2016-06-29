@@ -29,12 +29,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import static org.eclipse.che.api.core.util.LinksHelper.createLink;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_OUTPUT_CHANNEL;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_STATUS_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_STATUS_CHANNEL_TEMPLATE;
 import static org.eclipse.che.api.machine.shared.Constants.TERMINAL_REFERENCE;
 import static org.eclipse.che.dto.server.DtoFactory.cloneDto;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
@@ -130,17 +132,15 @@ public class MachineServiceLinksInjector {
         final LinkParameter channelParameter = newDto(LinkParameter.class).withName("channel")
                                                                           .withRequired(true);
 
-        links.add(cloneDto(workspaceChannelLink).withRel(GET_ENVIRONMENT_OUTPUT_CHANNEL)
+        links.add(cloneDto(workspaceChannelLink).withRel(LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL)
                                                 .withParameters(singletonList(cloneDto(channelParameter)
-                                                                                      .withDefaultValue("workspace:" +
-                                                                                                        machine.getWorkspaceId() +
-                                                                                                        ":environment_output"))));
+                                                                                      .withDefaultValue(format(ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE,
+                                                                                                               machine.getWorkspaceId())))));
 
-        links.add(cloneDto(workspaceChannelLink).withRel(GET_ENVIRONMENT_STATUS_CHANNEL)
+        links.add(cloneDto(workspaceChannelLink).withRel(ENVIRONMENT_STATUS_CHANNEL_TEMPLATE)
                                                 .withParameters(singletonList(cloneDto(channelParameter)
-                                                                                      .withDefaultValue("workspace:" +
-                                                                                                        machine.getWorkspaceId() +
-                                                                                                        ":machines_statuses"))));
+                                                                                      .withDefaultValue(format(ENVIRONMENT_STATUS_CHANNEL_TEMPLATE,
+                                                                                                               machine.getWorkspaceId())))));
 
         return machine.withLinks(links);
     }

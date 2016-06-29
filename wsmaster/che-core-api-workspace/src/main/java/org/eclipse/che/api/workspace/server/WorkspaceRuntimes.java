@@ -25,6 +25,7 @@ import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.notification.EventSubscriber;
+import org.eclipse.che.api.core.util.AbstractLineConsumer;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.core.util.WebsocketMessageConsumer;
 import org.eclipse.che.api.machine.server.MachineManager;
@@ -45,6 +46,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,6 +58,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Predicate;
 
 import static java.lang.String.format;
+import static org.eclipse.che.api.machine.shared.Constants.ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -622,10 +625,14 @@ public class WorkspaceRuntimes {
     }
 
     protected LineConsumer getMachineLogger(String workspaceId, String machineName) throws ServerException {
-        WebsocketMessageConsumer<MachineLogMessage> envMessageConsumer = new WebsocketMessageConsumer<>("workspace:" +
-                                                                                                        workspaceId +
-                                                                                                        ":environment_output");
-        return line -> envMessageConsumer.write(new MachineLogMessageImpl(machineName, line));
+        WebsocketMessageConsumer<MachineLogMessage> envMessageConsumer =
+                new WebsocketMessageConsumer<>(format(ENVIRONMENT_OUTPUT_CHANNEL_TEMPLATE, workspaceId));
+        return new AbstractLineConsumer() {
+            @Override
+            public void writeLine(String line) throws IOException {
+                envMessageConsumer.consume(new MachineLogMessageImpl(machineName, line));
+            }
+        };
     }
 
     /**

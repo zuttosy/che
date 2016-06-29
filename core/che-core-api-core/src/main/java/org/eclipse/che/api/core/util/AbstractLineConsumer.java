@@ -10,27 +10,17 @@
  *******************************************************************************/
 package org.eclipse.che.api.core.util;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.io.IOException;
 
 /**
- * Message consumer that sends messages to specified websocket channel
+ * No-op implementation of {@link LineConsumer}
  *
  * @author Alexander Garagatyi
  */
-public class WebsocketMessageConsumer<T> extends AbstractMessageConsumer<T> {
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-
-    private final LineConsumer messageSender;
-
-    public WebsocketMessageConsumer(String channel) {
-        this.messageSender = new WebsocketLineConsumer(channel);
-    }
+public abstract class AbstractLineConsumer implements LineConsumer {
+    @Override
+    public void writeLine(String line) throws IOException {}
 
     @Override
-    public void consume(T message) throws IOException {
-        messageSender.writeLine(GSON.toJson(message));
-    }
+    public void close() throws IOException {}
 }

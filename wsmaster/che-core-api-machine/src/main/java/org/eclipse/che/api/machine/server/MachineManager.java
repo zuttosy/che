@@ -367,11 +367,11 @@ public class MachineManager {
                 }
             }
             return machine;
-        } catch (ApiException e) {
+        } catch (ApiException apiEx) {
             try {
                 machineLogger.close();
-            } catch (IOException e1) {
-                LOG.error(e1.getLocalizedMessage(), e1);
+            } catch (IOException ioEx) {
+                LOG.error(ioEx.getLocalizedMessage(), ioEx);
             }
             try {
                 machineRegistry.remove(machineId);
@@ -379,7 +379,7 @@ public class MachineManager {
                 // machine is already removed
             }
 
-            throw new MachineException(e.getLocalizedMessage(), e);
+            throw new MachineException(apiEx.getLocalizedMessage(), apiEx);
         }
     }
 
@@ -412,28 +412,28 @@ public class MachineManager {
                                            .withWorkspaceId(machine.getWorkspaceId())
                                            .withMachineName(machine.getConfig().getName()));
 
-        } catch (ServerException | InterruptedException e) {
+        } catch (ServerException | InterruptedException creationEx) {
             eventService.publish(DtoFactory.newDto(MachineStatusEvent.class)
                                            .withEventType(MachineStatusEvent.EventType.ERROR)
                                            .withMachineId(machine.getId())
                                            .withDev(machine.getConfig().isDev())
                                            .withWorkspaceId(machine.getWorkspaceId())
                                            .withMachineName(machine.getConfig().getName())
-                                           .withError(e.getLocalizedMessage()));
+                                           .withError(creationEx.getLocalizedMessage()));
             try {
-                machineLogger.writeLine(String.format("[ERROR] %s", e.getLocalizedMessage()));
-            } catch (IOException e1) {
-                LOG.error(e1.getLocalizedMessage());
+                machineLogger.writeLine(String.format("[ERROR] %s", creationEx.getLocalizedMessage()));
+            } catch (IOException ioEx) {
+                LOG.error(ioEx.getLocalizedMessage());
             }
 
             try {
                 if (instance != null) {
                     instance.destroy();
                 }
-            } catch (MachineException e1) {
-                LOG.error(e.getLocalizedMessage(), e1);
+            } catch (MachineException destroyingEx) {
+                LOG.error(destroyingEx.getLocalizedMessage(), destroyingEx);
             }
-            throw new MachineException(e.getLocalizedMessage(), e);
+            throw new MachineException(creationEx.getLocalizedMessage(), creationEx);
         }
     }
 

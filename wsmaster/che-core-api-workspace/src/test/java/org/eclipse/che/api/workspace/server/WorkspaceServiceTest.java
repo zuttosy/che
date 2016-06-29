@@ -73,8 +73,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.STARTING;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_OUTPUT_CHANNEL;
-import static org.eclipse.che.api.machine.shared.Constants.GET_ENVIRONMENT_STATUS_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_STATUS_CHANNEL;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_REFERENCE;
 import static org.eclipse.che.api.machine.shared.Constants.WSAGENT_WEBSOCKET_REFERENCE;
 import static org.eclipse.che.api.workspace.shared.Constants.GET_ALL_USER_WORKSPACES;
@@ -667,8 +667,8 @@ public class WorkspaceServiceTest {
                                                               LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL,
                                                               LINK_REL_IDE_URL,
                                                               LINK_REL_SELF,
-                                                              GET_ENVIRONMENT_OUTPUT_CHANNEL,
-                                                              GET_ENVIRONMENT_STATUS_CHANNEL));
+                                                              LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL,
+                                                              LINK_REL_ENVIRONMENT_STATUS_CHANNEL));
         assertTrue(actualRels.equals(expectedRels), format("Links difference: '%s'. \n" +
                                                            "Returned links: '%s', \n" +
                                                            "Expected links: '%s'.",
