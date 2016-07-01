@@ -10,18 +10,23 @@
  *******************************************************************************/
 package org.eclipse.che.ide.workspace;
 
+import com.google.common.base.Strings;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.inject.Provider;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
+import org.eclipse.che.api.core.rest.shared.dto.Link;
+import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.api.workspace.shared.Constants;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
@@ -34,6 +39,7 @@ import org.eclipse.che.ide.api.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import org.eclipse.che.ide.api.event.HttpSessionDestroyedEvent;
 import org.eclipse.che.ide.api.machine.MachineManager;
+import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -65,10 +71,17 @@ import org.eclipse.che.ide.workspace.start.StartWorkspacePresenter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_LOGS_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_STATUS_CHANNEL;
+import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
+import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.MACHINE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.WORKSPACE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.ERROR;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.IN_PROGRESS;
@@ -110,6 +123,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     private   MessageBus                     messageBus;
 
     public WorkspaceComponent(WorkspaceServiceClient workspaceServiceClient,
+
                               CreateWorkspacePresenter createWorkspacePresenter,
                               StartWorkspacePresenter startWorkspacePresenter,
                               CoreLocalizationConstant locale,
@@ -190,7 +204,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      * @param callback
      *         callback to be executed
      */
-    public void startWorkspaceById(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
+    public void startWorkspace(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
         this.callback = callback;
         workspaceServiceClient.getWorkspace(workspace.getId()).then(new Operation<WorkspaceDto>() {
             @Override
@@ -207,7 +221,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                     @Override
                     public void onOpen() {
                         messageBus.removeOnOpenHandler(this);
-                        subscribeToWorkspaceStatusWebSocket(workspace);
+                        subscribeToWorkspaceStatusEvents(workspace);
 
                         WorkspaceStatus workspaceStatus = workspace.getStatus();
 
@@ -345,11 +359,79 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         }
     }
 
-    private void subscribeToWorkspaceStatusWebSocket(final WorkspaceDto workspace) {
+
+    private void subscribeOnEnvironmentOutputChannel(WorkspaceDto workspace) {
+        initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
+        final Link link = workspace.getLink(LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL);
+        final LinkParameter logsChannelLinkParameter = link.getParameter("channel");
+        if (logsChannelLinkParameter != null) {
+            String outputChannel = logsChannelLinkParameter.getDefaultValue();
+            subscribeToChannel(outputChannel, new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
+                @Override
+                protected void onMessageReceived(String text) {
+                    consolesPanelPresenter.printDevMachineOutput(text);
+                }
+
+                @Override
+                protected void onErrorReceived(Throwable exception) {
+                    Log.error(MachineManagerImpl.class, exception);
+                }
+            };);
+        }
+            final LinkParameter statusChannelLinkParameter =
+                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
+            if (statusChannelLinkParameter != null) {
+                statusChannel = statusChannelLinkParameter.getDefaultValue();
+            }
+        }
+        if (outputChannel != null && statusChannel != null) {
+        wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
+        subscribeToChannel(wsAgentLogChannel, outputHandler);
+            subscribeToChannel(statusChannel, statusHandler);
+        } else {
+            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
+        }
+    }
+
+    private void subscribeToChannel(String chanel, SubscriptionHandler handler) {
+        try {
+            messageBus.subscribe(chanel, handler);
+        } catch (WebSocketException exception) {
+            Log.error(getClass(), exception);
+        }
+    }
+
+    private void unsubscribeChannel(String chanel, SubscriptionHandler handler) {
+        try {
+            messageBus.unsubscribe(chanel, handler);
+        } catch (WebSocketException exception) {
+            Log.error(getClass(), exception);
+        }
+    }
+
+    private void subscribeToWorkspaceStatusEvents(final WorkspaceDto workspace) {
         Unmarshallable<WorkspaceStatusEvent> unmarshaller = dtoUnmarshallerFactory.newWSUnmarshaller(WorkspaceStatusEvent.class);
+        final Link workspaceEventsLink = workspace.getLink(LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL);
+        if (workspaceEventsLink == null) {
+            //should never be
+            notificationManager.notify("Can't subscribe on workspace events. Probably Workspace will works fine but application can't handel state events", StatusNotification.Status.FAIL,
+                                       StatusNotification.DisplayMode.EMERGE_MODE);
+            Log.error(getClass(), "Link " + LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL + " not found in workspace links. So events will be not handel");
+            return;
+        }
+        final String channel = workspaceEventsLink.getParameter("channel").getDefaultValue();
+        if (isNullOrEmpty(channel)) {
+            //should never be
+            notificationManager.notify(
+                    "Can't subscribe on workspace events. Probably Workspace will works fine but application can't handel state events",
+                    StatusNotification.Status.FAIL,
+                    StatusNotification.DisplayMode.EMERGE_MODE);
+            Log.error(getClass(), "Channel for handling Workspace events not provide. So events will be not handel");
+            return;
+        }
 
         try {
-            messageBus.subscribe("workspace:" + workspace.getId(), new SubscriptionHandler<WorkspaceStatusEvent>(unmarshaller) {
+            messageBus.subscribe(channel, new SubscriptionHandler<WorkspaceStatusEvent>(unmarshaller) {
                 @Override
                 protected void onMessageReceived(WorkspaceStatusEvent statusEvent) {
                     String workspaceName = workspace.getConfig().getName();
@@ -365,7 +447,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                             break;
 
                         case ERROR:
-                            unSubscribeWorkspace(statusEvent.getWorkspaceId(), this);
+                            unSubscribeWorkspace(channel, this);
                             notificationManager.notify(locale.workspaceStartFailed(), FAIL, FLOAT_MODE);
                             initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), ERROR);
                             showErrorDialog(workspaceName, statusEvent.getError());
@@ -373,7 +455,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                             break;
 
                         case STOPPED:
-                            unSubscribeWorkspace(statusEvent.getWorkspaceId(), this);
+                            unSubscribeWorkspace(channel, this);
                             notificationManager.notify(locale.extServerStopped(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
                             eventBus.fireEvent(new WorkspaceStoppedEvent(workspace));
                             break;
@@ -404,6 +486,10 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         }
     }
 
+
+
+
+
     private void showErrorDialog(final String wsName, final String errorMessage) {
         workspaceServiceClient.getWorkspaces(SKIP_COUNT, MAX_COUNT).then(new Operation<List<WorkspaceDto>>() {
             @Override
@@ -422,9 +508,9 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
     }
 
-    private void unSubscribeWorkspace(String workspaceId, MessageHandler handler) {
+    private void unSubscribeWorkspace(String channel, MessageHandler handler) {
         try {
-            messageBus.unsubscribe("workspace:" + workspaceId, handler);
+            messageBus.unsubscribe(channel, handler);
         } catch (WebSocketException exception) {
             Log.error(getClass(), exception);
         }
@@ -437,7 +523,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         return new Operation<WorkspaceDto>() {
             @Override
             public void apply(WorkspaceDto workspaceToStart) throws OperationException {
-                startWorkspaceById(workspaceToStart, callback);
+                startWorkspace(workspaceToStart, callback);
             }
         };
     }

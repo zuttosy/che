@@ -17,6 +17,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.ide.api.machine.MachineManager;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
@@ -103,8 +104,14 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent  {
         workspaceServiceClient.getWorkspace(browserQueryFieldRenderer.getNamespace(), browserQueryFieldRenderer.getWorkspaceName()).then(
                 new Operation<WorkspaceDto>() {
                     @Override
-                    public void apply(WorkspaceDto workspace) throws OperationException {
-                        startWorkspaceById(workspace, callback);
+                    public void apply(WorkspaceDto workspaceDto) throws OperationException {
+                        WorkspaceImpl workspace = new WorkspaceImpl(workspaceDto);
+                        if (WorkspaceStatus.STARTING.equals(workspace.getStatus())) {
+
+                        }
+
+
+                        startWorkspace(workspaceDto, callback);
                         return;
                     }
                 }).catchError(new Operation<PromiseError>() {
@@ -120,36 +127,9 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent  {
     }
 
 
-    private void tryStartRecentWorkspaceIfExist(List<WorkspaceDto> workspaces) {
-        final String recentWorkspaceId = getRecentWorkspaceId();
-        if (Strings.isNullOrEmpty(recentWorkspaceId)) {
-            startWorkspacePresenter.show(workspaces, callback);
-        } else {
-            for(WorkspaceDto workspace : workspaces) {
-                if (workspace.getId().equals(recentWorkspaceId)) {
-                    startWorkspaceById(workspace, callback);
-                    return;
-                }
-            }
-        }
-    }
 
-    private String getRecentWorkspaceId() {
-        String json = preferencesManager.getValue(PREFERENCE_PROPERTY_NAME);
 
-        AppState appState = null;
 
-        try {
-            appState = dtoFactory.createDtoFromJson(json, AppState.class);
-        } catch (Exception exception) {
-            Log.error(getClass(), "Can't create object using json: " + exception);
-        }
-
-        if (appState != null) {
-            return appState.getRecentWorkspaceId();
-        }
-        return null;
-    }
 
     @Override
     public void tryStartWorkspace() {

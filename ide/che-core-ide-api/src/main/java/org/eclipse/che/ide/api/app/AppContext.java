@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.app;
 
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.ide.api.machine.DevMachine;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
@@ -27,9 +28,9 @@ public interface AppContext {
     /** Returns list of start-up actions with parameters that comes form URL during IDE initialization. */
     List<StartUpAction> getStartAppActions();
 
-    WorkspaceDto getWorkspace();
+    Workspace getWorkspace();
 
-    void setWorkspace(WorkspaceDto workspace);
+    void setWorkspace(Workspace workspace);
 
     /** Returns id of current workspace of throws IllegalArgumentException if workspace is null. */
     String getWorkspaceId();

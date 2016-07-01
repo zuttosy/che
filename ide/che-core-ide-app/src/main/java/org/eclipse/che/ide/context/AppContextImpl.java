@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.factory.shared.dto.Factory;
 import org.eclipse.che.ide.api.machine.DevMachine;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
@@ -51,7 +52,7 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     private final BrowserQueryFieldRenderer browserQueryFieldRenderer;
     private final List<String>              projectsInImport;
 
-    private WorkspaceDto        workspace;
+    private Workspace           workspace;
     private CurrentProject      currentProject;
     private CurrentUser         currentUser;
     private Factory             factory;
@@ -88,12 +89,12 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     }
 
     @Override
-    public WorkspaceDto getWorkspace() {
+    public Workspace getWorkspace() {
         return workspace;
     }
 
     @Override
-    public void setWorkspace(WorkspaceDto workspace) {
+    public void setWorkspace(Workspace workspace) {
         this.workspace = workspace;
     }
 
