@@ -21,6 +21,7 @@ import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
+import org.eclipse.che.api.machine.shared.dto.MachineLogMessageDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
@@ -46,6 +47,7 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
+import org.eclipse.che.ide.api.workspace.event.EnvironmentOutputEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStartedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStartingEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
@@ -366,32 +368,38 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         final LinkParameter logsChannelLinkParameter = link.getParameter("channel");
         if (logsChannelLinkParameter != null) {
             String outputChannel = logsChannelLinkParameter.getDefaultValue();
-            subscribeToChannel(outputChannel, new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
+            final Unmarshallable<MachineLogMessageDto> machineLogMessageDtoUnmarshallable =
+                    dtoUnmarshallerFactory.newWSUnmarshaller(MachineLogMessageDto.class);
+            subscribeToChannel(outputChannel, new SubscriptionHandler<MachineLogMessageDto>(machineLogMessageDtoUnmarshallable) {
                 @Override
-                protected void onMessageReceived(String text) {
-                    consolesPanelPresenter.printDevMachineOutput(text);
+                protected void onMessageReceived(MachineLogMessageDto machineLogMessageDto) {
+                    eventBus.fireEvent(
+                            new EnvironmentOutputEvent(machineLogMessageDto.getContent(), machineLogMessageDto.getMachineName()));
                 }
 
                 @Override
                 protected void onErrorReceived(Throwable exception) {
-                    Log.error(MachineManagerImpl.class, exception);
+                    Log.error(WorkspaceComponent.class, exception);
                 }
-            };);
-        }
-            final LinkParameter statusChannelLinkParameter =
-                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
-            if (statusChannelLinkParameter != null) {
-                statusChannel = statusChannelLinkParameter.getDefaultValue();
-            }
-        }
-        if (outputChannel != null && statusChannel != null) {
-        wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
-        subscribeToChannel(wsAgentLogChannel, outputHandler);
-            subscribeToChannel(statusChannel, statusHandler);
-        } else {
-            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
+            });
         }
     }
+
+
+//            final LinkParameter statusChannelLinkParameter =
+//                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
+//            if (statusChannelLinkParameter != null) {
+//                statusChannel = statusChannelLinkParameter.getDefaultValue();
+//            }
+//        }
+//        if (outputChannel != null && statusChannel != null) {
+//        wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
+//        subscribeToChannel(wsAgentLogChannel, outputHandler);
+//            subscribeToChannel(statusChannel, statusHandler);
+//        } else {
+//            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
+//        }
+//    }
 
     private void subscribeToChannel(String chanel, SubscriptionHandler handler) {
         try {
