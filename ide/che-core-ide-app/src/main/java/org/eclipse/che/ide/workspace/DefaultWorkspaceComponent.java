@@ -100,35 +100,22 @@ public class DefaultWorkspaceComponent extends WorkspaceComponent  {
     @Override
     public void start(final Callback<Component, Exception> callback) {
         this.callback = callback;
-
         workspaceServiceClient.getWorkspace(browserQueryFieldRenderer.getNamespace(), browserQueryFieldRenderer.getWorkspaceName()).then(
                 new Operation<WorkspaceDto>() {
                     @Override
                     public void apply(WorkspaceDto workspaceDto) throws OperationException {
-                        WorkspaceImpl workspace = new WorkspaceImpl(workspaceDto);
-                        if (WorkspaceStatus.STARTING.equals(workspace.getStatus())) {
-
-                        }
-
-
-                        startWorkspace(workspaceDto, callback);
-                        return;
+                        handleWorkspaceEvents(workspaceDto, callback);
                     }
                 }).catchError(new Operation<PromiseError>() {
             @Override
             public void apply(PromiseError error) throws OperationException {
                 needToReloadComponents = true;
-
                 dialogFactory.createMessageDialog(locale.getWsErrorDialogTitle(),
                                                   locale.getWsErrorDialogContent(error.getMessage()),
                                                   null).show();
             }
         });
     }
-
-
-
-
 
 
     @Override

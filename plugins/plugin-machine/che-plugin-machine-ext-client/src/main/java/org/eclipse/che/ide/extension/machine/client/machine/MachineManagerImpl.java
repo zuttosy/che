@@ -31,6 +31,7 @@ import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.DevMachineStateEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
+import org.eclipse.che.ide.api.workspace.event.EnvironmentOutputEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.extension.machine.client.machine.MachineStatusNotifier.RunningListener;
@@ -60,7 +61,7 @@ import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status
  * @author Artem Zatsarynnyi
  */
 @Singleton
-public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent.Handler {
+public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent.Handler, EnvironmentOutputEvent.Handler {
 
     private final DtoUnmarshallerFactory  dtoUnmarshallerFactory;
     private final MachineServiceClient    machineServiceClient;
@@ -105,6 +106,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
         this.messageBus = messageBusProvider.getMessageBus();
 
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
+        eventBus.addHandler(EnvironmentOutputEvent.TYPE, this);
 
         initializeHandlers();
     }
@@ -145,6 +147,8 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
                 Log.error(MachineManagerImpl.class, exception);
             }
         };
+
+
     }
 
     @Override
@@ -362,4 +366,8 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
         }
     }
 
+    @Override
+    public void onEnvironmentOutputEvent(EnvironmentOutputEvent event) {
+        consolesPanelPresenter.printDevMachineOutput(event.getContent());
+    }
 }

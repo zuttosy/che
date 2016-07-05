@@ -10,24 +10,22 @@
  *******************************************************************************/
 package org.eclipse.che.ide.workspace;
 
-import com.google.common.base.Strings;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.inject.Provider;
 import com.google.web.bindery.event.shared.EventBus;
 
-import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.rest.shared.dto.Link;
 import org.eclipse.che.api.core.rest.shared.dto.LinkParameter;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.machine.shared.dto.MachineLogMessageDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
+import org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.shared.Constants;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
@@ -40,7 +38,6 @@ import org.eclipse.che.ide.api.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import org.eclipse.che.ide.api.event.HttpSessionDestroyedEvent;
 import org.eclipse.che.ide.api.machine.MachineManager;
-import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -73,12 +70,10 @@ import org.eclipse.che.ide.workspace.start.StartWorkspacePresenter;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_OUTPUT_CHANNEL;
-import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_LOGS_CHANNEL;
-import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_MACHINE_STATUS_CHANNEL;
+import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_ENVIRONMENT_STATUS_CHANNEL;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_WORKSPACE_EVENTS_CHANNEL;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
@@ -198,6 +193,51 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         browserQueryFieldRenderer.setQueryField(workspace.getNamespace(), workspace.getConfig().getName(), "");
     }
 
+
+
+    public void handleWorkspaceEvents(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
+        loader.show(initialLoadingInfo);
+        this.callback = callback;
+        if (messageBus != null) {
+            messageBus.cancelReconnection();
+        }
+        messageBus = messageBusProvider.createMessageBus(workspace.getId());
+
+        messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
+            @Override
+            public void onOpen() {
+                Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> messageBus connected");
+                messageBus.removeOnOpenHandler(this);
+                subscribeToWorkspaceStatusEvents(workspace);
+                subscribeOnEnvironmentOutputChannel(workspace);
+                subscribeOnEnvironmentStatusChannel(workspace);
+                final WorkspaceStatus workspaceStatus = workspace.getStatus();
+                switch (workspaceStatus) {
+                    case STARTING:
+                        Log.info(getClass(), "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + workspaceStatus);
+                        handleWsStart(workspace);
+                        break;
+
+                    case RUNNING:
+                        Log.info(getClass(), "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + workspaceStatus);
+                        setCurrentWorkspace(workspace);
+                        Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                            @Override
+                            public void execute() {
+                                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
+                                notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
+                                Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> fire event");
+                                eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
+                            }
+                        });
+                        break;
+                    default:
+                        checkWorkspaceForSnapshots(workspace);
+                }
+            }
+        });
+    }
+
     /**
      * Starts workspace by id when web socket connected.
      *
@@ -207,58 +247,60 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      *         callback to be executed
      */
     public void startWorkspace(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
-        this.callback = callback;
-        workspaceServiceClient.getWorkspace(workspace.getId()).then(new Operation<WorkspaceDto>() {
-            @Override
-            public void apply(WorkspaceDto arg) throws OperationException {
-                loader.show(initialLoadingInfo);
-                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
-
-                if (messageBus != null) {
-                    messageBus.cancelReconnection();
-                }
-                messageBus = messageBusProvider.createMessageBus(workspace.getId());
-
-                messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
-                    @Override
-                    public void onOpen() {
-                        messageBus.removeOnOpenHandler(this);
-                        subscribeToWorkspaceStatusEvents(workspace);
-
-                        WorkspaceStatus workspaceStatus = workspace.getStatus();
-
-                        switch (workspaceStatus) {
-                            case STARTING:
-                                handleWsStart(workspace);
-                                break;
-
-                            case RUNNING:
-                                setCurrentWorkspace(workspace);
-                                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
-                                    @Override
-                                    public void execute() {
-                                        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
-                                        notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
-                                        eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
-                                    }
-                                });
-                                break;
-
-                            default:
-                                checkWorkspaceForSnapshots(workspace);
-                        }
-                    }
-                });
-            }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError err) throws OperationException {
-                Log.error(getClass(), err.getCause());
-                if (ExceptionUtils.getStatusCode(err.getCause()) == HTTPStatus.FORBIDDEN) {
-                    eventBus.fireEvent(new HttpSessionDestroyedEvent());
-                }
-            }
-        });
+//        this.callback = callback;
+//        workspaceServiceClient.getWorkspace(workspace.getId()).then(new Operation<WorkspaceDto>() {
+//            @Override
+//            public void apply(WorkspaceDto arg) throws OperationException {
+//                loader.show(initialLoadingInfo);
+//                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
+//
+//                if (messageBus != null) {
+//                    messageBus.cancelReconnection();
+//                }
+//                messageBus = messageBusProvider.createMessageBus(workspace.getId());
+//
+//                messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
+//                    @Override
+//                    public void onOpen() {
+//                        messageBus.removeOnOpenHandler(this);
+//                        subscribeToWorkspaceStatusEvents(workspace);
+//                        subscribeOnEnvironmentOutputChannel(workspace);
+//                        subscribeOnEnvironmentStatusChannel(workspace);
+//
+//                        WorkspaceStatus workspaceStatus = workspace.getStatus();
+//
+//                        switch (workspaceStatus) {
+//                            case STARTING:
+////                                handleWsStart(workspace);
+//                                break;
+//
+//                            case RUNNING:
+//                                setCurrentWorkspace(workspace);
+//                                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+//                                    @Override
+//                                    public void execute() {
+//                                        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
+//                                        notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
+//                                        eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
+//                                    }
+//                                });
+//                                break;
+//
+//                            default:
+//                                checkWorkspaceForSnapshots(workspace);
+//                        }
+//                    }
+//                });
+//            }
+//        }).catchError(new Operation<PromiseError>() {
+//            @Override
+//            public void apply(PromiseError err) throws OperationException {
+//                Log.error(getClass(), err.getCause());
+//                if (ExceptionUtils.getStatusCode(err.getCause()) == HTTPStatus.FORBIDDEN) {
+//                    eventBus.fireEvent(new HttpSessionDestroyedEvent());
+//                }
+//            }
+//        });
     }
 
 
@@ -273,8 +315,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             @Override
             public void apply(List<SnapshotDto> snapshots) throws OperationException {
                 if (snapshots.isEmpty()) {
-                    handleWsStart(workspaceServiceClient.startById(workspace.getId(),
-                            workspace.getConfig().getDefaultEnv()));
+                    workspaceServiceClient.startById(workspace.getId(), workspace.getConfig().getDefaultEnv());
                 } else {
                     showRecoverWorkspaceConfirmDialog(workspace);
                 }
@@ -303,42 +344,36 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                 new ConfirmCallback() {
                     @Override
                     public void accepted() {
-                        handleWsStart(workspaceServiceClient.recoverWorkspace(workspace.getId(),
-                                workspace.getConfig()
-                                        .getDefaultEnv(),
-                                null));
+                        workspaceServiceClient.recoverWorkspace(workspace.getId(), workspace.getConfig().getDefaultEnv(), null);
                     }
                 },
                 new CancelCallback() {
                     @Override
                     public void cancelled() {
-                        handleWsStart(workspaceServiceClient.startById(workspace.getId(),
-                                workspace.getConfig()
-                                        .getDefaultEnv()));
+                        workspaceServiceClient.startById(workspace.getId(),  workspace.getConfig().getDefaultEnv());
                     }
-                })
-                     .show();
+                }).show();
 
         notifyShowIDE();
     }
-
-    /**
-     * Handles workspace start or recovering.
-     */
-    private void handleWsStart(final Promise<WorkspaceDto> promise) {
-        promise.then(new Operation<WorkspaceDto>() {
-            @Override
-            public void apply(WorkspaceDto workspace) throws OperationException {
-                handleWsStart(workspace);
-            }
-        }).catchError(new Operation<PromiseError>() {
-            @Override
-            public void apply(PromiseError arg) throws OperationException {
-                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), ERROR);
-                callback.onFailure(new Exception(arg.getCause()));
-            }
-        });
-    }
+//
+//    /**
+//     * Handles workspace start or recovering.
+//     */
+//    private void handleWsStart(final Promise<WorkspaceDto> promise) {
+//        promise.then(new Operation<WorkspaceDto>() {
+//            @Override
+//            public void apply(WorkspaceDto workspace) throws OperationException {
+//                handleWsStart(workspace);
+//            }
+//        }).catchError(new Operation<PromiseError>() {
+//            @Override
+//            public void apply(PromiseError arg) throws OperationException {
+//                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), ERROR);
+//                callback.onFailure(new Exception(arg.getCause()));
+//            }
+//        });
+//    }
 
     private void handleWsStart(WorkspaceDto workspace) {
         initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
@@ -384,6 +419,30 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             });
         }
     }
+
+
+    private void subscribeOnEnvironmentStatusChannel(WorkspaceDto workspace) {
+        initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
+        final Link link = workspace.getLink(LINK_REL_ENVIRONMENT_STATUS_CHANNEL);
+        final LinkParameter statusChannelLinkParameter = link.getParameter("channel");
+        if (statusChannelLinkParameter != null) {
+            String statusChannel = statusChannelLinkParameter.getDefaultValue();
+            final Unmarshallable<MachineStatusEvent> machineStatusEventUnmarshallable =
+                    dtoUnmarshallerFactory.newWSUnmarshaller(MachineStatusEvent.class);
+            subscribeToChannel(statusChannel, new SubscriptionHandler<MachineStatusEvent>(machineStatusEventUnmarshallable) {
+                @Override
+                protected void onMessageReceived(MachineStatusEvent machineStatusEvent) {
+                    Log.info(getClass(), machineStatusEvent);
+                }
+
+                @Override
+                protected void onErrorReceived(Throwable exception) {
+                    Log.error(WorkspaceComponent.class, exception);
+                }
+            });
+        }
+    }
+
 
 
 //            final LinkParameter statusChannelLinkParameter =
@@ -445,10 +504,12 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                     String workspaceName = workspace.getConfig().getName();
                     switch (statusEvent.getEventType()) {
                         case STARTING:
+                            Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>> STARTING");
                             eventBus.fireEvent(new WorkspaceStartingEvent(workspace));
                             break;
 
                         case RUNNING:
+                            Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>> RUNNING");
                             setCurrentWorkspace(workspace);
                             notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
                             eventBus.fireEvent(new WorkspaceStartedEvent(workspace));

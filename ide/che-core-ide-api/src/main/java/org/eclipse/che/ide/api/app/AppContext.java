@@ -28,9 +28,9 @@ public interface AppContext {
     /** Returns list of start-up actions with parameters that comes form URL during IDE initialization. */
     List<StartUpAction> getStartAppActions();
 
-    Workspace getWorkspace();
+    WorkspaceDto getWorkspace();
 
-    void setWorkspace(Workspace workspace);
+    void setWorkspace(WorkspaceDto workspace);
 
     /** Returns id of current workspace of throws IllegalArgumentException if workspace is null. */
     String getWorkspaceId();

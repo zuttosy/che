@@ -52,7 +52,7 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     private final BrowserQueryFieldRenderer browserQueryFieldRenderer;
     private final List<String>              projectsInImport;
 
-    private Workspace           workspace;
+    private WorkspaceDto           workspace;
     private CurrentProject      currentProject;
     private CurrentUser         currentUser;
     private Factory             factory;
@@ -89,12 +89,12 @@ public class AppContextImpl implements AppContext, SelectionChangedHandler, WsAg
     }
 
     @Override
-    public Workspace getWorkspace() {
+    public WorkspaceDto getWorkspace() {
         return workspace;
     }
 
     @Override
-    public void setWorkspace(Workspace workspace) {
+    public void setWorkspace(WorkspaceDto workspace) {
         this.workspace = workspace;
     }
 
