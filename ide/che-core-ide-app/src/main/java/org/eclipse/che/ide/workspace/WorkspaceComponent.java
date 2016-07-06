@@ -38,6 +38,7 @@ import org.eclipse.che.ide.api.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.api.dialogs.DialogFactory;
 import org.eclipse.che.ide.api.event.HttpSessionDestroyedEvent;
 import org.eclipse.che.ide.api.machine.MachineManager;
+import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -211,6 +212,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                 subscribeToWorkspaceStatusEvents(workspace);
                 subscribeOnEnvironmentOutputChannel(workspace);
                 subscribeOnEnvironmentStatusChannel(workspace);
+                subscribeOnWsAgentOutputChannel(workspace);
                 final WorkspaceStatus workspaceStatus = workspace.getStatus();
                 switch (workspaceStatus) {
                     case STARTING:
@@ -442,6 +444,24 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             });
         }
     }
+
+    private void subscribeOnWsAgentOutputChannel(final WorkspaceDto workspace) {
+        initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
+        String wsAgentLogChannel = "workspace:" + workspace.getId() + ":ext-server:output";
+            subscribeToChannel(wsAgentLogChannel, new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
+                @Override
+                protected void onMessageReceived(String wsAgentLog) {
+                    Log.info(getClass(), wsAgentLog);
+                    eventBus.fireEvent(new EnvironmentOutputEvent(wsAgentLog, "default"));
+                }
+
+                @Override
+                protected void onErrorReceived(Throwable exception) {
+                    Log.error(WorkspaceComponent.class, exception);
+                }
+            });
+    }
+
 
 
 

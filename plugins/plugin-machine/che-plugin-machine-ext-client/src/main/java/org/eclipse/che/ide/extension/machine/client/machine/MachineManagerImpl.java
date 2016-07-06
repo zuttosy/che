@@ -107,7 +107,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
 
         eventBus.addHandler(WorkspaceStoppedEvent.TYPE, this);
         eventBus.addHandler(EnvironmentOutputEvent.TYPE, this);
-
+        Log.info(getClass(), "MachineManagerImpl >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
         initializeHandlers();
     }
 
@@ -368,6 +368,7 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
 
     @Override
     public void onEnvironmentOutputEvent(EnvironmentOutputEvent event) {
+        Log.info(getClass(), event);
         consolesPanelPresenter.printDevMachineOutput(event.getContent());
     }
 }

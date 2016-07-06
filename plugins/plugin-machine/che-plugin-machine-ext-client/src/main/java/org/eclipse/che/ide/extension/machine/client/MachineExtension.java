@@ -16,6 +16,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
+import org.eclipse.che.ide.api.machine.MachineManager;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.actions.StopWorkspaceAction;
@@ -51,6 +52,7 @@ import org.eclipse.che.ide.extension.machine.client.processes.actions.ReRunProce
 import org.eclipse.che.ide.extension.machine.client.processes.actions.StopProcessAction;
 import org.eclipse.che.ide.extension.machine.client.targets.EditTargetsAction;
 import org.eclipse.che.ide.util.input.KeyCodeMap;
+import org.eclipse.che.ide.util.loging.Log;
 
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_CENTER_TOOLBAR;
 import static org.eclipse.che.ide.api.action.IdeActions.GROUP_MAIN_MENU;
@@ -87,7 +89,9 @@ public class MachineExtension {
                             final Provider<ServerPortProvider> machinePortProvider,
                             final PerspectiveManager perspectiveManager,
                             IconRegistry iconRegistry,
-                            CustomCommandType arbitraryCommandType) {
+                            CustomCommandType arbitraryCommandType,
+                            MachineManager machineManager) {
+        Log.info(getClass(), "################################### SUKA-ZALUPA-BLAT ################################");
         machineResources.getCss().ensureInjected();
 
         eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
