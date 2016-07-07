@@ -197,6 +197,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
 
     public void handleWorkspaceEvents(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
+        appContext.setWorkspace(workspace);
+        machineManagerProvider.get();
         loader.show(initialLoadingInfo);
         this.callback = callback;
         if (messageBus != null) {
@@ -210,8 +212,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                 Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> messageBus connected");
                 messageBus.removeOnOpenHandler(this);
                 subscribeToWorkspaceStatusEvents(workspace);
-                subscribeOnEnvironmentOutputChannel(workspace);
                 subscribeOnEnvironmentStatusChannel(workspace);
+                subscribeOnEnvironmentOutputChannel(workspace);
                 subscribeOnWsAgentOutputChannel(workspace);
                 final WorkspaceStatus workspaceStatus = workspace.getStatus();
                 switch (workspaceStatus) {
@@ -378,6 +380,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 //    }
 
     private void handleWsStart(WorkspaceDto workspace) {
+        Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> handleWsStart");
         initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
         setCurrentWorkspace(workspace);
         EnvironmentDto currentEnvironment = null;
@@ -434,6 +437,9 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             subscribeToChannel(statusChannel, new SubscriptionHandler<MachineStatusEvent>(machineStatusEventUnmarshallable) {
                 @Override
                 protected void onMessageReceived(MachineStatusEvent machineStatusEvent) {
+                    if (machineStatusEvent.isDev()) {
+                        machineManagerProvider.get().onDevMachineCreating(dtoFactory.createDto(MachineConfigDto.class).withDev(true));
+                    }
                     Log.info(getClass(), machineStatusEvent);
                 }
 
@@ -451,7 +457,6 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             subscribeToChannel(wsAgentLogChannel, new SubscriptionHandler<String>(new OutputMessageUnmarshaller()) {
                 @Override
                 protected void onMessageReceived(String wsAgentLog) {
-                    Log.info(getClass(), wsAgentLog);
                     eventBus.fireEvent(new EnvironmentOutputEvent(wsAgentLog, "default"));
                 }
 
@@ -526,6 +531,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                         case STARTING:
                             Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>> STARTING");
                             eventBus.fireEvent(new WorkspaceStartingEvent(workspace));
+                            handleWsStart(workspace);
                             break;
 
                         case RUNNING:

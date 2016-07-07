@@ -89,8 +89,7 @@ public class MachineExtension {
                             final Provider<ServerPortProvider> machinePortProvider,
                             final PerspectiveManager perspectiveManager,
                             IconRegistry iconRegistry,
-                            CustomCommandType arbitraryCommandType,
-                            MachineManager machineManager) {
+                            CustomCommandType arbitraryCommandType) {
         Log.info(getClass(), "################################### SUKA-ZALUPA-BLAT ################################");
         machineResources.getCss().ensureInjected();
 

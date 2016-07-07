@@ -328,26 +328,26 @@ public class MachineManagerImpl implements MachineManager, WorkspaceStoppedEvent
     public void onDevMachineCreating(MachineConfigDto machineConfig) {
         initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
 
-        if (machineConfig.getLink(LINK_REL_GET_MACHINE_LOGS_CHANNEL) != null &&
-            machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL) != null) {
-            final LinkParameter logsChannelLinkParameter = machineConfig.getLink(LINK_REL_GET_MACHINE_LOGS_CHANNEL).getParameter("channel");
-            if (logsChannelLinkParameter != null) {
-                outputChannel = logsChannelLinkParameter.getDefaultValue();
-            }
-            final LinkParameter statusChannelLinkParameter =
-                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
-            if (statusChannelLinkParameter != null) {
-                statusChannel = statusChannelLinkParameter.getDefaultValue();
-            }
-        }
-        if (outputChannel != null && statusChannel != null) {
-            wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
-            subscribeToChannel(wsAgentLogChannel, outputHandler);
-            subscribeToChannel(outputChannel, outputHandler);
-            subscribeToChannel(statusChannel, statusHandler);
-        } else {
-            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
-        }
+//        if (machineConfig.getLink(LINK_REL_GET_MACHINE_LOGS_CHANNEL) != null &&
+//            machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL) != null) {
+//            final LinkParameter logsChannelLinkParameter = machineConfig.getLink(LINK_REL_GET_MACHINE_LOGS_CHANNEL).getParameter("channel");
+//            if (logsChannelLinkParameter != null) {
+//                outputChannel = logsChannelLinkParameter.getDefaultValue();
+//            }
+//            final LinkParameter statusChannelLinkParameter =
+//                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
+//            if (statusChannelLinkParameter != null) {
+//                statusChannel = statusChannelLinkParameter.getDefaultValue();
+//            }
+//        }
+//        if (outputChannel != null && statusChannel != null) {
+//            wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
+//            subscribeToChannel(wsAgentLogChannel, outputHandler);
+//            subscribeToChannel(outputChannel, outputHandler);
+//            subscribeToChannel(statusChannel, statusHandler);
+//        } else {
+//            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
+//        }
     }
 
     private void subscribeToChannel(String chanel, SubscriptionHandler handler) {
