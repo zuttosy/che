@@ -33,7 +33,9 @@
     transform-origin: 12px 12px;
     border-top: 1px solid tabBorderColor;
     position: fixed;
-    width: 100%;
+    /* Using so big width prevents appearing an empty space
+       under the panel when flipping it on 90 deg. */
+    width: 500%;
 }
 
 .ide-work-bench-tool-panel-right {
@@ -42,7 +44,9 @@
     transform-origin: 12px 12px;
     border-bottom: 1px solid tabBorderColor;
     position: fixed;
-    width: 100%;
+    /* Using so big width prevents appearing an empty space
+       under the panel when flipping it on 90 deg. */
+    width: 500%;
 }
 
 .ide-work-bench-tool-panel-bottom {

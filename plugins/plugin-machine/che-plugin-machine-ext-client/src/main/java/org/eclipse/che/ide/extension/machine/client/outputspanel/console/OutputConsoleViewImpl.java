@@ -27,6 +27,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RequiresResize;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -43,7 +44,7 @@ import org.vectomatic.dom.svg.ui.SVGImage;
  * @author Artem Zatsarynnyi
  * @author Vitaliy Guliy
  */
-public class OutputConsoleViewImpl extends Composite implements OutputConsoleView, ScrollHandler {
+public class OutputConsoleViewImpl extends Composite implements OutputConsoleView, ScrollHandler, RequiresResize {
 
     interface OutputConsoleViewUiBinder extends UiBinder<Widget, OutputConsoleViewImpl> {
     }
@@ -67,11 +68,14 @@ public class OutputConsoleViewImpl extends Composite implements OutputConsoleVie
     @UiField
     Label           commandLabel;
 
-    @UiField
-    ScrollPanel     scrollPanel;
+//    @UiField
+//    ScrollPanel     scrollPanel;
+
+//    @UiField
+//    FlowPanel       consoleLines;
 
     @UiField
-    FlowPanel       consoleLines;
+    Console         console;
 
     @UiField
     Anchor          previewUrlLabel;
@@ -112,7 +116,7 @@ public class OutputConsoleViewImpl extends Composite implements OutputConsoleVie
         wrapTextButton.add(new SVGImage(resources.lineWrapIcon()));
         scrollToBottomButton.add(new SVGImage(resources.scrollToBottomIcon()));
 
-        scrollPanel.addDomHandler(this, ScrollEvent.getType());
+//        scrollPanel.addDomHandler(this, ScrollEvent.getType());
 
         reRunProcessButton.addDomHandler(new ClickHandler() {
             @Override
@@ -202,11 +206,11 @@ public class OutputConsoleViewImpl extends Composite implements OutputConsoleVie
 
     @Override
     public void wrapText(boolean wrap) {
-        if (wrap) {
-            consoleLines.getElement().setAttribute("wrap", "");
-        } else {
-            consoleLines.getElement().removeAttribute("wrap");
-        }
+//        if (wrap) {
+//            consoleLines.getElement().setAttribute("wrap", "");
+//        } else {
+//            consoleLines.getElement().removeAttribute("wrap");
+//        }
     }
 
     @Override
@@ -217,7 +221,7 @@ public class OutputConsoleViewImpl extends Composite implements OutputConsoleVie
 
     @Override
     public void clearConsole() {
-        consoleLines.getElement().setInnerHTML("");
+//        consoleLines.getElement().setInnerHTML("");
     }
 
     @Override
@@ -275,83 +279,90 @@ public class OutputConsoleViewImpl extends Composite implements OutputConsoleVie
 
     @Override
     public void print(String text, boolean cr) {
-        if (carriageReturn) {
-            Node lastChild = consoleLines.getElement().getLastChild();
-            if (lastChild != null) {
-                lastChild.removeFromParent();
-            }
-        }
+//        if (carriageReturn) {
+//            Node lastChild = consoleLines.getElement().getLastChild();
+//            if (lastChild != null) {
+//                lastChild.removeFromParent();
+//            }
+//        }
+//
+//        carriageReturn = cr;
+//
+//        PreElement pre = DOM.createElement("pre").cast();
+//        pre.setInnerText(text.isEmpty() ? " " : text);
+//        consoleLines.getElement().appendChild(pre);
+//
+//        followOutput();
 
-        carriageReturn = cr;
-
-        PreElement pre = DOM.createElement("pre").cast();
-        pre.setInnerText(text.isEmpty() ? " " : text);
-        consoleLines.getElement().appendChild(pre);
-
-        followOutput();
+        console.print(text, cr);
     }
 
     @Override
     public void onScroll(ScrollEvent event) {
-        // Do nothing if content height less scroll area height
-        if (scrollPanel.getElement().getScrollHeight() < scrollPanel.getElement().getOffsetHeight()) {
-            followOutput = true;
-            if (delegate != null) {
-                delegate.onOutputScrolled(followOutput);
-            }
-            return;
-        }
-
-        // Follow output if scroll area is scrolled to the end
-        if (scrollPanel.getElement().getScrollTop() + scrollPanel.getElement().getOffsetHeight() > scrollPanel.getElement().getScrollHeight()) {
-            followOutput = true;
-        } else {
-            followOutput = false;
-        }
-
-        if (delegate != null) {
-            delegate.onOutputScrolled(followOutput);
-        }
+//        // Do nothing if content height less scroll area height
+//        if (scrollPanel.getElement().getScrollHeight() < scrollPanel.getElement().getOffsetHeight()) {
+//            followOutput = true;
+//            if (delegate != null) {
+//                delegate.onOutputScrolled(followOutput);
+//            }
+//            return;
+//        }
+//
+//        // Follow output if scroll area is scrolled to the end
+//        if (scrollPanel.getElement().getScrollTop() + scrollPanel.getElement().getOffsetHeight() > scrollPanel.getElement().getScrollHeight()) {
+//            followOutput = true;
+//        } else {
+//            followOutput = false;
+//        }
+//
+//        if (delegate != null) {
+//            delegate.onOutputScrolled(followOutput);
+//        }
     }
 
     /**
      * Scrolls to the bottom if following the output is enabled.
      */
     private void followOutput() {
-        if (!followOutput) {
-            return;
-        }
+//        if (!followOutput) {
+//            return;
+//        }
+//
+//        /** Scroll bottom immediately if view is visible */
+//        if (scrollPanel.getElement().getOffsetParent() != null) {
+//            scrollPanel.scrollToBottom();
+//            scrollPanel.scrollToLeft();
+//            return;
+//        }
+//
+//        /** Otherwise, check the visibility periodically and scroll the view when it's visible */
+//        if (!followScheduled) {
+//            followScheduled = true;
+//
+//            Scheduler.get().scheduleFixedPeriod(new Scheduler.RepeatingCommand() {
+//                @Override
+//                public boolean execute() {
+//                    if (!followOutput) {
+//                        followScheduled = false;
+//                        return false;
+//                    }
+//
+//                    if (scrollPanel.getElement().getOffsetParent() != null) {
+//                        scrollPanel.scrollToBottom();
+//                        scrollPanel.scrollToLeft();
+//                        followScheduled = false;
+//                        return false;
+//                    }
+//
+//                    return true;
+//                }
+//            }, 500);
+//        }
+    }
 
-        /** Scroll bottom immediately if view is visible */
-        if (scrollPanel.getElement().getOffsetParent() != null) {
-            scrollPanel.scrollToBottom();
-            scrollPanel.scrollToLeft();
-            return;
-        }
-
-        /** Otherwise, check the visibility periodically and scroll the view when it's visible */
-        if (!followScheduled) {
-            followScheduled = true;
-
-            Scheduler.get().scheduleFixedPeriod(new Scheduler.RepeatingCommand() {
-                @Override
-                public boolean execute() {
-                    if (!followOutput) {
-                        followScheduled = false;
-                        return false;
-                    }
-
-                    if (scrollPanel.getElement().getOffsetParent() != null) {
-                        scrollPanel.scrollToBottom();
-                        scrollPanel.scrollToLeft();
-                        followScheduled = false;
-                        return false;
-                    }
-
-                    return true;
-                }
-            }, 500);
-        }
+    @Override
+    public void onResize() {
+        console.onResize();
     }
 
 }

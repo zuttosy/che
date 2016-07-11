@@ -230,7 +230,12 @@ public class CommandOutputConsolePresenter implements CommandOutputConsole, Outp
 
     @Override
     public void stop() {
-        machineServiceClient.stopProcess(machineId, pid);
+        machineServiceClient.stopProcess(machineId, pid).then(new Operation<Void>() {
+            @Override
+            public void apply(Void arg) throws OperationException {
+                view.enableStopButton(false);
+            }
+        });
     }
 
     @Override

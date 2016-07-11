@@ -17,19 +17,28 @@
     <ui:style>
 
         @eval editorPanelBackgroundColor org.eclipse.che.ide.api.theme.Style.theme.editorPanelBackgroundColor();
+        @eval panelBackgroundColor org.eclipse.che.ide.api.theme.Style.getPanelBackgroundColor();
 
         .bg {
             background-color: editorPanelBackgroundColor;
+        }
+
+        .leftPanel {
+            background-color: panelBackgroundColor;
+        }
+
+        .rightPanel {
+            background-color: panelBackgroundColor;
         }
 
     </ui:style>
 
     <g:DockLayoutPanel unit="PX" width="100%" height="100%" addStyleNames="{resources.workBenchCss.ideWorkBenchParentPanel}">
         <g:east size="24">
-            <g:FlowPanel ui:field="rightPanelContainer" debugId="rightPanel"/>
+            <g:FlowPanel ui:field="rightPanelContainer" debugId="rightPanel" styleName="{style.rightPanel}"/>
         </g:east>
         <g:west size="24">
-            <g:FlowPanel ui:field="leftPanelContainer" debugId="leftPanel"/>
+            <g:FlowPanel ui:field="leftPanelContainer" debugId="leftPanel" styleName="{style.leftPanel}"/>
         </g:west>
         <g:south size="24">
             <g:FlowPanel ui:field="bottomPanelContainer" debugId="bottomPanel"/>

@@ -13,6 +13,7 @@ package org.eclipse.che.ide.extension.machine.client.perspective.terminal;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArrayInteger;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.ScriptInjector;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -69,6 +70,8 @@ public class TerminalPresenter implements TabPresenter, TerminalView.ActionDeleg
     private TerminalJso           terminal;
     private TerminalStateListener terminalStateListener;
 
+    private static boolean        scriptInjected = false;
+
     @Inject
     public TerminalPresenter(TerminalView view,
                              NotificationManager notificationManager,
@@ -85,6 +88,18 @@ public class TerminalPresenter implements TabPresenter, TerminalView.ActionDeleg
         promise = AsyncPromiseHelper.createFromAsyncRequest(new AsyncPromiseHelper.RequestCall<Boolean>() {
             @Override
             public void makeCall(final AsyncCallback<Boolean> callback) {
+                if (scriptInjected) {
+                    Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                        @Override
+                        public void execute() {
+                            callback.onSuccess(true);
+                        }
+                    });
+                    return;
+                }
+
+                scriptInjected = true;
+
                 ScriptInjector.fromUrl(GWT.getModuleBaseURL() + "term/term.js")
                               .setWindow(ScriptInjector.TOP_WINDOW)
                               .setCallback(new Callback<Void, Exception>() {
@@ -107,7 +122,6 @@ public class TerminalPresenter implements TabPresenter, TerminalView.ActionDeleg
             @Override
             public void run() {
                 connect();
-
                 countRetry--;
             }
         };

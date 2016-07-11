@@ -94,6 +94,17 @@ public class MachineExtension {
             @Override
             public void onWsAgentStarted(WsAgentStateEvent event) {
                 machinePortProvider.get();
+
+                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
+                    @Override
+                    public void execute() {
+                        /* Do not show terminal on factories by default */
+                        if (appContext.getFactory() == null) {
+                            consolesPanelPresenter.newTerminal();
+                            workspaceAgent.setActivePart(consolesPanelPresenter);
+                        }
+                    }
+                });
             }
 
             @Override
@@ -116,11 +127,7 @@ public class MachineExtension {
                 perspectiveManager.setPerspectiveId(PROJECT_PERSPECTIVE_ID);
                 workspaceAgent.openPart(consolesPanelPresenter, PartStackType.INFORMATION);
 
-                /* Do not show terminal on factories by default */
-                if (appContext.getFactory() == null) {
-                    consolesPanelPresenter.newTerminal();
-                    workspaceAgent.setActivePart(consolesPanelPresenter);
-                }
+                workspaceAgent.setActivePart(consolesPanelPresenter);
             }
         });
 

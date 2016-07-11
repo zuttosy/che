@@ -95,6 +95,7 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
     private final DefaultActionGroup          machinesActions;
 
     private boolean workspaceRunning = false;
+    private boolean wsAgentRunning = false;
 
     @Inject
     public SelectCommandComboBox(MachineLocalizationConstant locale,
@@ -141,7 +142,7 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
 
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
-        event.getPresentation().setVisible(workspaceRunning);
+        event.getPresentation().setVisible(workspaceRunning && wsAgentRunning);
     }
 
     @Override
@@ -332,13 +333,14 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
 
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
-        workspaceRunning = true;
+        wsAgentRunning = true;
         loadCommands(null);
         loadMachines();
     }
 
     @Override
     public void onWsAgentStopped(WsAgentStateEvent event) {
+        wsAgentRunning = false;
     }
 
     @Override
