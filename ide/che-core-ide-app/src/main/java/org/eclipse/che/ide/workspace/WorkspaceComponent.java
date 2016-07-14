@@ -24,8 +24,6 @@ import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
-import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
@@ -36,7 +34,6 @@ import org.eclipse.che.ide.api.component.Component;
 import org.eclipse.che.ide.api.dialogs.CancelCallback;
 import org.eclipse.che.ide.api.dialogs.ConfirmCallback;
 import org.eclipse.che.ide.api.dialogs.DialogFactory;
-import org.eclipse.che.ide.api.event.HttpSessionDestroyedEvent;
 import org.eclipse.che.ide.api.machine.MachineManager;
 import org.eclipse.che.ide.api.machine.OutputMessageUnmarshaller;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
@@ -46,18 +43,17 @@ import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.preferences.PreferencesManager;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.ide.api.workspace.event.EnvironmentOutputEvent;
+import org.eclipse.che.ide.api.workspace.event.EnvironmentStatusChangedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStartedEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStartingEvent;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStoppedEvent;
 import org.eclipse.che.ide.context.BrowserQueryFieldRenderer;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
-import org.eclipse.che.ide.rest.HTTPStatus;
 import org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo;
 import org.eclipse.che.ide.ui.loaders.initialization.LoaderPresenter;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.ui.loaders.request.MessageLoader;
-import org.eclipse.che.ide.util.ExceptionUtils;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.MessageBus;
 import org.eclipse.che.ide.websocket.MessageBusProvider;
@@ -119,6 +115,8 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     protected Callback<Component, Exception> callback;
     protected boolean                        needToReloadComponents;
     private   MessageBus                     messageBus;
+    private   SubscriptionHandler<org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent>
+                                             statusEventSubscriptionHandler;
 
     public WorkspaceComponent(WorkspaceServiceClient workspaceServiceClient,
 
@@ -195,10 +193,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
     }
 
 
-
     public void handleWorkspaceEvents(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
-        appContext.setWorkspace(workspace);
-        machineManagerProvider.get();
         loader.show(initialLoadingInfo);
         this.callback = callback;
         if (messageBus != null) {
@@ -209,7 +204,6 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
             @Override
             public void onOpen() {
-                Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> messageBus connected");
                 messageBus.removeOnOpenHandler(this);
                 subscribeToWorkspaceStatusEvents(workspace);
                 subscribeOnEnvironmentStatusChannel(workspace);
@@ -218,20 +212,18 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                 final WorkspaceStatus workspaceStatus = workspace.getStatus();
                 switch (workspaceStatus) {
                     case STARTING:
-                        Log.info(getClass(), "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + workspaceStatus);
-                        handleWsStart(workspace);
+                        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                         break;
 
                     case RUNNING:
-                        Log.info(getClass(), "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + workspaceStatus);
                         setCurrentWorkspace(workspace);
                         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
                             @Override
                             public void execute() {
                                 initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                                 notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
-                                Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> fire event");
                                 eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
+                                machineManagerProvider.get();//start instance of machine manager
                             }
                         });
                         break;
@@ -251,60 +243,6 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
      *         callback to be executed
      */
     public void startWorkspace(final WorkspaceDto workspace, final Callback<Component, Exception> callback) {
-//        this.callback = callback;
-//        workspaceServiceClient.getWorkspace(workspace.getId()).then(new Operation<WorkspaceDto>() {
-//            @Override
-//            public void apply(WorkspaceDto arg) throws OperationException {
-//                loader.show(initialLoadingInfo);
-//                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), IN_PROGRESS);
-//
-//                if (messageBus != null) {
-//                    messageBus.cancelReconnection();
-//                }
-//                messageBus = messageBusProvider.createMessageBus(workspace.getId());
-//
-//                messageBus.addOnOpenHandler(new ConnectionOpenedHandler() {
-//                    @Override
-//                    public void onOpen() {
-//                        messageBus.removeOnOpenHandler(this);
-//                        subscribeToWorkspaceStatusEvents(workspace);
-//                        subscribeOnEnvironmentOutputChannel(workspace);
-//                        subscribeOnEnvironmentStatusChannel(workspace);
-//
-//                        WorkspaceStatus workspaceStatus = workspace.getStatus();
-//
-//                        switch (workspaceStatus) {
-//                            case STARTING:
-////                                handleWsStart(workspace);
-//                                break;
-//
-//                            case RUNNING:
-//                                setCurrentWorkspace(workspace);
-//                                Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
-//                                    @Override
-//                                    public void execute() {
-//                                        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
-//                                        notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
-//                                        eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
-//                                    }
-//                                });
-//                                break;
-//
-//                            default:
-//                                checkWorkspaceForSnapshots(workspace);
-//                        }
-//                    }
-//                });
-//            }
-//        }).catchError(new Operation<PromiseError>() {
-//            @Override
-//            public void apply(PromiseError err) throws OperationException {
-//                Log.error(getClass(), err.getCause());
-//                if (ExceptionUtils.getStatusCode(err.getCause()) == HTTPStatus.FORBIDDEN) {
-//                    eventBus.fireEvent(new HttpSessionDestroyedEvent());
-//                }
-//            }
-//        });
     }
 
 
@@ -360,47 +298,6 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
         notifyShowIDE();
     }
-//
-//    /**
-//     * Handles workspace start or recovering.
-//     */
-//    private void handleWsStart(final Promise<WorkspaceDto> promise) {
-//        promise.then(new Operation<WorkspaceDto>() {
-//            @Override
-//            public void apply(WorkspaceDto workspace) throws OperationException {
-//                handleWsStart(workspace);
-//            }
-//        }).catchError(new Operation<PromiseError>() {
-//            @Override
-//            public void apply(PromiseError arg) throws OperationException {
-//                initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), ERROR);
-//                callback.onFailure(new Exception(arg.getCause()));
-//            }
-//        });
-//    }
-
-    private void handleWsStart(WorkspaceDto workspace) {
-        Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> handleWsStart");
-        initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
-        setCurrentWorkspace(workspace);
-        EnvironmentDto currentEnvironment = null;
-        for (EnvironmentDto environment : workspace.getConfig().getEnvironments()) {
-            if (environment.getName().equals(workspace.getConfig().getDefaultEnv())) {
-                currentEnvironment = environment;
-                break;
-            }
-        }
-        List<MachineConfigDto> machineConfigs =
-                currentEnvironment != null ? currentEnvironment.getMachineConfigs() : Collections.<MachineConfigDto>emptyList();
-
-        for (MachineConfigDto machineConfig : machineConfigs) {
-            if (machineConfig.isDev()) {
-                MachineManager machineManager = machineManagerProvider.get();
-                machineManager.onDevMachineCreating(machineConfig);
-            }
-        }
-    }
-
 
     private void subscribeOnEnvironmentOutputChannel(WorkspaceDto workspace) {
         initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
@@ -428,26 +325,28 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
     private void subscribeOnEnvironmentStatusChannel(WorkspaceDto workspace) {
         initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
+
         final Link link = workspace.getLink(LINK_REL_ENVIRONMENT_STATUS_CHANNEL);
         final LinkParameter statusChannelLinkParameter = link.getParameter("channel");
         if (statusChannelLinkParameter != null) {
             String statusChannel = statusChannelLinkParameter.getDefaultValue();
-            final Unmarshallable<MachineStatusEvent> machineStatusEventUnmarshallable =
-                    dtoUnmarshallerFactory.newWSUnmarshaller(MachineStatusEvent.class);
-            subscribeToChannel(statusChannel, new SubscriptionHandler<MachineStatusEvent>(machineStatusEventUnmarshallable) {
+            final Unmarshallable<org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent> machineStatusEventUnmarshallable =
+                    dtoUnmarshallerFactory.newWSUnmarshaller(org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent.class);
+            statusEventSubscriptionHandler = new SubscriptionHandler<MachineStatusEvent>(machineStatusEventUnmarshallable) {
                 @Override
                 protected void onMessageReceived(MachineStatusEvent machineStatusEvent) {
-                    if (machineStatusEvent.isDev()) {
-                        machineManagerProvider.get().onDevMachineCreating(dtoFactory.createDto(MachineConfigDto.class).withDev(true));
-                    }
-                    Log.info(getClass(), machineStatusEvent);
+
+                    EnvironmentStatusChangedEvent environmentStatusChangedEvent = new EnvironmentStatusChangedEvent(machineStatusEvent);
+                    eventBus.fireEvent(environmentStatusChangedEvent);
+
                 }
 
                 @Override
                 protected void onErrorReceived(Throwable exception) {
                     Log.error(WorkspaceComponent.class, exception);
                 }
-            });
+            };
+            subscribeToChannel(statusChannel, statusEventSubscriptionHandler);
         }
     }
 
@@ -469,22 +368,6 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
 
 
 
-
-//            final LinkParameter statusChannelLinkParameter =
-//                    machineConfig.getLink(LINK_REL_GET_MACHINE_STATUS_CHANNEL).getParameter("channel");
-//            if (statusChannelLinkParameter != null) {
-//                statusChannel = statusChannelLinkParameter.getDefaultValue();
-//            }
-//        }
-//        if (outputChannel != null && statusChannel != null) {
-//        wsAgentLogChannel = "workspace:" + appContext.getWorkspaceId() + ":ext-server:output";
-//        subscribeToChannel(wsAgentLogChannel, outputHandler);
-//            subscribeToChannel(statusChannel, statusHandler);
-//        } else {
-//            initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), ERROR);
-//        }
-//    }
-
     private void subscribeToChannel(String chanel, SubscriptionHandler handler) {
         try {
             messageBus.subscribe(chanel, handler);
@@ -493,13 +376,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
         }
     }
 
-    private void unsubscribeChannel(String chanel, SubscriptionHandler handler) {
-        try {
-            messageBus.unsubscribe(chanel, handler);
-        } catch (WebSocketException exception) {
-            Log.error(getClass(), exception);
-        }
-    }
+
 
     private void subscribeToWorkspaceStatusEvents(final WorkspaceDto workspace) {
         Unmarshallable<WorkspaceStatusEvent> unmarshaller = dtoUnmarshallerFactory.newWSUnmarshaller(WorkspaceStatusEvent.class);
@@ -529,13 +406,11 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                     String workspaceName = workspace.getConfig().getName();
                     switch (statusEvent.getEventType()) {
                         case STARTING:
-                            Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>> STARTING");
+                            machineManagerProvider.get();
                             eventBus.fireEvent(new WorkspaceStartingEvent(workspace));
-                            handleWsStart(workspace);
                             break;
 
                         case RUNNING:
-                            Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>> RUNNING");
                             setCurrentWorkspace(workspace);
                             notificationManager.notify(locale.startedWs(), StatusNotification.Status.SUCCESS, FLOAT_MODE);
                             eventBus.fireEvent(new WorkspaceStartedEvent(workspace));
