@@ -123,8 +123,8 @@ public class OAuthAuthenticationService {
         OAuthAuthenticator oauth = getAuthenticator(providerName);
         final List<String> scopes = params.get("scope");
         oauth.callback(requestUrl, scopes == null ? Collections.<String>emptyList() : scopes);
-        final String redirectAfterLogin = getParameter(params, "redirect_after_login");
-        return Response.temporaryRedirect(URI.create(redirectAfterLogin)).build();
+        final String redirectUrl = getParameter(params, "redirect_url");
+        return Response.temporaryRedirect(URI.create(redirectUrl)).build();
     }
 
     /**
