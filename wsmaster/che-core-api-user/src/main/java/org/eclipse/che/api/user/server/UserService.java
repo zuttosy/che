@@ -104,7 +104,10 @@ public class UserService extends Service {
                                                        UnauthorizedException,
                                                        ConflictException,
                                                        ServerException {
-        final User newUser = token != null && userSelfCreationAllowed ?  tokenValidator.validateToken(token) : userDto;
+        if (token != null && !userSelfCreationAllowed) {
+            throw new ConflictException("Currently only admins can create accounts. Please contact our Admin Team for further info.");
+        }
+        final User newUser = token == null ? userDto : tokenValidator.validateToken(token);
         userValidator.checkUser(newUser);
         return Response.status(CREATED)
                        .entity(linksInjector.injectLinks(asDto(userManager.create(newUser, isTemporary)), getServiceContext()))
