@@ -113,7 +113,7 @@ public class OAuthAuthenticationService {
 
     @GET
     @Path("callback")
-    public Response callback(@QueryParam("errorValues") List<String> errorValues) throws OAuthAuthenticationException, BadRequestException {
+    public Response callback(@QueryParam("errorValues") List<String> errorValues) throws OAuthAuthenticationException, BadRequestException, ServerException {
         URL requestUrl = getRequestUrl(uriInfo);
         Map<String, List<String>> params = getRequestParameters(getState(requestUrl));
         if (errorValues != null && errorValues.contains("access_denied")) {

@@ -104,7 +104,7 @@ public class UserService extends Service {
                                                        UnauthorizedException,
                                                        ConflictException,
                                                        ServerException {
-        final User newUser = token == null ? userDto : tokenValidator.validateToken(token);
+        final User newUser = token != null && userSelfCreationAllowed ?  tokenValidator.validateToken(token) : userDto;
         userValidator.checkUser(newUser);
         return Response.status(CREATED)
                        .entity(linksInjector.injectLinks(asDto(userManager.create(newUser, isTemporary)), getServiceContext()))
