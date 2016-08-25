@@ -17,6 +17,7 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.editor.EditorWithAutoSave;
+import org.eclipse.che.ide.api.editor.document.Document;
 import org.eclipse.che.ide.api.editor.document.DocumentHandle;
 import org.eclipse.che.ide.api.editor.document.DocumentStorage;
 import org.eclipse.che.ide.api.editor.events.DocumentChangeEvent;
@@ -32,6 +33,7 @@ import org.eclipse.che.ide.api.resources.VirtualFile;
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.EMERGE_MODE;
@@ -135,7 +137,7 @@ public class EditorGroupSynchronizationImpl implements EditorGroupSynchronizatio
             return;
         }
 
-        if  (!(virtualFile instanceof File)) {
+        if (!(virtualFile instanceof File)) {
             return;
         }
 
@@ -155,22 +157,32 @@ public class EditorGroupSynchronizationImpl implements EditorGroupSynchronizatio
         });
     }
 
-    private void updateContent(String newContent, String modificationStamp, File file) {
-        DocumentHandle documentHandle = getDocumentHandleFor(groupLeaderEditor);
+    private void updateContent(String newContent, String oldStamp, File file) {
+        final DocumentHandle documentHandle = getDocumentHandleFor(groupLeaderEditor);
         if (documentHandle == null) {
             return;
         }
 
-        String oldContent = documentHandle.getDocument().getContents();
-        TextPosition cursorPosition = documentHandle.getDocument().getCursorPosition();
-        if (!newContent.equals(oldContent)) {
-            documentHandle.getDocument().replace(0, oldContent.length(), newContent);
-            documentHandle.getDocument().setCursorPosition(cursorPosition);
+        final Document document = documentHandle.getDocument();
+        final String oldContent = document.getContents();
+        final TextPosition cursorPosition = document.getCursorPosition();
+        final String newStamp = file.getModificationStamp();
 
-            if (notificationManager != null && modificationStamp != null && !modificationStamp.equals(file.getModificationStamp())) {
-                notificationManager.notify("External operation", "File '" + file.getName() + "' is updated", SUCCESS, EMERGE_MODE);
-            }
+        if (oldStamp == null && !Objects.equals(newContent, oldContent)) {
+            replaceContent(document, newContent, oldContent, cursorPosition);
+            return;
         }
+
+        if (!Objects.equals(oldStamp, newStamp)) {
+            replaceContent(document, newContent, oldContent, cursorPosition);
+
+            notificationManager.notify("External operation", "File '" + file.getName() + "' is updated", SUCCESS, EMERGE_MODE);
+        }
+    }
+
+    private void replaceContent(Document document, String newContent, String oldContent, TextPosition cursorPosition) {
+        document.replace(0, oldContent.length(), newContent);
+        document.setCursorPosition(cursorPosition);
     }
 
     @Nullable
