@@ -55,6 +55,10 @@ public class FileTrackingOperationTransmitter {
             final String path = event.getPath();
             final FileWatcherEventType type = event.getType();
 
+            if (!registry.contains(path)){
+                return;
+            }
+
             switch (type) {
                 case MODIFIED: {
                     LOG.debug("Received file MODIFIED trigger");
