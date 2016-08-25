@@ -119,11 +119,7 @@ public class FileTrackingRegistry {
     }
 
     public boolean contains(String path) {
-        return registry.entrySet()
-                       .stream()
-                       .map(Entry::getKey)
-                       .collect(toSet())
-                       .contains(path);
+        return registry.keySet().contains(path);
     }
 
     public Set<Integer> getEndpoints(String path) {
