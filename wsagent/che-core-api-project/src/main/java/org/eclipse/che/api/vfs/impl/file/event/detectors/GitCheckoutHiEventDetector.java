@@ -29,7 +29,6 @@ import javax.inject.Inject;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import static java.io.File.separator;
 import static java.util.Optional.empty;
 import static java.util.regex.Pattern.compile;
 import static org.eclipse.che.api.project.shared.dto.event.FileWatcherEventType.MODIFIED;
@@ -62,9 +61,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class GitCheckoutHiEventDetector implements HiEventDetector<GitCheckoutEventDto> {
     private static final Logger LOG = getLogger(GitCheckoutHiEventDetector.class);
 
-    private static final String  GIT_DIR   = ".git";
-    private static final String  HEAD_FILE = "HEAD";
-    private static final Pattern PATTERN   = compile("ref: refs" + separator + "heads" + separator);
+    private static final String  GIT_DIR                  = ".git";
+    private static final String  HEAD_FILE                = "HEAD";
+    private static final Pattern PATTERN                  = compile("ref: refs/heads/");
 
     private final VirtualFileSystemProvider virtualFileSystemProvider;
 
