@@ -63,8 +63,6 @@ public class GitCheckoutHiEventDetector implements HiEventDetector<GitCheckoutEv
 
     private static final String  GIT_DIR                  = ".git";
     private static final String  HEAD_FILE                = "HEAD";
-    private static final String  GIT_OPERATION_WS_CHANNEL = "git-operations-channel";
-    private static final int     PRIORITY                 = 50;
     private static final Pattern PATTERN                  = compile("ref: refs/heads/");
 
     private final VirtualFileSystemProvider virtualFileSystemProvider;
