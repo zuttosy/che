@@ -90,7 +90,9 @@ public class RefactoringUpdater {
                     delta = new ExternalResourceDelta(newPath, oldPath, ADDED | MOVED_FROM | MOVED_TO);
                     break;
                 case UPDATE:
-                    pathChanged.add(change.getPath());
+                    if (!isFileRemoved(change.getPath(), changes)) {
+                        pathChanged.add(change.getPath());
+                    }
                 default:
                     continue;
             }
@@ -115,7 +117,7 @@ public class RefactoringUpdater {
                 @Override
                 public void apply(final ResourceDelta[] appliedDeltas) throws OperationException {
                     for (ResourceDelta delta : appliedDeltas) {
-                            eventBus.fireEvent(new RevealResourceEvent(delta.getToPath()));
+                        eventBus.fireEvent(new RevealResourceEvent(delta.getToPath()));
                     }
                     for (EditorPartPresenter editorPartPresenter : editorAgent.getOpenedEditors()) {
                         final String path = editorPartPresenter.getEditorInput().getFile().getLocation().toString();
@@ -137,5 +139,15 @@ public class RefactoringUpdater {
                 }
             });
         }
+    }
+
+    private boolean isFileRemoved(String filePath, List<ChangeInfo> changes) {
+        for (ChangeInfo changeInfo : changes) {
+            if (!isNullOrEmpty(changeInfo.getOldPath()) && changeInfo.getOldPath().equals(filePath)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
