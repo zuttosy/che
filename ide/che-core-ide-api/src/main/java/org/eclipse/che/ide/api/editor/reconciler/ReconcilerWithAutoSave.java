@@ -41,7 +41,7 @@ import java.util.Map;
  */
 public class ReconcilerWithAutoSave implements Reconciler {
 
-    private static final int DELAY = 1000;
+    private static final int DELAY = 5000;
 
 
     private final Map<String, ReconcilingStrategy> strategies;
@@ -97,6 +97,7 @@ public class ReconcilerWithAutoSave implements Reconciler {
 
     private void save() {
         if (autoSaveEnabled) {
+            Log.info(getClass(), ">>>>>>>>>>>>>>>>>>>>>>>>> dosave");
             editor.doSave(new AsyncCallback<EditorInput>() {
                 @Override
                 public void onFailure(Throwable throwable) {
