@@ -44,6 +44,7 @@ import java.util.Set;
 /**
  * Implementation of {@link MessageBodyReader} and {@link MessageBodyWriter} needed for binding JSON content to and from Java Objects.
  *
+ * @author Yevhenii Voevodin
  * @author andrew00x
  * @see DTO
  * @see DtoFactory
@@ -53,12 +54,14 @@ import java.util.Set;
 @Produces({MediaType.APPLICATION_JSON})
 @Consumes({MediaType.APPLICATION_JSON})
 public class CheJsonProvider<T> implements MessageBodyReader<T>, MessageBodyWriter<T> {
-    private Set<Class> ignoredClasses;
-    private final JsonEntityProvider delegate = new JsonEntityProvider<>();
+
+    private final Set<Class>         ignoredClasses;
+    private final JsonEntityProvider delegate;
 
     @Inject
     public CheJsonProvider(@Nullable @Named("che.json.ignored_classes") Set<Class> ignoredClasses) {
-        this.ignoredClasses = ignoredClasses == null ? new LinkedHashSet<Class>() : new LinkedHashSet<>(ignoredClasses);
+        this.delegate = new JsonEntityProvider<>();
+        this.ignoredClasses = ignoredClasses == null ? new LinkedHashSet<>() : new LinkedHashSet<>(ignoredClasses);
     }
 
     @SuppressWarnings("unchecked")
@@ -97,11 +100,16 @@ public class CheJsonProvider<T> implements MessageBodyReader<T>, MessageBodyWrit
 
     @SuppressWarnings("unchecked")
     @Override
-    public T readFrom(Class<T> type, Type genericType, Annotation[] annotations, MediaType mediaType,
-                      MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+    public T readFrom(Class<T> type,
+                      Type genericType,
+                      Annotation[] annotations,
+                      MediaType mediaType,
+                      MultivaluedMap<String, String> httpHeaders,
+                      InputStream entityStream) throws IOException, WebApplicationException {
         if (type.isAnnotationPresent(DTO.class)) {
             return DtoFactory.getInstance().createDtoFromJson(entityStream, type);
-        } else if (type.isAssignableFrom(List.class) && genericType instanceof ParameterizedType) {
+        }
+        if (type.isAssignableFrom(List.class) && genericType instanceof ParameterizedType) {
             ParameterizedType parameterizedType = (ParameterizedType)genericType;
             Type elementType = parameterizedType.getActualTypeArguments()[0];
             if (elementType instanceof Class) {
