@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.jayway.restassured.response.Response;
 
-import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
@@ -26,11 +25,8 @@ import org.eclipse.che.api.environment.server.MachineProcessManager;
 import org.eclipse.che.api.environment.server.MachineServiceLinksInjector;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineRuntimeInfoImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
 import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
-import org.eclipse.che.api.machine.server.model.impl.ServerImpl;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.shared.dto.CommandDto;
 import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
@@ -62,14 +58,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.jayway.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -487,7 +482,7 @@ public class WorkspaceServiceTest {
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
         when(wsManager.getWorkspace(workspace.getId())).thenReturn(workspace);
         when(wsManager.updateWorkspace(any(), any())).thenReturn(workspace);
-        final EnvironmentDto envDto = createEnvDto().withName("new-env");
+        final EnvironmentDto envDto = createEnvDto();
         final int envsSizeBefore = workspace.getConfig().getEnvironments().size();
 
         final Response response = given().auth()
@@ -495,6 +490,7 @@ public class WorkspaceServiceTest {
                                          .contentType("application/json")
                                          .body(envDto)
                                          .when()
+                                         .queryParam("name", "new-env")
                                          .post(SECURE_PATH + "/workspace/" + workspace.getId() + "/environment");
 
         assertEquals(response.getStatusCode(), 200);
@@ -519,7 +515,7 @@ public class WorkspaceServiceTest {
                                          .body(envDto)
                                          .when()
                                          .put(SECURE_PATH + "/workspace/" + workspace.getId()
-                                              + "/environment/" + envDto.getName());
+                                              + "/environment/" + "new-env");
 
         assertEquals(response.getStatusCode(), 200);
         assertEquals(workspace.getConfig().getEnvironments().size(), 1);
@@ -548,13 +544,14 @@ public class WorkspaceServiceTest {
     public void shouldDeleteEnvironment() throws Exception {
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
         when(wsManager.getWorkspace(workspace.getId())).thenReturn(workspace);
-        final EnvironmentImpl firstEnv = workspace.getConfig().getEnvironments().iterator().next();
+        Map.Entry<String, EnvironmentImpl> envEntry =
+                workspace.getConfig().getEnvironments().entrySet().iterator().next();
 
         final Response response = given().auth()
                                          .basic(ADMIN_USER_NAME, ADMIN_USER_PASSWORD)
                                          .when()
                                          .delete(SECURE_PATH + "/workspace/" + workspace.getId()
-                                                 + "/environment/" + firstEnv.getName());
+                                                 + "/environment/" + envEntry.getKey());
 
         assertEquals(response.getStatusCode(), 204);
         verify(wsManager).updateWorkspace(any(), any());
@@ -642,27 +639,27 @@ public class WorkspaceServiceTest {
     public void testWorkspaceLinks() throws Exception {
         // given
         final WorkspaceImpl workspace = createWorkspace(createConfigDto());
-        Optional<EnvironmentImpl> environmentOpt = workspace.getConfig().getEnvironment(workspace.getConfig().getDefaultEnv());
-        assertTrue(environmentOpt.isPresent());
-        EnvironmentImpl environment = environmentOpt.get();
+        EnvironmentImpl environment =
+                workspace.getConfig().getEnvironments().get(workspace.getConfig().getDefaultEnv());
+        assertNotNull(environment);
 
-        final WorkspaceRuntimeImpl runtime = new WorkspaceRuntimeImpl(environment.getName());
-        final MachineConfigImpl devCfg = environment.getMachineConfigs()
-                                                    .iterator()
-                                                    .next();
-        runtime.setDevMachine(new MachineImpl(devCfg,
-                                              "machine123",
-                                              workspace.getId(),
-                                              environment.getName(),
-                                              USER_ID,
-                                              MachineStatus.RUNNING,
-                                              new MachineRuntimeInfoImpl(emptyMap(),
-                                                                         emptyMap(),
-                                                                         singletonMap("8080/https", new ServerImpl("wsagent",
-                                                                                                                   "8080",
-                                                                                                                   "https",
-                                                                                                                   "path1",
-                                                                                                                   "url")))));
+        final WorkspaceRuntimeImpl runtime = new WorkspaceRuntimeImpl(workspace.getConfig().getDefaultEnv());
+//        final MachineConfigImpl devCfg = environment.getMachineConfigs()
+//                                                    .iterator()
+//                                                    .next();
+//        runtime.setDevMachine(new MachineImpl(devCfg,
+//                                              "machine123",
+//                                              workspace.getId(),
+//                                              environment.getName(),
+//                                              USER_ID,
+//                                              MachineStatus.RUNNING,
+//                                              new MachineRuntimeInfoImpl(emptyMap(),
+//                                                                         emptyMap(),
+//                                                                         singletonMap("8080/https", new ServerImpl("wsagent",
+//                                                                                                                   "8080",
+//                                                                                                                   "https",
+//                                                                                                                   "path1",
+//                                                                                                                   "url")))));
         runtime.getMachines().add(runtime.getDevMachine());
         workspace.setStatus(RUNNING);
         workspace.setRuntime(runtime);
@@ -816,14 +813,18 @@ public class WorkspaceServiceTest {
                                                                                                     "path2")))
                                                               .setEnvVariables(singletonMap("key1", "value1"))
                                                               .build();
-        return DtoConverter.asDto(new EnvironmentImpl("dev-env", null, singletonList(devMachine)));
+        return DtoConverter.asDto(new EnvironmentImpl(null,
+                                                      null));
+//                                                      singletonList(devMachine)));
     }
 
     private static WorkspaceConfigDto createConfigDto() {
         final WorkspaceConfigImpl config = WorkspaceConfigImpl.builder()
                                                               .setName("dev-workspace")
                                                               .setDefaultEnv("dev-env")
-                                                              .setEnvironments(singletonList(new EnvironmentImpl(createEnvDto())))
+                                                              .setEnvironments(new HashMap<>(singletonMap("dev-env",
+                                                                                                          new EnvironmentImpl(
+                                                                                                                  createEnvDto()))))
                                                               .setCommands(new ArrayList<>(singleton(createCommandDto())))
                                                               .setProjects(new ArrayList<>(singleton(createProjectDto())))
                                                               .build();

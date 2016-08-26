@@ -61,14 +61,12 @@ public class DefaultWorkspaceValidator implements WorkspaceValidator {
         //environments
         checkArgument(!isNullOrEmpty(config.getDefaultEnv()), "Workspace default environment name required");
         checkNotNull(config.getEnvironments(), "Workspace should contain at least one environment");
-        checkArgument(config.getEnvironments()
-                            .stream()
-                            .anyMatch(env -> config.getDefaultEnv().equals(env.getName())),
+        checkArgument(config.getEnvironments().containsKey(config.getDefaultEnv()),
                       "Workspace default environment configuration required");
 
-        for (Environment environment : config.getEnvironments()) {
+        for (Map.Entry<String, ? extends Environment> envEntry : config.getEnvironments().entrySet()) {
             try {
-                environmentValidator.validate(environment);
+                environmentValidator.validate(envEntry.getKey(), envEntry.getValue());
             } catch (IllegalArgumentException e) {
                 throw new BadRequestException(e.getLocalizedMessage());
             }

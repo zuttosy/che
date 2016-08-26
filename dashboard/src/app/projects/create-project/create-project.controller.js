@@ -67,6 +67,7 @@ export class CreateProjectController {
 
     this.messageBus = null;
     this.recipeUrl = null;
+    this.recipeFormat = null;
 
     //search the selected tab
     let routeParams = $routeParams.tabName;
@@ -346,6 +347,19 @@ export class CreateProjectController {
     let agentChannel = 'workspace:' + workspace.id + ':ext-server:output';
     let statusChannel = statusLink ? statusLink.parameters[0].defaultValue : null;
     let outputChannel = outputLink ? outputLink.parameters[0].defaultValue : null;
+
+    if (outputChannel) {
+      this.listeningChannels.push(outputChannel);
+      bus.subscribe(outputChannel, (message) => {
+        message = this.getDisplayMachineLog(message);
+
+        if (this.getCreationSteps()[this.getCurrentProgressStep()].logs.length > 0) {
+          this.getCreationSteps()[this.getCurrentProgressStep()].logs = this.getCreationSteps()[this.getCurrentProgressStep()].logs + '\n' + message;
+        } else {
+          this.getCreationSteps()[this.getCurrentProgressStep()].logs = message;
+        }
+      });
+    }
 
     this.listeningChannels.push(agentChannel);
     bus.subscribe(agentChannel, (message) => {
@@ -846,11 +860,13 @@ export class CreateProjectController {
     }
     // check workspace is selected
     if (option === 'create-workspace') {
+      let source = {};
+      source.type = 'dockerfile';
       if (this.stack) {
         this.createWorkspace(this.getSourceFromStack(this.stack));
       } else {
-        let source = {};
-        source.type = 'dockerfile';
+        source.type = 'environment';
+        source.format = this.recipeFormat;
         if (this.recipeUrl && this.recipeUrl.length > 0) {
           source.location = this.recipeUrl;
           this.createWorkspace(source);
@@ -1096,12 +1112,11 @@ export class CreateProjectController {
       stack = this.cheStack.getStackById(this.workspaceSelected.attributes.stackId);
     }
     this.updateCurrentStack(stack);
-    let findEnvironment = this.lodash.find(this.workspaceSelected.config.environments, (environment) => {
-      return environment.name === this.workspaceSelected.config.defaultEnv;
-    });
-    if (findEnvironment) {
-      this.workspaceRam = findEnvironment.machineConfigs[0].limits.ram;
-    }
+    let defaultEnvironment = this.workspaceSelected.config.defaultEnv;
+    let environment = this.workspaceSelected.config.environments[defaultEnvironment];
+   /* TODO not implemented yet if (environment) {
+      this.workspaceRam = environment.machines[0].limits.ram;
+    }*/
     this.updateWorkspaceStatus(true);
   }
 

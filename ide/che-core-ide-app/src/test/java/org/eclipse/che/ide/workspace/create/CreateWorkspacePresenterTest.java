@@ -47,7 +47,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.eclipse.che.api.machine.shared.Constants.WS_MACHINE_NAME;
 import static org.eclipse.che.ide.workspace.create.CreateWorkspacePresenter.MAX_COUNT;
@@ -140,8 +142,8 @@ public class CreateWorkspacePresenterTest {
         when(dtoFactory.createDto(MachineConfigDto.class)).thenReturn(machineConfigDto);
 
         when(dtoFactory.createDto(EnvironmentDto.class)).thenReturn(environmentDto);
-        when(environmentDto.withName(anyString())).thenReturn(environmentDto);
-        when(environmentDto.withMachineConfigs(Matchers.<List<MachineConfigDto>>anyObject())).thenReturn(environmentDto);
+//        when(environmentDto.withName(anyString())).thenReturn(environmentDto);
+//        when(environmentDto.withMachineConfigs(Matchers.<List<MachineConfigDto>>anyObject())).thenReturn(environmentDto);
 
         when(dtoFactory.createDto(WorkspaceConfigDto.class)).thenReturn(workspaceConfigDto);
 
@@ -327,8 +329,8 @@ public class CreateWorkspacePresenterTest {
         verify(machineSourceDto).withLocation("test");
 
         verify(dtoFactory).createDto(EnvironmentDto.class);
-        verify(environmentDto).withName("name");
-        verify(environmentDto).withMachineConfigs(Matchers.<List<MachineConfigDto>>anyObject());
+//        verify(environmentDto).withName("name");
+//        verify(environmentDto).withMachineConfigs(Matchers.<List<MachineConfigDto>>anyObject());
     }
 
     @Test
@@ -342,13 +344,13 @@ public class CreateWorkspacePresenterTest {
     }
 
     private void callApplyCreateWorkspaceMethod() throws Exception {
-        List<EnvironmentDto> environments = new ArrayList<>();
-        environments.add(environmentDto);
+        Map<String, EnvironmentDto> environments = new HashMap<>();
+        environments.put("name", environmentDto);
 
         when(workspaceConfigDto.getDefaultEnv()).thenReturn("name");
         when(workspaceConfigDto.getEnvironments()).thenReturn(environments);
 
-        when(environmentDto.getMachineConfigs()).thenReturn(Collections.singletonList(machineConfigDto));
+//        when(environmentDto.getMachineConfigs()).thenReturn(Collections.singletonList(machineConfigDto));
 
         clickOnCreateButton();
 

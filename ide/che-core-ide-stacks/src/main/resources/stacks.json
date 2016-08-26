@@ -39,26 +39,23 @@
       "origin": "codenvy/alpine-jdk:nightly"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/alpine-jdk:nightly\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "Che in Che",
       "defaultEnv": "default",
       "description": null,
@@ -117,26 +114,23 @@
       "origin": "codenvy/ubuntu_jdk8"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -179,26 +173,23 @@
       "origin": "codenvy/ubuntu_jdk8"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
@@ -246,26 +237,23 @@
       "origin": "codenvy/ubuntu_android"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_android\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -322,26 +310,23 @@
       "origin": "codenvy/cpp_gcc"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/cpp_gcc\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -392,26 +377,23 @@
       "origin": "codenvy/dotnet_core"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/dotnet_core\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -447,7 +429,7 @@
       "mediaType": "image/svg+xml"
     }
   },
-   {
+  {
     "id": "go-default",
     "creator": "ide",
     "name": "Go",
@@ -472,26 +454,23 @@
       "origin": "codenvy/ubuntu_go"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_go\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -550,26 +529,23 @@
       "origin": "codenvy/hadoop-dev"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/hadoop-dev\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
@@ -636,26 +612,23 @@
       "origin": "codenvy/node"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/node\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
@@ -715,26 +688,23 @@
       "origin": "codenvy/php"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/php\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -805,26 +775,23 @@
       "origin": "codenvy/ubuntu_python:latest"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:latest\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -884,26 +851,23 @@
       "origin": "codenvy/ubuntu_rails"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_rails\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -955,30 +919,27 @@
       }
     ],
     "source": {
-      "type": "dockerfile",
-      "origin": "FROM codenvy/debian_jre\nCMD tail -f /dev/null"
+      "type": "image",
+      "origin": "codenvy/debian_jre"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/debian_jre\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
@@ -1029,26 +990,23 @@
       "origin": "codenvy/centos_jdk8"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/centos_jdk8\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1110,26 +1068,23 @@
       "origin": "codenvy/debian_jdk8"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/debian_jdk8\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1194,26 +1149,23 @@
       "origin": "codenvy/php:gae"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/php:gae\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1268,26 +1220,23 @@
       "origin": "codenvy/ubuntu_python:2.7"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:2.7\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1339,26 +1288,23 @@
       "origin": "codenvy/ubuntu_python:gae_python2.7"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:gae_python2.7\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1429,26 +1375,23 @@
       "origin": "codenvy/selenium"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/selenium\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
@@ -1496,26 +1439,23 @@
       "origin": "tomitribe/ubuntu_tomee_173_jdk8"
     },
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: tomitribe/ubuntu_tomee_173_jdk8\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null,
@@ -1556,33 +1496,30 @@
       }
     ],
     "workspaceConfig": {
-      "environments": [
-        {
-          "name": "default",
-          "recipe": null,
-          "machineConfigs": [
-            {
-              "name": "default",
-              "limits": {
-                "ram": 1000
-              },
-              "source": {
-                "location": "stub",
-                "type": "dockerfile"
-              },
-              "type": "docker",
-              "dev": true
+      "environments": {
+        "default": {
+          "machines": {
+            "dev-machine": {
+              "agents": [
+                "ws-agent"
+              ],
+              "servers": {}
             }
-          ]
+          },
+          "recipe": {
+            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jre\n    mem_limit: 2147483648",
+            "contentType": "application/x-yaml",
+            "type": "compose"
+          }
         }
-      ],
+      },
       "name": "default",
       "defaultEnv": "default",
       "description": null
     },
     "source": {
-      "type": "dockerfile",
-      "origin": "FROM codenvy/ubuntu_jre\nCMD tail -f /dev/null"
+      "type": "image",
+      "origin": "codenvy/ubuntu_jre"
     },
     "acl": [
       {

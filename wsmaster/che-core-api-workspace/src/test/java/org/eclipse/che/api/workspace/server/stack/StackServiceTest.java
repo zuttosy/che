@@ -56,13 +56,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static com.jayway.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.eclipse.che.api.workspace.shared.Constants.LINK_REL_GET_STACK_BY_ID;
@@ -152,7 +152,7 @@ public class StackServiceTest {
     public void setUp() throws IOException, ConflictException {
         byte[] fileContent = STACK_ID.getBytes();
         stackIcon = new StackIcon(ICON_MEDIA_TYPE, "image/svg+xml", fileContent);
-        componentsImpl = Collections.singletonList(new StackComponentImpl(COMPONENT_NAME, COMPONENT_VERSION));
+        componentsImpl = singletonList(new StackComponentImpl(COMPONENT_NAME, COMPONENT_VERSION));
         stackSourceImpl = new StackSourceImpl(SOURCE_TYPE, SOURCE_ORIGIN);
         CommandImpl command = new CommandImpl(COMMAND_NAME, COMMAND_LINE, COMMAND_TYPE);
         MachineSourceImpl machineSource = new MachineSourceImpl(MACHINE_SOURCE_TYPE).setLocation(MACHINE_SOURCE_LOCATION);
@@ -171,19 +171,21 @@ public class StackServiceTest {
                                                                                                  "9090/udp",
                                                                                                  "someprotocol",
                                                                                                  "/some/path")),
-                                                                Collections.singletonMap("key1", "value1"));
-        EnvironmentImpl environment = new EnvironmentImpl(ENVIRONMENT_NAME, null, Collections.singletonList(machineConfig));
+                                                                singletonMap("key1", "value1"));
+        EnvironmentImpl environment = new EnvironmentImpl(null,
+                                                          null);
+//                                                          Collections.singletonList(machineConfig));
 
         WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
                                                                  .setName(WORKSPACE_CONFIG_NAME)
                                                                  .setDefaultEnv(DEF_ENVIRONMENT_NAME)
-                                                                 .setCommands(Collections.singletonList(command))
-                                                                 .setEnvironments(Collections.singletonList(environment))
+                                                                 .setCommands(singletonList(command))
+                                                                 .setEnvironments(singletonMap(ENVIRONMENT_NAME, environment))
                                                                  .build();
 
         stackSourceDto = newDto(StackSourceDto.class).withType(SOURCE_TYPE).withOrigin(SOURCE_ORIGIN);
         StackComponentDto stackComponentDto = newDto(StackComponentDto.class).withName(COMPONENT_NAME).withVersion(COMPONENT_VERSION);
-        componentsDto = Collections.singletonList(stackComponentDto);
+        componentsDto = singletonList(stackComponentDto);
 
         stackDto = DtoFactory.getInstance().createDto(StackDto.class).withId(STACK_ID)
                              .withName(NAME)
@@ -332,7 +334,7 @@ public class StackServiceTest {
                                                   .withScope("Simple java stack for generation java projects")
                                                   .withTags(asList("java", "maven"))
                                                   .withCreator("che")
-                                                  .withComponents(Collections.singletonList(stackComponentDto))
+                                                  .withComponents(singletonList(stackComponentDto))
                                                   .withSource(stackSourceDto);
 
         Response response = given().auth()

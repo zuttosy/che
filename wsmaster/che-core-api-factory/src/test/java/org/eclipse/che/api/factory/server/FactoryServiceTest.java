@@ -80,6 +80,8 @@ import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 import static java.net.URLEncoder.encode;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static javax.ws.rs.core.Response.Status;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -564,7 +566,7 @@ public class FactoryServiceTest {
         byte[] imageContent = Files.readAllBytes(path);
         FactoryImage image = new FactoryImage(imageContent, "image/jpeg", "imageName");
 
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(singletonList(image)));
 
         // when
         Response response = given().when().get(SERVICE_PATH + "/" + CORRECT_FACTORY_ID + "/image?imgId=imageName");
@@ -585,7 +587,7 @@ public class FactoryServiceTest {
         byte[] imageContent = Files.readAllBytes(path);
         FactoryImage image = new FactoryImage(imageContent, "image/jpeg", "imageName");
 
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(singletonList(image)));
 
         // when
         Response response = given().when().get(SERVICE_PATH + "/" + CORRECT_FACTORY_ID + "/image");
@@ -684,8 +686,8 @@ public class FactoryServiceTest {
         Factory factory = dto.createDto(Factory.class)
                              .withV("4.0")
                              .withWorkspace(dto.createDto(WorkspaceConfigDto.class)
-                                               .withProjects(Collections.singletonList(dto.createDto(ProjectConfigDto.class)
-                                                                                          .withSource(storageDto))))
+                                               .withProjects(singletonList(dto.createDto(ProjectConfigDto.class)
+                                                                              .withSource(storageDto))))
                              .withId(CORRECT_FACTORY_ID)
                              .withButton(dto.createDto(Button.class)
                                             .withType(Button.ButtonType.logo));
@@ -694,7 +696,7 @@ public class FactoryServiceTest {
         image.setName(imageName);
 
         when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(singletonList(image)));
         // when, then
         given().expect()
                .statusCode(200)
@@ -723,7 +725,7 @@ public class FactoryServiceTest {
         image.setName(imageName);
 
         when(factoryStore.getFactory(CORRECT_FACTORY_ID)).thenReturn(factory);
-        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(Collections.singletonList(image)));
+        when(factoryStore.getFactoryImages(CORRECT_FACTORY_ID, null)).thenReturn(new HashSet<>(singletonList(image)));
         // when, then
         given().expect()
                .statusCode(200)
@@ -974,7 +976,7 @@ public class FactoryServiceTest {
                 .withId(CORRECT_FACTORY_ID)
                 .withCreator(dto.createDto(Author.class).withUserId("uid-123"));
 
-        List<Pair<String, String>> expected = Collections.singletonList(Pair.of("creator.userid", "uid-123"));
+        List<Pair<String, String>> expected = singletonList(Pair.of("creator.userid", "uid-123"));
         when(factoryStore.findByAttribute(anyInt(), anyInt(), eq(expected))).thenReturn(
                 Arrays.asList(factory, factory));
 
@@ -1010,11 +1012,11 @@ public class FactoryServiceTest {
                                               .withPath("path")));
         wsConfig.setName("wsname");
         wsConfig.setDefaultEnv("env1");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
-        wsConfig.setCommands(Collections.singletonList(dto.createDto(CommandDto.class)
-                                                          .withName("MCI")
-                                                          .withType("mvn")
-                                                          .withCommandLine("clean install")));
+        wsConfig.setEnvironments(singletonMap("env1", dto.createDto(EnvironmentDto.class)));
+        wsConfig.setCommands(singletonList(dto.createDto(CommandDto.class)
+                                              .withName("MCI")
+                                              .withType("mvn")
+                                              .withCommandLine("clean install")));
         userWs.setId(wsId);
         userWs.setNamespace("id-2314");
         userWs.setStatus(WorkspaceStatus.RUNNING);
@@ -1058,13 +1060,13 @@ public class FactoryServiceTest {
                                                        .withLocation("location"))));
         wsConfig.setName("wsname");
         ws.setNamespace("id-2314");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
+        wsConfig.setEnvironments(singletonMap("env1", dto.createDto(EnvironmentDto.class)));
         wsConfig.setDefaultEnv("env1");
         ws.setStatus(WorkspaceStatus.RUNNING);
-        wsConfig.setCommands(Collections.singletonList(dto.createDto(CommandDto.class)
-                                                    .withName("MCI")
-                                                    .withType("mvn")
-                                                    .withCommandLine("clean install")));
+        wsConfig.setCommands(singletonList(dto.createDto(CommandDto.class)
+                                              .withName("MCI")
+                                              .withType("mvn")
+                                              .withCommandLine("clean install")));
         ws.setConfig(wsConfig.build());
         WorkspaceImpl usersWorkspace = ws.build();
         when(workspaceManager.getWorkspace(eq(wsId))).thenReturn(usersWorkspace);
@@ -1238,10 +1240,10 @@ public class FactoryServiceTest {
                                         .withPath("/proj2")));
         wsConfig.setName("wsname");
         ws.setNamespace("id-2314");
-        wsConfig.setEnvironments(Collections.singletonList(dto.createDto(EnvironmentDto.class).withName("env1")));
+        wsConfig.setEnvironments(singletonMap("env1", dto.createDto(EnvironmentDto.class)));
         wsConfig.setDefaultEnv("env1");
         ws.setStatus(WorkspaceStatus.RUNNING);
-        wsConfig.setCommands(Collections.singletonList(
+        wsConfig.setCommands(singletonList(
                 dto.createDto(CommandDto.class).withName("MCI").withType("mvn").withCommandLine("clean install")));
         ws.setConfig(wsConfig.build());
 
@@ -1427,8 +1429,8 @@ public class FactoryServiceTest {
         return dto.createDto(Factory.class)
                   .withV("4.0")
                   .withWorkspace(dto.createDto(WorkspaceConfigDto.class)
-                                    .withProjects(Collections.singletonList(dto.createDto(ProjectConfigDto.class)
-                                                                               .withSource(dto.createDto(SourceStorageDto.class)
+                                    .withProjects(singletonList(dto.createDto(ProjectConfigDto.class)
+                                                                   .withSource(dto.createDto(SourceStorageDto.class)
                                                                                               .withType(type)
                                                                                               .withLocation(location)))));
     }

@@ -44,25 +44,54 @@ public class CheEnvironmentValidator {
         this.machineInstanceProviders = machineInstanceProviders;
     }
 
-    public void validate(Environment env) throws IllegalArgumentException {
-        String envName = env.getName();
-        checkArgument(envName != null && !envName.isEmpty(),
+    public void validate(String envName, Environment env) throws IllegalArgumentException {
+        checkArgument(!isNullOrEmpty(envName),
                       "Environment name should not be neither null nor empty");
-        checkArgument(env.getMachineConfigs() != null && !env.getMachineConfigs().isEmpty(),
-                      "Environment '%s' should contain at least 1 machine",
+        checkNotNull(env.getRecipe(), "Environment recipe should not be null");
+        checkArgument(!isNullOrEmpty(env.getRecipe().getType()),
+                      "Environment recipe type should not be neither null nor empty");
+        checkArgument("compose".equals(env.getRecipe().getType()),
+                      "Type '%s' of environment '%s' is not supported. Supported types: %s",
+                      env.getRecipe().getType(),
+                      envName,
+                      "compose");
+        checkArgument(!isNullOrEmpty(env.getRecipe().getContentType()),
+                      "Environment recipe content type should not be neither null nor empty");
+        checkArgument(env.getRecipe().getContent() != null || env.getRecipe().getLocation() != null,
+                      "Recipe of environment '%s' must contain location or content", envName);
+        checkArgument(env.getRecipe().getContent() == null || env.getRecipe().getLocation() == null,
+                      "Recipe of environment '%s' contains mutually exclusive fields location and content",
                       envName);
 
-        final long devCount = env.getMachineConfigs()
-                                 .stream()
-                                 .filter(MachineConfig::isDev)
-                                 .count();
-        checkArgument(devCount == 1,
-                      "Environment '%s' should contain exactly 1 dev machine, but contains '%d'",
-                      envName,
-                      devCount);
-        for (MachineConfig machineCfg : env.getMachineConfigs()) {
-            validateMachine(machineCfg, envName);
-        }
+        // TODO use compose format
+        // check :
+        // machine name is not empty
+        // dev machine existence, only 1
+        // che machines field
+
+
+
+
+
+
+
+
+
+//        checkArgument(env.getMachineConfigs() != null && !env.getMachineConfigs().isEmpty(),
+//                      "Environment '%s' should contain at least 1 machine",
+//                      envName);
+
+//        final long devCount = env.getMachineConfigs()
+//                                 .stream()
+//                                 .filter(MachineConfig::isDev)
+//                                 .count();
+//        checkArgument(devCount == 1,
+//                      "Environment '%s' should contain exactly 1 dev machine, but contains '%d'",
+//                      envName,
+//                      devCount);
+//        for (MachineConfig machineCfg : env.getMachineConfigs()) {
+//            validateMachine(machineCfg, envName);
+//        }
     }
 
     private void validateMachine(MachineConfig machineCfg, String envName) throws IllegalArgumentException {
