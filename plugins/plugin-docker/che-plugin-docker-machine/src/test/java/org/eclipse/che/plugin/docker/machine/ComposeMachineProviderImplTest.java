@@ -228,7 +228,7 @@ public class ComposeMachineProviderImplTest {
         final String tag = "latest";
         provider = getProvider(false);
 
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setImage(repo + ":" + tag);
         machine.setBuild(null);
 
@@ -284,7 +284,7 @@ public class ComposeMachineProviderImplTest {
         String tag = "latest";
         ComposeMachineProviderImpl provider = getProvider(false);
 
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setBuild(null);
         machine.setImage(repo + ":" + tag + "@digest");
 
@@ -471,7 +471,7 @@ public class ComposeMachineProviderImplTest {
                                 USER_NAME,
                                 MachineStatus.CREATING,
                                 null);
-        ComposeServiceImpl service = getMachine();
+        ComposeServiceImpl service = createService();
 
 
         createInstanceFromSnapshot(service);
@@ -511,7 +511,7 @@ public class ComposeMachineProviderImplTest {
                                 MachineStatus.CREATING,
                                 null);
 
-        ComposeServiceImpl service = getMachine();
+        ComposeServiceImpl service = createService();
         createInstanceFromRecipe(service);
 
 
@@ -875,7 +875,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = false;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setExpose(asList("9090", "8080"));
 
         // when
@@ -924,7 +924,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = false;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setExpose(asList("9090", "8080"));
 
         // when
@@ -973,7 +973,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = true;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setExpose(asList("9090", "8080"));
 
         // when
@@ -1022,7 +1022,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = true;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setExpose(asList("9090", "8080"));
 
         // when
@@ -1825,7 +1825,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = false;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setEnvironment(envVarsFromConfig);
 
         // when
@@ -1873,7 +1873,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = true;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setEnvironment(envVarsFromConfig);
 
         // when
@@ -1921,7 +1921,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = false;
-        ComposeServiceImpl service = getMachine();
+        ComposeServiceImpl service = createService();
         service.setEnvironment(envVarsFromConfig);
 
         // when
@@ -1969,7 +1969,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER);
 
         final boolean isDev = true;
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setEnvironment(envVarsFromConfig);
 
         // when
@@ -1990,25 +1990,25 @@ public class ComposeMachineProviderImplTest {
     }
 
     private void createInstanceFromRecipe() throws Exception {
-        createInstanceFromRecipe(getMachine());
+        createInstanceFromRecipe(createService());
     }
 
     private void createInstanceFromRecipe(boolean isDev) throws Exception {
-        createInstanceFromRecipe(getMachine(), isDev, WORKSPACE_ID);
+        createInstanceFromRecipe(createService(), isDev, WORKSPACE_ID);
     }
 
     private void createInstanceFromRecipe(boolean isDev, String workspaceId) throws Exception {
-        createInstanceFromRecipe(getMachine(), isDev, workspaceId);
+        createInstanceFromRecipe(createService(), isDev, workspaceId);
     }
 
     private void createInstanceFromRecipe(int memorySizeInMB) throws Exception {
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setMemLimit(memorySizeInMB * 1024L * 1024L);
         createInstanceFromRecipe(machine);
     }
 
     private void createInstanceFromSnapshot(String repo, String tag, String registry) throws ServerException {
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setImage(registry + repo + ":" + tag + "@digest");
         machine.setBuild(null);
         createInstanceFromSnapshot(machine);
@@ -2037,7 +2037,7 @@ public class ComposeMachineProviderImplTest {
     }
 
     private void createInstanceFromSnapshot() throws ServerException {
-        createInstanceFromSnapshot(getMachine(), false, WORKSPACE_ID);
+        createInstanceFromSnapshot(createService(), false, WORKSPACE_ID);
     }
 
     private void createInstanceFromSnapshot(ComposeServiceImpl service) throws ServerException {
@@ -2045,17 +2045,17 @@ public class ComposeMachineProviderImplTest {
     }
 
     private void createInstanceFromSnapshot(int memorySizeInMB) throws ServerException {
-        ComposeServiceImpl machine = getMachine();
+        ComposeServiceImpl machine = createService();
         machine.setMemLimit(memorySizeInMB * 1024L * 1024L);
         createInstanceFromSnapshot(machine, false, WORKSPACE_ID);
     }
 
     private void createInstanceFromSnapshot(boolean isDev) throws ServerException {
-        createInstanceFromSnapshot(getMachine(), isDev, WORKSPACE_ID);
+        createInstanceFromSnapshot(createService(), isDev, WORKSPACE_ID);
     }
 
     private void createInstanceFromSnapshot(boolean isDev, String workspaceId) throws ServerException {
-        createInstanceFromSnapshot(getMachine(), isDev, workspaceId);
+        createInstanceFromSnapshot(createService(), isDev, workspaceId);
     }
 
     private void createInstanceFromSnapshot(ComposeServiceImpl service, boolean isDev) throws ServerException {
@@ -2098,7 +2098,7 @@ public class ComposeMachineProviderImplTest {
                                                   MEMORY_SWAP_MULTIPLIER));
     }
 
-    public ComposeServiceImpl getMachine() {
+    public ComposeServiceImpl createService() {
         ComposeServiceImpl service = new ComposeServiceImpl();
         service.setImage("image");
         service.setCommand(asList("some", "command"));

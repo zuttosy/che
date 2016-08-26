@@ -10,12 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.api.environment.server.compose;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.EnvironmentRecipe;
+import org.eclipse.che.api.core.model.workspace.compose.ComposeEnvironment;
 import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.commons.env.EnvironmentContext;
@@ -117,6 +119,15 @@ public class ComposeFileParser {
             if (file != null && !file.delete()) {
                 LOG.error(String.format("Removal of recipe file %s failed.", file.getAbsolutePath()));
             }
+        }
+    }
+
+    public String toYaml(ComposeEnvironment composeEnvironment) throws ServerException {
+        checkNotNull(composeEnvironment, "Compose environment should not be null");
+        try {
+            return YAML_PARSER.writeValueAsString(composeEnvironment);
+        } catch (JsonProcessingException e) {
+            throw new ServerException(e.getLocalizedMessage(), e);
         }
     }
 

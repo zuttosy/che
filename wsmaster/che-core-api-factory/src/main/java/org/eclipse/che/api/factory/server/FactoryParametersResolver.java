@@ -11,6 +11,7 @@
 package org.eclipse.che.api.factory.server;
 
 import org.eclipse.che.api.core.BadRequestException;
+import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.factory.shared.dto.Factory;
 
 import javax.validation.constraints.NotNull;
@@ -40,7 +41,7 @@ public interface FactoryParametersResolver {
      * @throws BadRequestException
      *         when data are invalid
      */
-    Factory createFactory(@NotNull Map<String, String> factoryParameters) throws BadRequestException;
+    Factory createFactory(@NotNull Map<String, String> factoryParameters) throws BadRequestException, ServerException;
 
 
 }

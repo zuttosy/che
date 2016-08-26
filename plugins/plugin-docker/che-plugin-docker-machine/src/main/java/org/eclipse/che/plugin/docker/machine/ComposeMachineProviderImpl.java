@@ -348,10 +348,10 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
         return imageName;
     }
 
-    private void buildImage(ComposeServiceImpl service,
-                            String machineImageName,
-                            boolean doForcePullOnBuild,
-                            ProgressMonitor progressMonitor)
+    protected void buildImage(ComposeServiceImpl service,
+                              String machineImageName,
+                              boolean doForcePullOnBuild,
+                              ProgressMonitor progressMonitor)
             throws MachineException {
 
         try {
@@ -369,11 +369,11 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
         }
     }
 
-    private void pullImage(ComposeServiceImpl service,
-                           String machineImageName,
-                           ProgressMonitor progressMonitor) throws NotFoundException,
-                                                                   MachineException,
-                                                                   SourceNotFoundException {
+    protected void pullImage(ComposeServiceImpl service,
+                             String machineImageName,
+                             ProgressMonitor progressMonitor) throws NotFoundException,
+                                                                     MachineException,
+                                                                     SourceNotFoundException {
         DockerMachineSource dockerMachineSource = new DockerMachineSource(
                 new MachineSourceImpl("image").setLocation(service.getImage()));
         if (dockerMachineSource.getRepository() == null) {
@@ -553,7 +553,6 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
 
     // workspaceId parameter is required, because in case of separate storage for tokens
     // you need to know exactly which workspace and which user to apply the token.
-    // TODO should we move that to agents mechanism?
     protected String getUserToken(String wsId) {
         return EnvironmentContext.getCurrent().getSubject().getToken();
     }
