@@ -276,7 +276,9 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                                                                    .setName(machineName)
                                                                    .setType("docker")
                                                                    // casting considered as safe because more than int of megabytes is a lot!
-                                                                   .setLimits(new LimitsImpl((int)Size.parseSizeToMegabytes(service.getMemLimit() + "b")))
+                                                                   .setLimits(new LimitsImpl((int)Size
+                                                                           .parseSizeToMegabytes(
+                                                                                   service.getMemLimit() + "b")))
                                                                    .build(),
                                                   machineId,
                                                   workspaceId,
@@ -290,6 +292,8 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                                                        image,
                                                        node,
                                                        machineLogger);
+        } catch (SourceNotFoundException e) {
+            throw e;
         } catch (RuntimeException | ServerException | NotFoundException | IOException e) {
             cleanUpContainer(container);
             throw new ServerException(e.getLocalizedMessage());

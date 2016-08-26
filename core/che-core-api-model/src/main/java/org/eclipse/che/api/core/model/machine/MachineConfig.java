@@ -18,6 +18,7 @@ import java.util.Map;
 /**
  * @author gazarenkov
  */
+@Deprecated
 // TODO do not use this class
 public interface MachineConfig {
 
