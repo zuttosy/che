@@ -94,60 +94,53 @@ public class CheEnvironmentValidator {
 //        }
     }
 
-    private void validateMachine(MachineConfig machineCfg, String envName) throws IllegalArgumentException {
+    public void validateMachine(MachineConfig machineCfg) throws IllegalArgumentException {
         String machineName = machineCfg.getName();
-        checkArgument(!isNullOrEmpty(machineName), "Environment '%s' contains machine with null or empty name", envName);
+        checkArgument(!isNullOrEmpty(machineName), "Machine name is null or empty");
         checkArgument(MACHINE_NAME_PATTERN.matcher(machineName).matches(),
-                      "Environment '%s' contains machine with invalid name '%s'", envName, machineName);
-        checkNotNull(machineCfg.getSource(), "Machine '%s' in environment '%s' doesn't have source", machineName, envName);
+                      "Machine name '%s' is invalid", machineName);
+        checkNotNull(machineCfg.getSource(), "Machine '%s' doesn't have source", machineName);
         checkArgument(machineCfg.getSource().getContent() != null || machineCfg.getSource().getLocation() != null,
-                      "Source of machine '%s' in environment '%s' must contain location or content", machineName, envName);
+                      "Source of machine '%s' must contain location or content", machineName);
         checkArgument(machineCfg.getSource().getContent() == null || machineCfg.getSource().getLocation() == null,
-                      "Source of machine '%s' in environment '%s' contains mutually exclusive fields location and content",
-                      machineName, envName);
+                      "Source of machine '%s' contains mutually exclusive fields location and content",
+                      machineName);
         checkArgument(machineInstanceProviders.hasProvider(machineCfg.getType()),
-                      "Type '%s' of machine '%s' in environment '%s' is not supported. Supported values are: %s.",
+                      "Type '%s' of machine '%s' is not supported. Supported values are: %s.",
                       machineCfg.getType(),
                       machineName,
-                      envName,
                       Joiner.on(", ").join(machineInstanceProviders.getProviderTypes()));
 
         if (machineCfg.getSource().getType().equals("dockerfile") && machineCfg.getSource().getLocation() != null) {
             try {
                 final String protocol = new URL(machineCfg.getSource().getLocation()).getProtocol();
                 checkArgument(protocol.equals("http") || protocol.equals("https"),
-                              "Environment '%s' contains machine '%s' with invalid source location protocol: %s",
-                              envName,
+                              "Machine '%s' has invalid source location protocol: %s",
                               machineName,
                               machineCfg.getSource().getLocation());
             } catch (MalformedURLException e) {
-                throw new IllegalArgumentException(format("Environment '%s' contains machine '%s' with invalid source location: '%s'",
-                                                          envName,
+                throw new IllegalArgumentException(format("Machine '%s' has invalid source location: '%s'",
                                                           machineName,
                                                           machineCfg.getSource().getLocation()));
             }
         }
         for (ServerConf serverConf : machineCfg.getServers()) {
             checkArgument(serverConf.getPort() != null && SERVER_PORT.matcher(serverConf.getPort()).matches(),
-                          "Machine '%s' in environment '%s' contains server conf with invalid port '%s'",
+                          "Machine '%s' contains server conf with invalid port '%s'",
                           machineName,
-                          envName,
                           serverConf.getPort());
             checkArgument(serverConf.getProtocol() == null || SERVER_PROTOCOL.matcher(serverConf.getProtocol()).matches(),
-                          "Machine '%s' in environment '%s' contains server conf with invalid protocol '%s'",
+                          "Machine '%s' contains server conf with invalid protocol '%s'",
                           machineName,
-                          envName,
                           serverConf.getProtocol());
         }
         for (Map.Entry<String, String> envVariable : machineCfg.getEnvVariables().entrySet()) {
             checkArgument(!isNullOrEmpty(envVariable.getKey()),
-                          "Machine '%s' in environment '%s' contains environment variable with null or empty name",
-                          machineName,
-                          envName);
+                          "Machine '%s' contains environment variable with null or empty name",
+                          machineName);
             checkNotNull(envVariable.getValue(),
-                         "Machine '%s' in environment '%s' contains environment variable '%s' with null value",
+                         "Machine '%s' contains environment variable '%s' with null value",
                          machineName,
-                         envName,
                          envVariable.getKey());
         }
     }

@@ -278,6 +278,12 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                                                                    .setLimits(new LimitsImpl((int)Size
                                                                            .parseSizeToMegabytes(
                                                                                    service.getMemLimit() + "b")))
+                                                                   .setSource(new MachineSourceImpl(service.getBuild() != null ?
+                                                                                                    "context" :
+                                                                                                    "image")
+                                                                                      .setLocation(service.getBuild() != null ?
+                                                                                                   service.getBuild().getContext() :
+                                                                                                   service.getImage()))
                                                                    .build(),
                                                   machineId,
                                                   workspaceId,
