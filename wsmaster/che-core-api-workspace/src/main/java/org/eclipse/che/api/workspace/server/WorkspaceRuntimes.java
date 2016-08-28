@@ -29,6 +29,7 @@ import org.eclipse.che.api.core.util.AbstractMessageConsumer;
 import org.eclipse.che.api.core.util.MessageConsumer;
 import org.eclipse.che.api.core.util.WebsocketMessageConsumer;
 import org.eclipse.che.api.environment.server.CheEnvironmentEngine;
+import org.eclipse.che.api.environment.server.exception.EnvironmentNotRunningException;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.spi.Instance;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
@@ -247,6 +248,7 @@ public class WorkspaceRuntimes {
         } catch (ApiException e) {
             try {
                 environmentEngine.stop(workspaceId);
+            } catch (EnvironmentNotRunningException ignore) {
             } catch (Exception ex) {
                 LOG.error(ex.getLocalizedMessage(), ex);
             }
@@ -259,7 +261,7 @@ public class WorkspaceRuntimes {
                                   workspaceId,
                                   environmentStartError);
 
-            throw new ServerException(environmentStartError);
+            throw new ServerException(environmentStartError, e);
         }
     }
 

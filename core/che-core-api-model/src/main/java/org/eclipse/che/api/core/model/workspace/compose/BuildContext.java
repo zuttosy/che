@@ -29,6 +29,4 @@ public interface BuildContext {
      * <p/> Needed if dockerfile has non-default name or is not placed in the root of build context.
      */
     String getDockerfile();
-
-    // TODO add args field
 }

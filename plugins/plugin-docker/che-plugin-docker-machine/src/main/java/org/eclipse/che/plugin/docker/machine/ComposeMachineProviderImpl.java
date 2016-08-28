@@ -259,7 +259,6 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                                               machineId,
                                               machineLogger);
 
-            // TODO remove usage of isDev flag. Move this logic higher in calls hierarchy
             DockerNode node = dockerMachineFactory.createNode(workspaceId, container);
             if (isDev) {
                 node.bindWorkspace();
@@ -341,7 +340,6 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
         if (service.getBuild() != null && service.getBuild().getContext() != null) {
             buildImage(service, imageName, doForcePullOnBuild, progressMonitor);
         } else {
-            // TODO do we need that? probably can be removed after move to docker 1.12
             pullImage(service, imageName, progressMonitor);
         }
 
@@ -469,7 +467,6 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                      .getId();
     }
 
-    // TODO move these changes to agents mechanism
     private void addSystemWideContainerSettings(String workspaceId,
                                                 boolean isDev,
                                                 ComposeServiceImpl composeService) throws IOException {

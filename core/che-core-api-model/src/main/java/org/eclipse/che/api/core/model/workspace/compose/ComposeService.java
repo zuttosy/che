@@ -92,23 +92,23 @@ public interface ComposeService {
      * <ul>
      *     <li>80</li>
      *     <li>3000</li>
-     *     <li>8080:80</li>// TODO wil lwe support that?
-     *     <li>80:8000</li>// TODO wil lwe support that?
-     *     <li>9090-9091:8080-8081</li> // TODO wil lwe support that?
-     *     <li>127.0.0.1:8001:8001</li> // TODO wil lwe support that?
-     *     <li>127.0.0.1:5000-5010:5000-5010</li> // TODO wil lwe support that?
+     *     <li>8080:80</li>
+     *     <li>80:8000</li>
+     *     <li>9090-9091:8080-8081</li>
+     *     <li>127.0.0.1:8001:8001</li>
+     *     <li>127.0.0.1:5000-5010:5000-5010</li>
      * </ul>
      */
     List<String> getPorts();
 
     /**
-     * Mount paths or named volumes. // TODO wil lwe support that?
+     * Mount paths or named volumes.
      *
      * <p/> Examples:
      * <ul>
      *     <li>/var/lib/mysql</li>
      *     <li>/opt/data:/var/lib/mysql</li>
-     *     <li>datavolume:/var/lib/mysql</li>
+     *     <li>data-volume:/var/lib/mysql</li>
      * </ul>
      */
     List<String> getVolumes();

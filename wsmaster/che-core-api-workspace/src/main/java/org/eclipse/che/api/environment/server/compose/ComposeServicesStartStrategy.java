@@ -31,7 +31,6 @@ import static java.lang.String.format;
  */
 public class ComposeServicesStartStrategy {
     public List<String> order(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
-        // TODO if dev machine has the same weight as other machines put it in the head of queue
 
         Map<String, Integer> weights = weightMachines(composeEnvironment.getServices());
 

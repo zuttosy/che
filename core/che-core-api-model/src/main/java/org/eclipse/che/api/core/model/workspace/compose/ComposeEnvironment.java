@@ -18,11 +18,6 @@ import java.util.Map;
  * @author Alexander Garagatyi
  */
 public interface ComposeEnvironment {
-    // TODO
-    // will we support network entry
-    // will we support version 1?
-    // will we support volumes
-
     /**
      * Version of compose syntax.
      */

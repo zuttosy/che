@@ -39,12 +39,9 @@ public class ComposeServiceImpl implements ComposeService {
     private List<String>        volumes;
     @JsonProperty("volumes_from")
     private List<String>        volumesFrom;
-    // todo missing in the model
     @JsonProperty("mem_limit")
     private Long                memLimit;
     private BuildContextImpl    build;
-    //todo env_file list
-    //todo extends
 
     public ComposeServiceImpl() {}
 
