@@ -48,6 +48,7 @@ import org.eclipse.che.ide.api.event.ng.EditorFileStatusNotificationReceiver;
 import org.eclipse.che.ide.api.event.ng.FileOpenCloseEventListener;
 import org.eclipse.che.ide.api.event.ng.GitCheckoutStatusNotificationReceiver;
 import org.eclipse.che.ide.api.event.ng.JsonRpcWebSocketAgentEventListener;
+import org.eclipse.che.ide.api.event.ng.ProjectTreeStatusNotificationReceiver;
 import org.eclipse.che.ide.api.extension.ExtensionGinModule;
 import org.eclipse.che.ide.api.extension.ExtensionRegistry;
 import org.eclipse.che.ide.api.factory.FactoryServiceClient;
@@ -360,6 +361,7 @@ public class CoreGinModule extends AbstractGinModule {
                 GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
 
         requestReceivers.addBinding("event:file-in-vfs-status-changed").to(EditorFileStatusNotificationReceiver.class);
+        requestReceivers.addBinding("event:project-tree-status-changed").to(ProjectTreeStatusNotificationReceiver.class);
         requestReceivers.addBinding("event:git-checkout").to(GitCheckoutStatusNotificationReceiver.class);
     }
 
