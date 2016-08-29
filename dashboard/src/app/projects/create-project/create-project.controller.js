@@ -835,25 +835,33 @@ export class CreateProjectController {
     this.resetCreateProgress();
     this.setCreateProjectInProgress();
 
+    let source = {};
+    source.type = 'dockerfile';
     // logic to decide if we create workspace based on a stack or reuse existing workspace
-    let option;
-
     if (this.workspaceResource === 'existing-workspace') {
-      option = 'reuse-workspace';
+      // reuse existing workspace
       this.recipeUrl = null;
       this.stack = null;
+      this.createProjectSvc.setWorkspaceOfProject(this.workspaceSelected.config.name);
+      this.createProjectSvc.setWorkspaceNamespace(this.workspaceSelected.namespace);
+      this.checkExistingWorkspaceState(this.workspaceSelected);
     } else {
+      // create workspace based on a stack
       switch (this.stackTab) {
         case 'ready-to-go':
-          option = 'create-workspace';
+          source = this.getSourceFromStack(this.readyToGoStack);
           this.stack = this.readyToGoStack;
           break;
         case 'stack-library':
-          option = 'create-workspace';
+          source = this.getSourceFromStack(this.stackLibraryUser);
           this.stack = this.stackLibraryUser;
           break;
         case 'custom-stack':
-          option = 'create-workspace';
+          if (this.recipeUrl && this.recipeUrl.length > 0) {
+            source.location = this.recipeUrl;
+          } else {
+            source.content = this.recipeScript;
+          }
           this.stack = null;
           break;
       }
@@ -1042,7 +1050,17 @@ export class CreateProjectController {
   }
 
   isReadyToCreate() {
-    return !this.isCreateProjectInProgress() && this.isReady;
+    let isCustomStack = this.stackTab === 'custom-stack';
+    let isCreateProjectInProgress = this.isCreateProjectInProgress();
+
+    if (!isCustomStack) {
+      return !isCreateProjectInProgress && this.isReady
+    }
+
+    let isRecipeUrl = this.recipeUrl && this.recipeUrl.length > 0;
+    let isRecipeScript = this.recipeScript && this.recipeScript.length > 0;
+
+    return !isCreateProjectInProgress && this.isReady && (isRecipeUrl || isRecipeScript);
   }
 
   resetCreateProgress() {
