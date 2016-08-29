@@ -11,6 +11,7 @@
 package org.eclipse.che.api.workspace.server;
 
 import org.eclipse.che.api.core.BadRequestException;
+import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.machine.Command;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.Workspace;
@@ -43,13 +44,15 @@ public class DefaultWorkspaceValidator implements WorkspaceValidator {
     }
 
     @Override
-    public void validateWorkspace(Workspace workspace) throws BadRequestException {
+    public void validateWorkspace(Workspace workspace) throws BadRequestException,
+                                                              ServerException {
         validateAttributes(workspace.getAttributes());
         validateConfig(workspace.getConfig());
     }
 
     @Override
-    public void validateConfig(WorkspaceConfig config) throws BadRequestException {
+    public void validateConfig(WorkspaceConfig config) throws BadRequestException,
+                                                              ServerException {
         // configuration object itself
         checkNotNull(config.getName(), "Workspace name required");
         checkArgument(WS_NAME.matcher(config.getName()).matches(),

@@ -30,18 +30,24 @@ import static java.lang.String.format;
  * author Alexander Garagatyi
  */
 public class ComposeServicesStartStrategy {
+    /**
+     * Resolves order of start for machines in an environment.
+     *
+     * @throws IllegalArgumentException
+     *         if order of machines can not be calculated
+     */
     public List<String> order(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
 
         Map<String, Integer> weights = weightMachines(composeEnvironment.getServices());
 
-        return sortByWeight(composeEnvironment.getServices(), weights);
+        return sortByWeight(weights);
     }
 
     /**
-     * Move start of dependent machines after machines they depends on.
+     * Returns mapping of names of machines to its weights in dependency graph.
      *
      * @throws IllegalArgumentException
-     *         if weight of machines is not calculated
+     *         if weights of machines can not be calculated
      */
     private Map<String, Integer> weightMachines(Map<String, ComposeServiceImpl> services)
             throws IllegalArgumentException {
@@ -115,9 +121,9 @@ public class ComposeServicesStartStrategy {
     }
 
     /**
-     * Parses link content into depends_on field representation - basically removes column and further chars
+     * Parses link content into depends_on field representation - removes column and further chars
      */
-    private String getServiceFromMachineLink(String link) {
+    private String getServiceFromMachineLink(String link) throws IllegalArgumentException {
         String service = link;
         if (link != null) {
             String[] split = service.split(":");
@@ -129,13 +135,11 @@ public class ComposeServicesStartStrategy {
         return service;
     }
 
-    private List<String> sortByWeight(Map<String, ComposeServiceImpl> services,
-                                      Map<String, Integer> weights) {
-
-        TreeMap<String, ComposeServiceImpl> sortedServices =
+    private List<String> sortByWeight(Map<String, Integer> weights) {
+        TreeMap<String, Integer> sortedServices =
                 new TreeMap<>((o1, o2) -> weights.get(o1).compareTo(weights.get(o2)));
 
-        sortedServices.putAll(services);
+        sortedServices.putAll(weights);
 
         return new ArrayList<>(sortedServices.keySet());
     }

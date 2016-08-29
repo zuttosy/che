@@ -52,7 +52,17 @@ public class ComposeFileParser {
         this.apiEndpoint = apiEndpoint;
     }
 
-    public ComposeEnvironmentImpl parse(Environment environment) throws ServerException {
+    /**
+     * Parses recipe environment into Docker Compose model.
+     *
+     * @param environment environment to parse
+     * @throws IllegalArgumentException
+     *         when environment or environment recipe is invalid
+     * @throws ServerException
+     *         when environment recipe can not be retrieved
+     */
+    public ComposeEnvironmentImpl parse(Environment environment) throws IllegalArgumentException,
+                                                                        ServerException {
         checkNotNull(environment, "Environment should not be null");
         checkNotNull(environment.getRecipe(), "Environment recipe should not be null");
         checkNotNull(environment.getRecipe().getContentType(), "Content type of environment recipe should not be null");
@@ -62,6 +72,22 @@ public class ComposeFileParser {
         String recipeContent = getContentOfRecipe(environment.getRecipe());
         return parseEnvironmentRecipeContent(recipeContent,
                                              environment.getRecipe().getContentType());
+    }
+
+    /**
+     * Converts Docker Compose environment model into YAML file.
+     *
+     * @param composeEnvironment Docker Compose environment model file
+     * @throws IllegalArgumentException
+     *         when argument is null or conversion to YAML fails
+     */
+    public String toYaml(ComposeEnvironment composeEnvironment) throws IllegalArgumentException {
+        checkNotNull(composeEnvironment, "Compose environment should not be null");
+        try {
+            return YAML_PARSER.writeValueAsString(composeEnvironment);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getLocalizedMessage(), e);
+        }
     }
 
     private String getContentOfRecipe(EnvironmentRecipe environmentRecipe) throws ServerException {
@@ -119,15 +145,6 @@ public class ComposeFileParser {
             if (file != null && !file.delete()) {
                 LOG.error(String.format("Removal of recipe file %s failed.", file.getAbsolutePath()));
             }
-        }
-    }
-
-    public String toYaml(ComposeEnvironment composeEnvironment) throws ServerException {
-        checkNotNull(composeEnvironment, "Compose environment should not be null");
-        try {
-            return YAML_PARSER.writeValueAsString(composeEnvironment);
-        } catch (JsonProcessingException e) {
-            throw new ServerException(e.getLocalizedMessage(), e);
         }
     }
 

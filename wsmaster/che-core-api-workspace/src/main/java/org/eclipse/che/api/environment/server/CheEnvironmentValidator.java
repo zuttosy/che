@@ -12,19 +12,31 @@ package org.eclipse.che.api.environment.server;
 
 import com.google.common.base.Joiner;
 
+import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.machine.MachineConfig;
 import org.eclipse.che.api.core.model.machine.ServerConf;
 import org.eclipse.che.api.core.model.workspace.Environment;
+import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
+import org.eclipse.che.api.core.model.workspace.ServerConf2;
+import org.eclipse.che.api.core.model.workspace.compose.ComposeService;
+import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
+import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
+import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
 import org.eclipse.che.api.machine.server.MachineInstanceProviders;
+import org.eclipse.che.commons.annotation.Nullable;
 
 import javax.inject.Inject;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Validates description of environment of workspace.
@@ -33,28 +45,58 @@ import static java.lang.String.format;
  */
 public class CheEnvironmentValidator {
     /* machine name must contain only {a-zA-Z0-9_-} characters and it's needed for validation machine names */
-    private static final Pattern MACHINE_NAME_PATTERN = Pattern.compile("^/?[a-zA-Z0-9_-]+$");
-    private static final Pattern SERVER_PORT          = Pattern.compile("[1-9]+[0-9]*/(?:tcp|udp)");
-    private static final Pattern SERVER_PROTOCOL      = Pattern.compile("[a-z][a-z0-9-+.]*");
+    private static final String  MACHINE_NAME_REGEXP  = "[a-zA-Z0-9_-]+";
+    private static final Pattern MACHINE_NAME_PATTERN = Pattern.compile("^" + MACHINE_NAME_REGEXP + "$");
+    private static final Pattern SERVER_PORT          = Pattern.compile("^[1-9]+[0-9]*/(tcp|udp)$");
+    private static final Pattern SERVER_PROTOCOL      = Pattern.compile("^[a-z][a-z0-9-+.]*$");
 
-    private final MachineInstanceProviders machineInstanceProviders;
+    // Compose syntax patterns
+    /**
+     * Examples:
+     * <ul>
+     * <li>8080/tcp</li>
+     * <li>8080/udp</li>
+     * <li>8080</li>
+     * <li>8/tcp</li>
+     * <li>8</li>
+     * </ul>
+     */
+    private static final Pattern EXPOSE_PATTERN = Pattern.compile("^[1-9]+[0-9]*(/(tcp|udp))?$");
+    /**
+     * Examples:
+     * <ul>
+     * <li>service1</li>
+     * <li>service1:alias1</li>
+     * </ul>
+     */
+    private static final Pattern LINK_PATTERN   =
+            Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + "):" + MACHINE_NAME_REGEXP + "$");
+
+    private static final Pattern VOLUME_FROM_PATTERN =
+            Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + ")(:(ro|rw))?$");
+
+    private final MachineInstanceProviders     machineInstanceProviders;
+    private final ComposeFileParser            composeFileParser;
+    private final ComposeServicesStartStrategy startStrategy;
 
     @Inject
-    public CheEnvironmentValidator(MachineInstanceProviders machineInstanceProviders) {
+    public CheEnvironmentValidator(MachineInstanceProviders machineInstanceProviders,
+                                   ComposeFileParser composeFileParser,
+                                   ComposeServicesStartStrategy startStrategy) {
         this.machineInstanceProviders = machineInstanceProviders;
+        this.composeFileParser = composeFileParser;
+        this.startStrategy = startStrategy;
     }
 
-    public void validate(String envName, Environment env) throws IllegalArgumentException {
+    public void validate(String envName, Environment env) throws IllegalArgumentException,
+                                                                 ServerException {
         checkArgument(!isNullOrEmpty(envName),
                       "Environment name should not be neither null nor empty");
         checkNotNull(env.getRecipe(), "Environment recipe should not be null");
-        checkArgument(!isNullOrEmpty(env.getRecipe().getType()),
-                      "Environment recipe type should not be neither null nor empty");
         checkArgument("compose".equals(env.getRecipe().getType()),
-                      "Type '%s' of environment '%s' is not supported. Supported types: %s",
+                      "Type '%s' of environment '%s' is not supported. Supported types: compose",
                       env.getRecipe().getType(),
-                      envName,
-                      "compose");
+                      envName);
         checkArgument(!isNullOrEmpty(env.getRecipe().getContentType()),
                       "Environment recipe content type should not be neither null nor empty");
         checkArgument(env.getRecipe().getContent() != null || env.getRecipe().getLocation() != null,
@@ -63,35 +105,160 @@ public class CheEnvironmentValidator {
                       "Recipe of environment '%s' contains mutually exclusive fields location and content",
                       envName);
 
-        // TODO use compose format
-        // check :
-        // machine name is not empty
-        // dev machine existence, only 1
-        // che machines field
+        ComposeEnvironmentImpl composeEnvironment;
+        try {
+            composeEnvironment = composeFileParser.parse(env);
+        } catch (ServerException e) {
+            throw new ServerException(format("Parsing of recipe of environment '%s' failed. Error: %s",
+                                             envName, e.getLocalizedMessage()));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(format("Parsing of recipe of environment '%s' failed. Error: %s",
+                                                      envName, e.getLocalizedMessage()));
+        }
 
+        checkArgument(composeEnvironment.getServices() != null && !composeEnvironment.getServices().isEmpty(),
+                      "Environment '%s' should contain at least 1 compose service",
+                      envName);
 
+        checkArgument(env.getMachines() != null && !env.getMachines().isEmpty(),
+                      "Environment '%s' doesn't contain machine with 'ws-agent' agent",
+                      envName);
 
+        List<String> missingServices = env.getMachines()
+                                          .keySet()
+                                          .stream()
+                                          .filter(machineName -> !composeEnvironment.getServices()
+                                                                                    .containsKey(machineName))
+                                          .collect(toList());
+        checkArgument(missingServices.isEmpty(),
+                      "Environment '%s' contains machines that are missing in environment recipe: %s",
+                      envName, Joiner.on(", ").join(missingServices));
 
+        List<String> devMachines = env.getMachines()
+                                      .entrySet()
+                                      .stream()
+                                      .filter(entry -> entry.getValue()
+                                                            .getAgents()
+                                                            .contains("ws-agent"))
+                                      .map(Map.Entry::getKey)
+                                      .collect(toList());
 
+        checkArgument(devMachines.size() == 1,
+                      "Environment '%s' should contain exactly 1 machine with ws-agent, but contains '%d'. " +
+                      "All machines with this agent: %s",
+                      envName, devMachines.size(), Joiner.on(", ").join(devMachines));
 
+        // needed to validate different kinds of dependencies in services to other services
+        Set<String> servicesNames = composeEnvironment.getServices().keySet();
 
+        composeEnvironment.getServices()
+                          .forEach((serviceName, service) -> validateMachine(serviceName,
+                                                                             env.getMachines().get(serviceName),
+                                                                             service,
+                                                                             envName,
+                                                                             servicesNames));
 
+        // check that order can be resolved
+        try {
+            startStrategy.order(composeEnvironment);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    format("Compose services order of environment '%s' is not resolvable. Error: %s",
+                           envName, e.getLocalizedMessage()));
+        }
+    }
 
-//        checkArgument(env.getMachineConfigs() != null && !env.getMachineConfigs().isEmpty(),
-//                      "Environment '%s' should contain at least 1 machine",
-//                      envName);
+    protected void validateMachine(String machineName,
+                                   @Nullable ExtendedMachine extendedMachine,
+                                   ComposeService service,
+                                   String envName,
+                                   Set<String> servicesNames) throws IllegalArgumentException {
+        checkArgument(MACHINE_NAME_PATTERN.matcher(machineName).matches(),
+                      "Name of machine '%s' in environment '%s' is invalid",
+                      machineName, envName);
 
-//        final long devCount = env.getMachineConfigs()
-//                                 .stream()
-//                                 .filter(MachineConfig::isDev)
-//                                 .count();
-//        checkArgument(devCount == 1,
-//                      "Environment '%s' should contain exactly 1 dev machine, but contains '%d'",
-//                      envName,
-//                      devCount);
-//        for (MachineConfig machineCfg : env.getMachineConfigs()) {
-//            validateMachine(machineCfg, envName);
-//        }
+        checkArgument(!isNullOrEmpty(service.getImage()) ||
+                      (service.getBuild() != null && !isNullOrEmpty(service.getBuild().getContext())),
+                      "Filed 'image' or 'build.context' is missing in compose service '%s' in environment '%s'",
+                      machineName, envName);
+
+        checkArgument(service.getMemLimit() != null && service.getMemLimit() > 0,
+                      "Field 'mem_limit' is missing or contain illegal value in service '%s' of environment '%s'." +
+                      " This field should specify container RAM size in bytes.",
+                      machineName, envName);
+
+        service.getExpose()
+               .stream()
+               .forEach(expose -> checkArgument(EXPOSE_PATTERN.matcher(expose).matches(),
+                                                "Port '%s' in field 'expose' of service '%s' in environment '%s' is invalid",
+                                                expose, machineName, envName));
+
+        service.getLinks()
+               .stream()
+               .forEach(link -> {
+                   Matcher matcher = LINK_PATTERN.matcher(link);
+
+                   checkArgument(matcher.matches(),
+                                 "Link '%s' in field 'links' of service '%s' in environment '%s' is invalid",
+                                 link, machineName, envName);
+
+                   String serviceFromLink = matcher.group("serviceName");
+                   checkArgument(servicesNames.contains(serviceFromLink),
+                                 "Service '%s' in environment '%s' contains link to non existing service '%s'",
+                                 machineName, envName, serviceFromLink);
+               });
+
+        service.getDependsOn()
+               .stream()
+               .forEach(depends -> {
+                   checkArgument(MACHINE_NAME_PATTERN.matcher(depends).matches(),
+                                 "Dependency '%s' in field 'depends_on' of service '%s' in environment '%s' is invalid",
+                                 depends, machineName, envName);
+
+                   checkArgument(servicesNames.contains(depends),
+                                 "Service '%s' in environment '%s' contains dependency to non existing service '%s'",
+                                 machineName, envName, depends);
+               });
+
+        service.getVolumesFrom()
+               .stream()
+               .forEach(volumesFrom -> {
+                   Matcher matcher = VOLUME_FROM_PATTERN.matcher(volumesFrom);
+
+                   checkArgument(matcher.matches(),
+                                 "Service '%s' in field 'volumes_from' of service '%s' in environment '%s' is invalid",
+                                 volumesFrom, machineName, envName);
+
+                   String serviceFromVolumesFrom = matcher.group("serviceName");
+                   checkArgument(servicesNames.contains(serviceFromVolumesFrom),
+                                 "Service '%s' in environment '%s' contains non existing service '%s' in 'volumes_from' field",
+                                 machineName, envName, serviceFromVolumesFrom);
+               });
+
+        checkArgument(service.getPorts() == null || service.getPorts().isEmpty(),
+                      "Ports binding is forbidden but found in service '%s' of environment '%s'",
+                      machineName, envName);
+
+        checkArgument(service.getVolumes() == null || service.getVolumes().isEmpty(),
+                      "Volumes binding is forbidden but found in service '%s' of environment '%s'",
+                      machineName, envName);
+
+        extendedMachine.getServers()
+                       .entrySet()
+                       .stream()
+                       .forEach(serverEntry -> {
+                           String serverName = serverEntry.getKey();
+                           ServerConf2 server = serverEntry.getValue();
+
+                           checkArgument(server.getPort() != null && SERVER_PORT.matcher(server.getPort()).matches(),
+                                         "Machine '%s' in environment '%s' contains server conf '%s' with invalid port '%s'",
+                                         machineName, envName, serverName, server.getPort());
+                           checkArgument(server.getProtocol() == null || SERVER_PROTOCOL.matcher(server.getProtocol()).matches(),
+                                         "Machine '%s' in environment '%s' contains server conf '%s' with invalid protocol '%s'",
+                                         machineName, envName, serverName, server.getProtocol());
+                       });
+
+        // TODO volumes_from collocate containers
     }
 
     public void validateMachine(MachineConfig machineCfg) throws IllegalArgumentException {
