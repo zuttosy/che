@@ -39,6 +39,7 @@ import org.eclipse.che.api.vfs.impl.file.event.detectors.FileTrackingOperationTr
 import org.eclipse.che.api.vfs.impl.file.event.detectors.FileTrackingRegistry;
 import org.eclipse.che.api.vfs.impl.file.event.detectors.GitCheckoutHiEventDetector;
 import org.eclipse.che.api.vfs.impl.file.event.detectors.PomModifiedHiEventDetector;
+import org.eclipse.che.api.vfs.impl.file.event.detectors.ProjectTreeChangesDetector;
 import org.eclipse.che.api.vfs.search.MediaTypeFilter;
 import org.eclipse.che.api.vfs.search.SearcherProvider;
 import org.eclipse.che.api.vfs.search.impl.FSLuceneSearcherProvider;
@@ -102,6 +103,7 @@ public class ProjectApiModule extends AbstractModule {
         highLevelVfsEventDetectorMultibinder.addBinding().to(PomModifiedHiEventDetector.class);
         highLevelVfsEventDetectorMultibinder.addBinding().to(GitCheckoutHiEventDetector.class);
         highLevelVfsEventDetectorMultibinder.addBinding().to(EditorFileStatusDetector.class);
+        highLevelVfsEventDetectorMultibinder.addBinding().to(ProjectTreeChangesDetector.class);
 
         bind(FileTrackingOperationTransmitter.class).asEagerSingleton();
 
