@@ -11,6 +11,8 @@
 package org.eclipse.che.plugin.docker.client.exception;
 
 /**
+ * Is thrown when docker network is not found.
+ *
  * @author Alexander Garagatyi
  */
 public class NetworkNotFoundException extends DockerException {

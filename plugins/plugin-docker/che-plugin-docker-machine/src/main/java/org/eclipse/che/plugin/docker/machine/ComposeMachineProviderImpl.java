@@ -85,6 +85,8 @@ import static org.eclipse.che.plugin.docker.machine.DockerInstance.LATEST_TAG;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
+ * Creates/destroys docker networks and creates docker compose based {@link Instance}.
+ *
  * @author Alexander Garagatyi
  */
 public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvider {
