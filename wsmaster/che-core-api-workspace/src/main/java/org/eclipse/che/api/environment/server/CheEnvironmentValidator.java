@@ -188,13 +188,11 @@ public class CheEnvironmentValidator {
                       machineName, envName);
 
         service.getExpose()
-               .stream()
                .forEach(expose -> checkArgument(EXPOSE_PATTERN.matcher(expose).matches(),
                                                 "Port '%s' in field 'expose' of service '%s' in environment '%s' is invalid",
                                                 expose, machineName, envName));
 
         service.getLinks()
-               .stream()
                .forEach(link -> {
                    Matcher matcher = LINK_PATTERN.matcher(link);
 
@@ -209,7 +207,6 @@ public class CheEnvironmentValidator {
                });
 
         service.getDependsOn()
-               .stream()
                .forEach(depends -> {
                    checkArgument(MACHINE_NAME_PATTERN.matcher(depends).matches(),
                                  "Dependency '%s' in field 'depends_on' of service '%s' in environment '%s' is invalid",
@@ -221,7 +218,6 @@ public class CheEnvironmentValidator {
                });
 
         service.getVolumesFrom()
-               .stream()
                .forEach(volumesFrom -> {
                    Matcher matcher = VOLUME_FROM_PATTERN.matcher(volumesFrom);
 
@@ -246,7 +242,6 @@ public class CheEnvironmentValidator {
         if (extendedMachine != null && extendedMachine.getServers() != null) {
             extendedMachine.getServers()
                            .entrySet()
-                           .stream()
                            .forEach(serverEntry -> {
                                String serverName = serverEntry.getKey();
                                ServerConf2 server = serverEntry.getValue();
