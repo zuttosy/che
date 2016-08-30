@@ -73,6 +73,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.jayway.restassured.RestAssured.given;
 import static java.lang.Boolean.FALSE;
@@ -1036,8 +1037,15 @@ public class FactoryServiceTest {
         Factory result = dto.createDtoFromJson(response.getBody().asString(), Factory.class);
         assertEquals(result.getWorkspace().getProjects().size(), 2);
         assertEquals(result.getWorkspace().getName(), usersWorkspace.getConfig().getName());
-        assertEquals(result.getWorkspace().getEnvironments().get(0).toString(),
-                     asDto(usersWorkspace.getConfig().getEnvironments().get(0)).toString());
+        assertEquals(result.getWorkspace()
+                           .getEnvironments()
+                           .toString(),
+                     usersWorkspace.getConfig()
+                                   .getEnvironments()
+                                   .entrySet()
+                                   .stream()
+                                   .collect(Collectors.toMap(Map.Entry::getKey, entry -> asDto(entry.getValue())))
+                                   .toString());
         assertEquals(result.getWorkspace().getCommands().get(0), asDto(usersWorkspace.getConfig().getCommands().get(0)));
     }
 

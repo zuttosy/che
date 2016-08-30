@@ -814,7 +814,6 @@ public class CheEnvironmentEngine {
     }
 
     private void addMachine(MachineImpl machine) throws ServerException {
-        machine.setStatus(MachineStatus.CREATING);
         Instance instance = new NoOpMachineInstance(machine);
         try (StripedLocks.WriteLock lock = stripedLocks.acquireWriteLock(machine.getWorkspaceId())) {
             ensurePreDestroyIsNotExecuted();

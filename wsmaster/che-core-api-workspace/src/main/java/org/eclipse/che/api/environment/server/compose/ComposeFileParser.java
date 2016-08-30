@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -155,17 +156,6 @@ public class ComposeFileParser {
     private static void checkNotNull(Object object, String errorMessageTemplate, Object... errorMessageParams) {
         if (object == null) {
             throw new IllegalArgumentException(format(errorMessageTemplate, errorMessageParams));
-        }
-    }
-
-    /**
-     * Checks that expression is true, throws {@link IllegalArgumentException} otherwise.
-     *
-     * <p>Exception uses error message built from error message template and error message parameters.
-     */
-    private static void checkArgument(boolean expression, String errorMessage) {
-        if (!expression) {
-            throw new IllegalArgumentException(errorMessage);
         }
     }
 }

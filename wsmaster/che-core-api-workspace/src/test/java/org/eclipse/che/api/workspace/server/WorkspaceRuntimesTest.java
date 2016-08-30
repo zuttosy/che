@@ -560,16 +560,8 @@ public class WorkspaceRuntimesTest {
     }
 
     private static WorkspaceImpl createWorkspace() {
-        MachineConfigImpl devCfg = createConfig(true);
-        MachineConfigImpl nonDevCfg = MachineConfigImpl.builder()
-                                                             .fromConfig(devCfg)
-                                                             .setName("non-dev")
-                                                             .setDev(false)
-                                                             .build();
         EnvironmentImpl environment = new EnvironmentImpl(null,
                                                           null);
-//                                                          new RecipeImpl(),
-//                                                          asList(nonDevCfg, devCfg));
         WorkspaceConfigImpl wsConfig = WorkspaceConfigImpl.builder()
                                                           .setName("test workspace")
                                                           .setEnvironments(singletonMap(ENV_NAME, environment))
