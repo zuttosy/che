@@ -11,9 +11,11 @@
 package org.eclipse.che.api.environment.server;
 
 import org.eclipse.che.api.machine.server.MachineInstanceProviders;
-import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
-import org.eclipse.che.api.machine.shared.dto.MachineSourceDto;
-import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
+import org.eclipse.che.api.workspace.server.DtoConverter;
+import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
+import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
+import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
+import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,10 +28,10 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,44 +54,48 @@ public class CheEnvironmentValidatorTest {
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "Environment name should not be neither null nor empty")
     public void shouldFailValidationIfEnvNameIsNull() throws Exception {
-        EnvironmentDto environment = createConfig();
+        // given
+        EnvironmentDto environment = createEnv();
 
-
+        // when
         environmentValidator.validate(null, environment);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "Environment name should not be neither null nor empty")
     public void shouldFailValidationIfEnvNameIsEmpty() throws Exception {
-        EnvironmentDto environment = createConfig();
+        // given
+        EnvironmentDto environment = createEnv();
 
-
+        // when
         environmentValidator.validate("", environment);
     }
 
-    @Test
-    public void shouldNotFailValidationIfEnvironmentRecipeTypeIsDocker() throws Exception {
-        EnvironmentDto config = createConfig();
-//        config.withRecipe(newDto(RecipeDto.class).withType("docker"));
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "Type 'docker' of environment 'env' is not supported. Supported types: compose")
+    public void shouldFailValidationIfEnvironmentRecipeTypeIsNotCompose() throws Exception {
+        // given
+        EnvironmentDto config = createEnv();
+        config.getRecipe().setType("docker");
 
-
+        // when
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment '.*' should contain at least 1 machine")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment '.*' should contain at least 1 machine")
     public void shouldFailValidationIfMachinesListIsEmpty() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.withMachineConfigs(null);
 
 
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment '.*' should contain exactly 1 dev machine, but contains '0'")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment '.*' should contain exactly 1 dev machine, but contains '0'")
     public void shouldFailValidationIfNoDevMachineFound() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .stream()
 //              .filter(MachineConfigDto::isDev)
@@ -99,10 +105,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment '.*' should contain exactly 1 dev machine, but contains '2'")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment '.*' should contain exactly 1 dev machine, but contains '2'")
     public void shouldFailValidationIf2DevMachinesFound() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        final Optional<MachineConfigDto> devMachine = config.getMachineConfigs()
 //                                                            .stream()
 //                                                            .filter(MachineConfigDto::isDev)
@@ -114,10 +120,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment .* contains machine with null or empty name")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment .* contains machine with null or empty name")
     public void shouldFailValidationIfMachineNameIsNull() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withName(null);
@@ -126,10 +132,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment .* contains machine with null or empty name")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment .* contains machine with null or empty name")
     public void shouldFailValidationIfMachineNameIsEmpty() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withName("");
@@ -138,10 +144,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' doesn't have source")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' doesn't have source")
     public void shouldFailValidationIfMachineSourceIsNull() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withSource(null);
@@ -150,10 +156,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Type 'null' of machine '.*' in environment '.*' is not supported. Supported values are: docker, ssh.")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Type 'null' of machine '.*' in environment '.*' is not supported. Supported values are: docker, ssh.")
     public void shouldFailValidationIfMachineTypeIsNull() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withType(null);
@@ -162,10 +168,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Type 'compose' of machine '.*' in environment '.*' is not supported. Supported values are: docker, ssh.")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Type 'compose' of machine '.*' in environment '.*' is not supported. Supported values are: docker, ssh.")
     public void shouldFailValidationIfMachineTypeIsNotDocker() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withType("compose");
@@ -174,11 +180,11 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine .* contains server conf with invalid port .*",
-          dataProvider = "invalidPortProvider")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine .* contains server conf with invalid port .*",
+//          dataProvider = "invalidPortProvider")
     public void shouldFailValidationIfServerConfPortIsInvalid(String invalidPort) throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .getServers()
@@ -215,11 +221,11 @@ public class CheEnvironmentValidatorTest {
         };
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine .* contains server conf with invalid protocol .*",
-          dataProvider = "invalidProtocolProvider")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine .* contains server conf with invalid protocol .*",
+//          dataProvider = "invalidProtocolProvider")
     public void shouldFailValidationIfServerConfProtocolIsInvalid(String invalidProtocol) throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .getServers()
@@ -240,10 +246,10 @@ public class CheEnvironmentValidatorTest {
                 };
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable with null or empty name")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable with null or empty name")
     public void shouldFailValidationIfEnvVarNameIsNull() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .getEnvVariables()
@@ -253,10 +259,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable with null or empty name")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable with null or empty name")
     public void shouldFailValidationIfEnvVarNameIsEmpty() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .getEnvVariables()
@@ -266,10 +272,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable '.*' with null value")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Machine '.*' in environment '.*' contains environment variable '.*' with null value")
     public void shouldFailValidationIfEnvVarValueIsNull() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .getEnvVariables()
@@ -279,10 +285,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Source of machine '.*' in environment '.*' must contain location or content")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Source of machine '.*' in environment '.*' must contain location or content")
     public void shouldFailValidationIfMissingSourceLocationAndContent() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withSource(newDto(MachineSourceDto.class).withType("dockerfile"));
@@ -290,10 +296,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment '.*' contains machine '.*' with invalid source location: 'localhost'")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment '.*' contains machine '.*' with invalid source location: 'localhost'")
     public void shouldFailValidationIfLocationIsInvalidUrl() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withSource(newDto(MachineSourceDto.class).withType("dockerfile").withLocation("localhost"));
@@ -301,10 +307,10 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Environment '.*' contains machine '.*' with invalid source location protocol: ftp://localhost")
+//    @Test(expectedExceptions = IllegalArgumentException.class,
+//          expectedExceptionsMessageRegExp = "Environment '.*' contains machine '.*' with invalid source location protocol: ftp://localhost")
     public void shouldFailValidationIfLocationHasInvalidProtocol() throws Exception {
-        EnvironmentDto config = createConfig();
+        EnvironmentDto config = createEnv();
 //        config.getMachineConfigs()
 //              .get(0)
 //              .withSource(newDto(MachineSourceDto.class).withType("dockerfile").withLocation("ftp://localhost"));
@@ -312,29 +318,29 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", config);
     }
 
-    private EnvironmentDto createConfig() {
-        final List<ServerConfDto> serversConf =
-                new ArrayList<>(Arrays.asList(newDto(ServerConfDto.class).withRef("ref1")
-                                                                         .withPort("8080/tcp")
-                                                                         .withProtocol("https")
-                                                                         .withPath("some/path"),
-                                              newDto(ServerConfDto.class).withRef("ref2")
-                                                                         .withPort("9090/udp")
-                                                                         .withProtocol("protocol")
-                                                                         .withPath("/some/path")));
-        MachineConfigDto devMachine = newDto(MachineConfigDto.class).withDev(true)
-                                                                    .withName("dev-machine")
-                                                                    .withType("docker")
-                                                                    .withSource(newDto(MachineSourceDto.class)
-                                                                                        .withLocation("http://location")
-                                                                                        .withType("dockerfile"))
-                                                                    .withServers(serversConf)
-                                                                    .withEnvVariables(new HashMap<>(
-                                                                            singletonMap("key1", "value1")));
+    private EnvironmentDto createEnv() {
+        // singletonMap, asList are wrapped into modifiable collections to ease env modifying by tests
+        EnvironmentImpl env = new EnvironmentImpl();
+        Map<String, ExtendedMachineImpl> machines = new HashMap<>();
+        Map<String, ServerConf2Impl> servers = new HashMap<>();
 
-        return newDto(EnvironmentDto.class)
-//                                           .withMachineConfigs(
-//                                                   new ArrayList<>(singletonList(devMachine)))
-                                           .withRecipe(null);
+        servers.put("ref1", new ServerConf2Impl("8080/tcp",
+                                                "proto1",
+                                                new HashMap<>(singletonMap("prop1", "propValue"))));
+        servers.put("ref2", new ServerConf2Impl("8080/udp", "proto1", null));
+        servers.put("ref3", new ServerConf2Impl("9090", "proto1", null));
+        machines.put("dev-machine", new ExtendedMachineImpl(new ArrayList<>(asList("ws-agent", "someAgent")), servers));
+        machines.put("machine2", new ExtendedMachineImpl(new ArrayList<>(asList("someAgent2", "someAgent3")), null));
+        String environmentRecipeContent =
+                "services:\n  " +
+                "dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 4294967296\n  " +
+                "machine2:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 100000";
+        env.setRecipe(new EnvironmentRecipeImpl("compose",
+                                                "application/x-yaml",
+                                                environmentRecipeContent,
+                                                null));
+        env.setMachines(machines);
+
+        return DtoConverter.asDto(env);
     }
 }
