@@ -85,7 +85,10 @@ public class ProjectTreeChangesDetector implements HiEventDetector<ProjectTreeCh
                                                            .filter(EventTreeNode::isDir)
                                                            .collect(toSet())) {
                 directories.removeIf(dir -> dir.getPath().contains(candidateDir.getPath()));
-                directories.add(candidateDir);
+
+                if (directories.stream().noneMatch(dir -> candidateDir.getPath().contains(dir.getPath()))) {
+                    directories.add(candidateDir);
+                }
             }
 
             for (EventTreeNode node : directories) {
