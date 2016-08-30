@@ -243,20 +243,22 @@ public class CheEnvironmentValidator {
                       "Volumes binding is forbidden but found in service '%s' of environment '%s'",
                       machineName, envName);
 
-        extendedMachine.getServers()
-                       .entrySet()
-                       .stream()
-                       .forEach(serverEntry -> {
-                           String serverName = serverEntry.getKey();
-                           ServerConf2 server = serverEntry.getValue();
+        if (extendedMachine != null && extendedMachine.getServers() != null) {
+            extendedMachine.getServers()
+                           .entrySet()
+                           .stream()
+                           .forEach(serverEntry -> {
+                               String serverName = serverEntry.getKey();
+                               ServerConf2 server = serverEntry.getValue();
 
-                           checkArgument(server.getPort() != null && SERVER_PORT.matcher(server.getPort()).matches(),
-                                         "Machine '%s' in environment '%s' contains server conf '%s' with invalid port '%s'",
-                                         machineName, envName, serverName, server.getPort());
-                           checkArgument(server.getProtocol() == null || SERVER_PROTOCOL.matcher(server.getProtocol()).matches(),
-                                         "Machine '%s' in environment '%s' contains server conf '%s' with invalid protocol '%s'",
-                                         machineName, envName, serverName, server.getProtocol());
-                       });
+                               checkArgument(server.getPort() != null && SERVER_PORT.matcher(server.getPort()).matches(),
+                                             "Machine '%s' in environment '%s' contains server conf '%s' with invalid port '%s'",
+                                             machineName, envName, serverName, server.getPort());
+                               checkArgument(server.getProtocol() == null || SERVER_PROTOCOL.matcher(server.getProtocol()).matches(),
+                                             "Machine '%s' in environment '%s' contains server conf '%s' with invalid protocol '%s'",
+                                             machineName, envName, serverName, server.getProtocol());
+                           });
+        }
 
         // TODO volumes_from collocate containers
     }

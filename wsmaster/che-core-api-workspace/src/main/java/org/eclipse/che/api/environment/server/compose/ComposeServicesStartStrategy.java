@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.environment.server.compose;
 
+import com.google.common.base.Joiner;
+
 import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
 import org.eclipse.che.api.environment.server.compose.model.ComposeServiceImpl;
 
@@ -20,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -90,7 +92,7 @@ public class ComposeServicesStartStrategy {
                         machinesLeft.remove(service);
                         weightEvaluatedInCycleRun = true;
                     } else {
-                        // machine has depends on entry - check if it has not weighted connection
+                        // machine has dependencies - check if it has not weighted dependencies
                         Optional<String> nonWeightedLink = dependencies.get(service)
                                                                        .stream()
                                                                        .filter(machinesLeft::contains)
@@ -114,7 +116,9 @@ public class ComposeServicesStartStrategy {
         // Not evaluated weights of machines left.
         // Probably because of circular dependency.
         if (weights.size() != services.size()) {
-            throw new IllegalArgumentException("Launch order of machines " + machinesLeft + " can't be evaluated");
+            throw new IllegalArgumentException("Launch order of machines " +
+                                               Joiner.on(',').join(machinesLeft) +
+                                               " can't be evaluated");
         }
 
         return weights;
@@ -136,11 +140,10 @@ public class ComposeServicesStartStrategy {
     }
 
     private List<String> sortByWeight(Map<String, Integer> weights) {
-        TreeMap<String, Integer> sortedServices =
-                new TreeMap<>((o1, o2) -> weights.get(o1).compareTo(weights.get(o2)));
-
-        sortedServices.putAll(weights);
-
-        return new ArrayList<>(sortedServices.keySet());
+        return weights.entrySet()
+                      .stream()
+                      .sorted((o1, o2) -> o1.getValue().compareTo(o2.getValue()))
+                      .map(Map.Entry::getKey)
+                      .collect(Collectors.toList());
     }
 }
