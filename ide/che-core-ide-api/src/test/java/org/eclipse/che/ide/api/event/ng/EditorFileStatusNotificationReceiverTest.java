@@ -34,6 +34,7 @@ import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMod
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -52,6 +53,8 @@ public class EditorFileStatusNotificationReceiverTest {
     private DtoFactory                           dtoFactory;
     @Mock
     private EventBus                             eventBus;
+    @Mock
+    private DeletedFilesController               deletedFilesController;
     @Mock
     private AppContext                           appContext;
     @InjectMocks
@@ -119,6 +122,24 @@ public class EditorFileStatusNotificationReceiverTest {
         verify(appContext).getWorkspaceRoot();
         verify(container).synchronize(any());
 
+        verify(deletedFilesController).remove(anyString());
         verify(notificationManager).notify(eq("External operation"), eq("File '" + "file" + "' is removed"), eq(SUCCESS), eq(EMERGE_MODE));
+    }
+
+    @Test
+    public void shouldNotNotifyAboutRemove() {
+        when(dto.getType()).thenReturn(DELETED);
+        when(deletedFilesController.remove(anyString())).thenReturn(true);
+
+
+        receiver.receive(request);
+
+        verify(eventBus, never()).fireEvent(any());
+
+        verify(appContext).getWorkspaceRoot();
+        verify(container).synchronize(any());
+
+        verify(deletedFilesController).remove(anyString());
+        verify(notificationManager, never()).notify(eq("External operation"), eq("File '" + "file" + "' is removed"), eq(SUCCESS), eq(EMERGE_MODE));
     }
 }
