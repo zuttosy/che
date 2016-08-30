@@ -68,7 +68,7 @@ public class LoEventServiceTest {
     public void shouldConsumeSimpleEventSegmentAndProduceEventTree() throws Exception {
         final LoEvent loEvent = getLoEvent(PATH, FILE_NAME);
         loEventQueueHolder.put(loEvent);
-        final Optional<EventTreeNode> rootOptional = eventTreeQueueHolder.poll();
+        final Optional<EventTreeNode> rootOptional = eventTreeQueueHolder.take();
 
         assertNotNull(rootOptional);
         assertTrue(rootOptional.isPresent());
@@ -102,13 +102,13 @@ public class LoEventServiceTest {
     public void shouldConsumeTwoEventSegmentsAndProduceTwoEventTries() throws Exception {
         final LoEvent loEventI = getLoEvent(separator + FOLDER_NAME + 1 + separator + FILE_NAME + 1, FILE_NAME + 1);
         loEventQueueHolder.put(loEventI);
-        final Optional<EventTreeNode> rootOptionalI = eventTreeQueueHolder.poll();
+        final Optional<EventTreeNode> rootOptionalI = eventTreeQueueHolder.take();
 
         sleep(TIMEOUT); // this is required to properly simulate delay between events, should exceed max event interval
 
         final LoEvent loEventII = getLoEvent(separator + FOLDER_NAME + 2 + separator + FILE_NAME + 2, FILE_NAME + 2);
         loEventQueueHolder.put(loEventII);
-        final Optional<EventTreeNode> rootOptionalII = eventTreeQueueHolder.poll();
+        final Optional<EventTreeNode> rootOptionalII = eventTreeQueueHolder.take();
 
         assertNotNull(rootOptionalI);
         assertTrue(rootOptionalI.isPresent());
@@ -167,8 +167,8 @@ public class LoEventServiceTest {
             sleep(sleepTime);
         }
 
-        final Optional<EventTreeNode> rootOptionalI = eventTreeQueueHolder.poll();
-        final Optional<EventTreeNode> rootOptionalII = eventTreeQueueHolder.poll();
+        final Optional<EventTreeNode> rootOptionalI = eventTreeQueueHolder.take();
+        final Optional<EventTreeNode> rootOptionalII = eventTreeQueueHolder.take();
         assertTrue(rootOptionalI.isPresent());
         assertTrue(rootOptionalII.isPresent());
 
