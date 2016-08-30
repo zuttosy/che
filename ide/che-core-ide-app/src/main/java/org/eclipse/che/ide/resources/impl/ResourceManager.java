@@ -1012,6 +1012,25 @@ public final class ResourceManager {
                     }
 
                     eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(intercepted, ADDED | DERIVED)));
+                } else if (delta.getToPath().segmentCount() == 1) {
+                    ps.getProjects().then(new Function<List<ProjectConfigDto>, Void>() {
+                        @Override
+                        public Void apply(List<ProjectConfigDto> updatedConfiguration) throws FunctionException {
+                            cachedConfigs = updatedConfiguration.toArray(new ProjectConfigDto[updatedConfiguration.size()]);
+
+                            for (ProjectConfigDto config : cachedConfigs) {
+                                if (Path.valueOf(config.getPath()).equals(delta.getToPath())) {
+                                    final Project project = resourceFactory.newProjectImpl(config, ResourceManager.this);
+
+                                    store.register(project);
+
+                                    eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(project, ADDED)));
+                                }
+                            }
+
+                            return null;
+                        }
+                    });
                 }
 
                 return null;
