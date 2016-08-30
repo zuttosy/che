@@ -48,6 +48,7 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -71,7 +72,7 @@ public class StackLoaderTest {
         stackLoader = new StackLoader(url.getPath(), urlFolder.getPath(), stackDao);
 
         stackLoader.start();
-        verify(stackDao).update(any());
+        verify(stackDao, times(2)).update(any());
         verify(stackDao, never()).create(any());
     }
 
@@ -85,8 +86,8 @@ public class StackLoaderTest {
         stackLoader = new StackLoader(url.getPath(), urlFolder.getPath(), stackDao);
 
         stackLoader.start();
-        verify(stackDao).update(any());
-        verify(stackDao).create(any());
+        verify(stackDao, times(2)).update(any());
+        verify(stackDao, times(2)).create(any());
     }
 
     @Test
@@ -99,8 +100,8 @@ public class StackLoaderTest {
         stackLoader = new StackLoader(url.getPath(), urlFolder.getPath(), stackDao);
 
         stackLoader.start();
-        verify(stackDao).update(any());
-        verify(stackDao).create(any());
+        verify(stackDao, times(2)).update(any());
+        verify(stackDao, times(2)).create(any());
     }
 
     @Test
