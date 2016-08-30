@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -77,7 +78,17 @@ public class ProjectTreeChangesDetector implements HiEventDetector<ProjectTreeCh
         }
 
         if (state == State.RESUMED) {
-            for (EventTreeNode node : eventTreeNode.stream().filter(EventTreeNode::modificationOccurred).collect(toSet())) {
+            final Set<EventTreeNode> directories = new HashSet<>();
+
+            for (EventTreeNode candidateDir : eventTreeNode.stream()
+                                                           .filter(EventTreeNode::modificationOccurred)
+                                                           .filter(EventTreeNode::isDir)
+                                                           .collect(toSet())) {
+                directories.removeIf(dir -> dir.getPath().contains(candidateDir.getPath()));
+                directories.add(candidateDir);
+            }
+
+            for (EventTreeNode node : directories) {
                 final String path = node.getPath();
                 final FileWatcherEventType lastEventType = node.getLastEventType();
 
