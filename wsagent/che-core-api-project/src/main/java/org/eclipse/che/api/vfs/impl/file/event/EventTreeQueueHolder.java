@@ -50,9 +50,9 @@ class EventTreeQueueHolder {
         }
     }
 
-    public Optional<EventTreeNode> poll() {
+    public Optional<EventTreeNode> take() {
         try {
-            return Optional.ofNullable(loVfsEventQueue.poll(1, SECONDS));
+            return Optional.ofNullable(loVfsEventQueue.take());
         } catch (InterruptedException e) {
             LOG.error("Error trying to take an event tree out of an event tree queue", e);
         }
