@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.singletonMap;
 import static org.eclipse.che.api.machine.shared.Constants.WS_MACHINE_NAME;
 
 /**
@@ -237,11 +238,11 @@ public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDeleg
 
         EnvironmentDto environment = dtoFactory.createDto(EnvironmentDto.class)
                                                .withRecipe(recipe)
-                                               .withMachines(Collections.singletonMap(WS_MACHINE_NAME, machine));
+                                               .withMachines(singletonMap(WS_MACHINE_NAME, machine));
 
         return dtoFactory.createDto(WorkspaceConfigDto.class)
                          .withName(wsName)
                          .withDefaultEnv(wsName)
-                         .withEnvironments(Collections.singletonMap(wsName, environment));
+                         .withEnvironments(singletonMap(wsName, environment));
     }
 }

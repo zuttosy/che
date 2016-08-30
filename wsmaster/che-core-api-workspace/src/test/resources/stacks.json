@@ -43,7 +43,7 @@
                         }
                     },
                     "recipe": {
-                        "location": "https://gist.githubusercontent.com/garagatyi/c4cb347b62e9eb8297cc59540ca5b3df/raw/04258a7f268d4a56446de968bde1572ca70f10d0/gistfile1.txt",
+                        "location": "https://raw.githubusercontent.com/eclipse/che/master/Dockerfile",
                         "contentType": "application/x-yaml",
                         "type": "compose"
                     }
@@ -72,5 +72,90 @@
             "name": "type-java.svg",
             "mediaType": "image/svg+xml"
         }
+    },
+    {
+        "id": "node-default",
+        "creator": "ide",
+        "name": "Node",
+        "description": "Default Node Stack with Node 0.12.",
+        "scope": "general",
+        "tags": [
+            "Ubuntu",
+            "Git",
+            "Node.JS",
+            "NPM",
+            "Gulp",
+            "Bower",
+            "Grunt",
+            "Yeoman",
+            "Angular",
+            "Karma"
+        ],
+        "components": [
+            {
+                "name": "Node.JS",
+                "version": "0.12.9"
+            },
+            {
+                "name": "NPM",
+                "version": "---"
+            },
+            {
+                "name": "Gulp",
+                "version": "---"
+            },
+            {
+                "name": "Bower",
+                "version": "---"
+            },
+            {
+                "name": "Grunt",
+                "version": "---"
+            },
+            {
+                "name": "Yeoman",
+                "version": "---"
+            }
+        ],
+        "source": {
+            "type": "image",
+            "origin": "codenvy/node"
+        },
+        "workspaceConfig": {
+            "environments": {
+                "default" : {
+                    "machines": {
+                        "devmachine": {
+                            "agents": [
+                                "ws-agent"
+                            ]
+                        }
+                    },
+                    "recipe": {
+                        "location": "https://raw.githubusercontent.com/eclipse/che/master/Dockerfile",
+                        "contentType": "application/x-yaml",
+                        "type": "compose"
+                    }
+                }
+            },
+            "name": "default",
+            "defaultEnv": "default",
+            "description": null,
+            "commands": [
+                {
+                    "commandLine": "mvn clean install -f ${current.project.path}",
+                    "name": "newMaven",
+                    "type": "mvn"
+                }
+            ]
+        },
+        "acl": [
+            {
+                "user": "*",
+                "actions": [
+                    "search"
+                ]
+            }
+        ]
     }
 ]

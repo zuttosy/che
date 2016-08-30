@@ -11,15 +11,11 @@
 package org.eclipse.che.plugin.docker.machine;
 
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.core.model.machine.MachineConfig;
-import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.machine.ServerConf;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.environment.server.compose.model.ComposeServiceImpl;
-import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
 import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
 import org.eclipse.che.api.machine.server.recipe.RecipeImpl;
 import org.eclipse.che.api.machine.server.util.RecipeRetriever;
@@ -32,7 +28,6 @@ import org.eclipse.che.plugin.docker.client.UserSpecificDockerRegistryCredential
 import org.eclipse.che.plugin.docker.client.json.ContainerCreated;
 import org.eclipse.che.plugin.docker.client.json.ContainerInfo;
 import org.eclipse.che.plugin.docker.client.json.ContainerState;
-import org.eclipse.che.plugin.docker.client.params.BuildImageParams;
 import org.eclipse.che.plugin.docker.client.params.CreateContainerParams;
 import org.eclipse.che.plugin.docker.client.params.InspectContainerParams;
 import org.eclipse.che.plugin.docker.client.params.PullParams;
@@ -174,29 +169,6 @@ public class ComposeMachineProviderImplTest {
         EnvironmentContext.reset();
     }
 
-    // TODO add tests for instance snapshot removal
-
-    @Test
-    public void shouldBuildDockerfileOnInstanceCreationFromRecipe() throws Exception {
-        String generatedContainerId = "genContainerId";
-        doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
-                                                                                          eq(MACHINE_ID),
-                                                                                          eq(USER_NAME),
-                                                                                          eq(MACHINE_NAME));
-
-
-        createInstanceFromRecipe();
-
-
-        ArgumentCaptor<BuildImageParams> argumentCaptor = ArgumentCaptor.forClass(BuildImageParams.class);
-        verify(dockerConnector).buildImage(argumentCaptor.capture(),
-                                           any(ProgressMonitor.class));
-        BuildImageParams buildImageParams = argumentCaptor.getValue();
-        assertEquals(buildImageParams.getRepository(), "eclipse-che/" + generatedContainerId);
-        assertEquals((long)buildImageParams.getMemoryLimit(), (long)MEMORY_LIMIT_MB * 1024 * 1024);
-        assertEquals((long)buildImageParams.getMemorySwapLimit(), (long)-1);
-    }
-
     @Test
     public void shouldPullDockerImageOnInstanceCreationFromSnapshotFromRegistry() throws Exception {
         String repo = MACHINE_SNAPSHOT_PREFIX + "repo";
@@ -243,28 +215,6 @@ public class ComposeMachineProviderImplTest {
                               LineConsumer.DEV_NULL);
 
         verify(dockerConnector, never()).pull(any(PullParams.class), any(ProgressMonitor.class));
-    }
-
-    /*@Test
-    public void shouldRemoveLocalImageDuringRemovalOfSnapshot() throws Exception {
-        final String repo = MACHINE_SNAPSHOT_PREFIX + "repo";
-        final String tag = "latest";
-        final DockerMachineSource dockerMachineSource = new DockerMachineSource(repo).withTag(tag);
-        provider = getProvider(false);
-
-        provider.removeInstanceSnapshot(dockerMachineSource);
-
-        verify(dockerConnector, times(1)).removeImage(RemoveImageParams.create(dockerMachineSource.getLocation(false)));
-    }*/
-
-    @Test
-    public void shouldRemoveImageAfterRestoreFromSnapshotFromRegistry() throws Exception {
-        String repo = MACHINE_SNAPSHOT_PREFIX + "repo";
-        String tag = "latest";
-
-        createInstanceFromSnapshot(repo, tag, null);
-
-        verify(dockerConnector).removeImage(any(RemoveImageParams.class));
     }
 
     @Test
@@ -447,45 +397,6 @@ public class ComposeMachineProviderImplTest {
     }
 
     @Test
-    public void shouldCallCreationDockerInstanceWithFactoryOnCreateInstanceFromSnapshot() throws Exception {
-        String generatedContainerId = "genContainerId";
-        doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
-                                                                                          eq(MACHINE_ID),
-                                                                                          eq(USER_NAME),
-                                                                                          eq(MACHINE_NAME));
-
-        final MachineSourceImpl machineSource = new MachineSourceImpl("type").setLocation("location");
-        final MachineImpl machine =
-                new MachineImpl(new MachineConfigImpl(false,
-                                                      MACHINE_NAME,
-                                                      "machineType",
-                                                      machineSource,
-                                                      new LimitsImpl(MEMORY_LIMIT_MB),
-                                                      asList(new ServerConfImpl("ref1", "8080", "https", null),
-                                                             new ServerConfImpl("ref2", "9090/udp", "someprotocol",
-                                                                                null)),
-                                                      singletonMap("key1", "value1")),
-                                "machineId",
-                                WORKSPACE_ID,
-                                "envName",
-                                USER_NAME,
-                                MachineStatus.CREATING,
-                                null);
-        ComposeServiceImpl service = createService();
-
-
-        createInstanceFromSnapshot(service);
-
-
-        verify(dockerMachineFactory).createInstance(eq(machine),
-                                                    eq(CONTAINER_ID),
-                                                    eq("eclipse-che/" + generatedContainerId),
-                                                    eq(dockerNode),
-                                                    any(LineConsumer.class));
-    }
-
-
-    @Test
     public void shouldCallCreationDockerInstanceWithFactoryOnCreateInstanceFromRecipe() throws Exception {
         String generatedContainerId = "genContainerId";
         doReturn(generatedContainerId).when(containerNameGenerator).generateContainerName(eq(WORKSPACE_ID),
@@ -493,29 +404,11 @@ public class ComposeMachineProviderImplTest {
                                                                                           eq(USER_NAME),
                                                                                           eq(MACHINE_NAME));
 
-        final MachineSourceImpl machineSource = new MachineSourceImpl(DOCKER_FILE_TYPE).setLocation("location");
-        final MachineImpl machine =
-                new MachineImpl(new MachineConfigImpl(false,
-                                                      MACHINE_NAME,
-                                                      "machineType",
-                                                      machineSource,
-                                                      new LimitsImpl(MEMORY_LIMIT_MB),
-                                                      asList(new ServerConfImpl("ref1", "8080", "https", null),
-                                                             new ServerConfImpl("ref2", "9090/udp", "someprotocol",
-                                                                                null)),
-                                                      singletonMap("key1", "value1")),
-                                "machineId",
-                                WORKSPACE_ID,
-                                "envName",
-                                USER_NAME,
-                                MachineStatus.CREATING,
-                                null);
-
         ComposeServiceImpl service = createService();
         createInstanceFromRecipe(service);
 
 
-        verify(dockerMachineFactory).createInstance(eq(machine),
+        verify(dockerMachineFactory).createInstance(any(Machine.class),
                                                     eq(CONTAINER_ID),
                                                     eq("eclipse-che/" + generatedContainerId),
                                                     eq(dockerNode),
@@ -844,65 +737,9 @@ public class ComposeMachineProviderImplTest {
     }
 
     @Test
-    public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnNonDevInstanceCreationFromSnapshot()
-            throws Exception {
-        // given
-        List<String> expectedExposedPorts = new ArrayList<>();
-        final List<ServerConf> serversFromConf = asList(new ServerConfImpl("reference1", "8080", "http", null),
-                                                        new ServerConfImpl("reference2", "8081", "ftp", null));
-        expectedExposedPorts.addAll(serversFromConf.stream()
-                                                   .map(ServerConf::getPort)
-                                                   .collect(Collectors.toList()));
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        final boolean isDev = false;
-        ComposeServiceImpl machine = createService();
-        machine.setExpose(asList("9090", "8080"));
-
-        // when
-        createInstanceFromSnapshot(machine, isDev);
-
-        // then
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-
-        assertTrue(new ArrayList<>(argumentCaptor.getValue()
-                                                 .getContainerConfig()
-                                                 .getExposedPorts()
-                                                 .keySet())
-                           .containsAll(expectedExposedPorts));
-    }
-
-    @Test
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnNonDevInstanceCreationFromRecipe()
             throws Exception {
         // given
-        List<String> expectedExposedPorts = new ArrayList<>();
-        final List<ServerConf> serversFromConf = asList(new ServerConfImpl("reference1", "8080", "http", null),
-                                                        new ServerConfImpl("reference2", "8081", "ftp", null));
-        expectedExposedPorts.addAll(serversFromConf.stream()
-                                                   .map(ServerConf::getPort)
-                                                   .collect(Collectors.toList()));
-
         provider = new ComposeMachineProviderImpl(dockerConnector,
                                                   dockerConnectorConfiguration,
                                                   credentialsReader,
@@ -926,58 +763,10 @@ public class ComposeMachineProviderImplTest {
         final boolean isDev = false;
         ComposeServiceImpl machine = createService();
         machine.setExpose(asList("9090", "8080"));
+        List<String> expectedExposedPorts = asList("9090", "8080");
 
         // when
         createInstanceFromRecipe(machine, isDev);
-
-        // then
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-
-        assertTrue(new ArrayList<>(argumentCaptor.getValue()
-                                                 .getContainerConfig()
-                                                 .getExposedPorts()
-                                                 .keySet())
-                           .containsAll(expectedExposedPorts));
-    }
-
-    @Test
-    public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnDevInstanceCreationFromSnapshot()
-            throws Exception {
-        // given
-        List<String> expectedExposedPorts = new ArrayList<>();
-        final List<ServerConf> serversFromConf = asList(new ServerConfImpl("reference1", "8080", "http", null),
-                                                        new ServerConfImpl("reference2", "8081", "ftp", null));
-        expectedExposedPorts.addAll(serversFromConf.stream()
-                                                   .map(ServerConf::getPort)
-                                                   .collect(Collectors.toList()));
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        final boolean isDev = true;
-        ComposeServiceImpl machine = createService();
-        machine.setExpose(asList("9090", "8080"));
-
-        // when
-        createInstanceFromSnapshot(machine, isDev);
 
         // then
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
@@ -994,13 +783,6 @@ public class ComposeMachineProviderImplTest {
     public void shouldAddServersConfsPortsFromMachineConfigToExposedPortsOnDevInstanceCreationFromRecipe()
             throws Exception {
         // given
-        List<String> expectedExposedPorts = new ArrayList<>();
-        final List<ServerConf> serversFromConf = asList(new ServerConfImpl("reference1", "8080", "http", null),
-                                                        new ServerConfImpl("reference2", "8081", "ftp", null));
-        expectedExposedPorts.addAll(serversFromConf.stream()
-                                                   .map(ServerConf::getPort)
-                                                   .collect(Collectors.toList()));
-
         provider = new ComposeMachineProviderImpl(dockerConnector,
                                                   dockerConnectorConfiguration,
                                                   credentialsReader,
@@ -1036,7 +818,7 @@ public class ComposeMachineProviderImplTest {
                                                  .getContainerConfig()
                                                  .getExposedPorts()
                                                  .keySet())
-                           .containsAll(expectedExposedPorts));
+                           .containsAll(asList("9090", "8080")));
     }
 
     @Test
@@ -1068,48 +850,9 @@ public class ComposeMachineProviderImplTest {
 
         final boolean isDev = true;
 
-
-        createInstanceFromRecipe(isDev);
-
-
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-        verify(dockerConnector).startContainer(any(StartContainerParams.class));
-
-        assertEquals(argumentCaptor.getValue().getContainerConfig().getHostConfig().getBinds(), expectedVolumes);
-    }
-
-    @Test
-    public void shouldBindProjectsFSVolumeToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
-        final String expectedHostPathOfProjects = "/tmp/projects";
-        final String[] expectedVolumes = new String[] {expectedHostPathOfProjects + ":/projects:Z"};
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        when(workspaceFolderPathProvider.getPath(anyString())).thenReturn(expectedHostPathOfProjects);
-
-        final boolean isDev = true;
-
-
-        createInstanceFromSnapshot(isDev);
+        ComposeServiceImpl service = createService();
+        service.setVolumes(null);
+        createInstanceFromRecipe(isDev, service);
 
 
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
@@ -1148,46 +891,9 @@ public class ComposeMachineProviderImplTest {
         final boolean isDev = false;
 
 
-        createInstanceFromRecipe(isDev);
-
-
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-        verify(dockerConnector).startContainer(any(StartContainerParams.class));
-
-        assertEquals(argumentCaptor.getValue().getContainerConfig().getHostConfig().getBinds(), expectedVolumes);
-    }
-
-    @Test
-    public void shouldNotBindProjectsFSVolumeToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
-        String[] expectedVolumes = new String[0];
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        when(dockerNode.getProjectsFolder()).thenReturn("/tmp/projects");
-
-        final boolean isDev = false;
-
-
-        createInstanceFromSnapshot(isDev);
+        ComposeServiceImpl service = createService();
+        service.setVolumes(null);
+        createInstanceFromRecipe(isDev, service);
 
 
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
@@ -1232,57 +938,9 @@ public class ComposeMachineProviderImplTest {
         when(workspaceFolderPathProvider.getPath(anyString())).thenReturn(expectedHostPathOfProjects);
         final boolean isDev = true;
 
-
-        createInstanceFromRecipe(isDev);
-
-
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-        verify(dockerConnector).startContainer(any(StartContainerParams.class));
-
-        final String[] actualBinds = argumentCaptor.getValue().getContainerConfig().getHostConfig().getBinds();
-        assertEquals(actualBinds.length, expectedVolumes.size());
-        assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
-    }
-
-    @Test
-    public void shouldBindCommonAndDevVolumesToContainerOnDevInstanceCreationFromSnapshot() throws Exception {
-        final String expectedHostPathOfProjects = "/tmp/projects";
-        Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
-        Set<String> commonVolumes =
-                new HashSet<>(asList("/some/thing/else:/home/some/thing/else", "/other/path:/home/other/path"));
-
-        final ArrayList<String> expectedVolumes = new ArrayList<>();
-        expectedVolumes.addAll(devVolumes);
-        expectedVolumes.addAll(commonVolumes);
-        expectedVolumes.add(expectedHostPathOfProjects + ":/projects:Z");
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  devVolumes,
-                                                  commonVolumes,
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        when(workspaceFolderPathProvider.getPath(anyString())).thenReturn(expectedHostPathOfProjects);
-
-        final boolean isDev = true;
-
-
-        createInstanceFromSnapshot(isDev);
+        ComposeServiceImpl service = createService();
+        service.setVolumes(null);
+        createInstanceFromRecipe(isDev, service);
 
 
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
@@ -1329,7 +987,9 @@ public class ComposeMachineProviderImplTest {
         final boolean isDev = false;
 
 
-        createInstanceFromRecipe(isDev);
+        ComposeServiceImpl service = createService();
+        service.setVolumes(null);
+        createInstanceFromRecipe(isDev, service);
 
 
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
@@ -1522,53 +1182,6 @@ public class ComposeMachineProviderImplTest {
     }
 
     @Test
-    public void shouldBindCommonVolumesOnlyToContainerOnNonDevInstanceCreationFromSnapshot() throws Exception {
-        final String expectedHostPathOfProjects = "/tmp/projects";
-        Set<String> devVolumes = new HashSet<>(asList("/etc:/tmp/etc:ro", "/some/thing:/home/some/thing"));
-        Set<String> commonVolumes =
-                new HashSet<>(asList("/some/thing/else:/home/some/thing/else", "/other/path:/home/other/path"));
-
-        final ArrayList<String> expectedVolumes = new ArrayList<>();
-        expectedVolumes.addAll(commonVolumes);
-
-        provider = new ComposeMachineProviderImpl(dockerConnector,
-                                                  dockerConnectorConfiguration,
-                                                  credentialsReader,
-                                                  dockerMachineFactory,
-                                                  dockerInstanceStopDetector,
-                                                  containerNameGenerator,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  devVolumes,
-                                                  commonVolumes,
-                                                  null,
-                                                  workspaceFolderPathProvider,
-                                                  PROJECT_FOLDER_PATH,
-                                                  false,
-                                                  false,
-                                                  Collections.emptySet(),
-                                                  Collections.emptySet(),
-                                                  SNAPSHOT_USE_REGISTRY,
-                                                  MEMORY_SWAP_MULTIPLIER);
-
-        when(dockerNode.getProjectsFolder()).thenReturn(expectedHostPathOfProjects);
-
-        final boolean isDev = false;
-
-
-        createInstanceFromSnapshot(isDev);
-
-
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-        verify(dockerConnector).startContainer(any(StartContainerParams.class));
-
-        final String[] actualBinds = argumentCaptor.getValue().getContainerConfig().getHostConfig().getBinds();
-        assertEquals(actualBinds.length, expectedVolumes.size());
-        assertEquals(new HashSet<>(asList(actualBinds)), new HashSet<>(expectedVolumes));
-    }
-
-    @Test
     public void shouldAddWorkspaceIdEnvVariableOnDevInstanceCreationFromRecipe() throws Exception {
         String wsId = "myWs";
         createInstanceFromRecipe(true, wsId);
@@ -1598,17 +1211,6 @@ public class ComposeMachineProviderImplTest {
     public void shouldNotAddWorkspaceIdEnvVariableOnNonDevInstanceCreationFromRecipe() throws Exception {
         String wsId = "myWs";
         createInstanceFromRecipe(false, wsId);
-        ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
-        verify(dockerConnector).createContainer(argumentCaptor.capture());
-        assertFalse(asList(argumentCaptor.getValue().getContainerConfig().getEnv())
-                            .contains(DockerInstanceRuntimeInfo.CHE_WORKSPACE_ID + "=" + wsId),
-                    "Non dev machine should not contains " + DockerInstanceRuntimeInfo.CHE_WORKSPACE_ID);
-    }
-
-    @Test
-    public void shouldNotAddWorkspaceIdEnvVariableOnNonDevInstanceCreationFromSnapshot() throws Exception {
-        String wsId = "myWs";
-        createInstanceFromSnapshot(false, wsId);
         ArgumentCaptor<CreateContainerParams> argumentCaptor = ArgumentCaptor.forClass(CreateContainerParams.class);
         verify(dockerConnector).createContainer(argumentCaptor.capture());
         assertFalse(asList(argumentCaptor.getValue().getContainerConfig().getEnv())
@@ -1993,6 +1595,10 @@ public class ComposeMachineProviderImplTest {
         createInstanceFromRecipe(createService());
     }
 
+    private void createInstanceFromRecipe(boolean isDev, ComposeServiceImpl service) throws Exception {
+        createInstanceFromRecipe(service, isDev, WORKSPACE_ID);
+    }
+
     private void createInstanceFromRecipe(boolean isDev) throws Exception {
         createInstanceFromRecipe(createService(), isDev, WORKSPACE_ID);
     }
@@ -2009,7 +1615,7 @@ public class ComposeMachineProviderImplTest {
 
     private void createInstanceFromSnapshot(String repo, String tag, String registry) throws ServerException {
         ComposeServiceImpl machine = createService();
-        machine.setImage(registry + repo + ":" + tag + "@digest");
+        machine.setImage(registry + "/" + repo + ":" + tag);
         machine.setBuild(null);
         createInstanceFromSnapshot(machine);
     }
@@ -2064,7 +1670,6 @@ public class ComposeMachineProviderImplTest {
 
     private void createInstanceFromSnapshot(ComposeServiceImpl service, boolean isDev, String workspaceId)
             throws ServerException {
-        service.setImage("registry.com/repo@digest");
         provider.startService(USER_NAME,
                               workspaceId,
                               ENV_NAME,

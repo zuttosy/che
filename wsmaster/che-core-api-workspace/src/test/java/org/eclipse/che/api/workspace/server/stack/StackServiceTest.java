@@ -19,10 +19,6 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.rest.ApiExceptionMapper;
 import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
-import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
-import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
-import org.eclipse.che.api.machine.server.model.impl.ServerConfImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackComponentImpl;
@@ -55,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.jayway.restassured.RestAssured.given;
@@ -111,13 +106,6 @@ public class StackServiceTest {
 
     private static final String ENVIRONMENT_NAME = "default";
 
-    private static final String  MACHINE_CONFIG_NAME = "ws-machine";
-    private static final String  MACHINE_TYPE        = "docker";
-    private static final boolean IS_DEV              = true;
-
-    private static final String MACHINE_SOURCE_LOCATION = "http://localhost:8080/ide/api/recipe/recipe_ubuntu/script";
-    private static final String MACHINE_SOURCE_TYPE     = "dockerfile";
-
     private static final String ICON_MEDIA_TYPE = "image/svg+xml";
 
     @SuppressWarnings("unused")
@@ -155,26 +143,8 @@ public class StackServiceTest {
         componentsImpl = singletonList(new StackComponentImpl(COMPONENT_NAME, COMPONENT_VERSION));
         stackSourceImpl = new StackSourceImpl(SOURCE_TYPE, SOURCE_ORIGIN);
         CommandImpl command = new CommandImpl(COMMAND_NAME, COMMAND_LINE, COMMAND_TYPE);
-        MachineSourceImpl machineSource = new MachineSourceImpl(MACHINE_SOURCE_TYPE).setLocation(MACHINE_SOURCE_LOCATION);
-        int limitMemory = 1000;
-        LimitsImpl limits = new LimitsImpl(limitMemory);
-        MachineConfigImpl machineConfig = new MachineConfigImpl(IS_DEV,
-                                                                MACHINE_CONFIG_NAME,
-                                                                MACHINE_TYPE,
-                                                                machineSource,
-                                                                limits,
-                                                                Arrays.asList(new ServerConfImpl("ref1",
-                                                                                                 "8080",
-                                                                                                 "https",
-                                                                                                 "some/path"),
-                                                                              new ServerConfImpl("ref2",
-                                                                                                 "9090/udp",
-                                                                                                 "someprotocol",
-                                                                                                 "/some/path")),
-                                                                singletonMap("key1", "value1"));
         EnvironmentImpl environment = new EnvironmentImpl(null,
                                                           null);
-//                                                          Collections.singletonList(machineConfig));
 
         WorkspaceConfigImpl workspaceConfig = WorkspaceConfigImpl.builder()
                                                                  .setName(WORKSPACE_CONFIG_NAME)
