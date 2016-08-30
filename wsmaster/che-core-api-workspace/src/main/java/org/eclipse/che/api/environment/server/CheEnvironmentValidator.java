@@ -255,8 +255,6 @@ public class CheEnvironmentValidator {
                                              machineName, envName, serverName, server.getProtocol());
                            });
         }
-
-        // TODO volumes_from collocate containers
     }
 
     public void validateMachine(MachineConfig machineCfg) throws IllegalArgumentException {
