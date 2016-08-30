@@ -39,6 +39,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 public class EditorFileStatusNotificationReceiver implements JsonRpcRequestReceiver {
     private final DtoFactory dtoFactory;
     private final EventBus   eventBus;
+    private final DeletedFilesController deletedFilesController;
     private final AppContext appContext;
 
     private NotificationManager notificationManager;
@@ -46,9 +47,11 @@ public class EditorFileStatusNotificationReceiver implements JsonRpcRequestRecei
     @Inject
     public EditorFileStatusNotificationReceiver(DtoFactory dtoFactory,
                                                 EventBus eventBus,
+                                                DeletedFilesController deletedFilesController,
                                                 AppContext appContext) {
         this.dtoFactory = dtoFactory;
         this.eventBus = eventBus;
+        this.deletedFilesController = deletedFilesController;
         this.appContext = appContext;
 
     }
@@ -79,10 +82,9 @@ public class EditorFileStatusNotificationReceiver implements JsonRpcRequestRecei
                 Log.info(getClass(), "Received removed file event status: " + path);
 
                 appContext.getWorkspaceRoot().synchronize(new ExternalResourceDelta(Path.valueOf(path), Path.valueOf(path), REMOVED));
-                if (notificationManager != null) {
+                if (notificationManager != null && !deletedFilesController.remove(path)) {
                     notificationManager.notify("External operation", "File '" + name + "' is removed", SUCCESS, EMERGE_MODE);
                 }
-
 
                 break;
             }

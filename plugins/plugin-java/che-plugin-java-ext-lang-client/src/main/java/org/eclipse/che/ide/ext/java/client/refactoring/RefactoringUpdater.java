@@ -21,6 +21,7 @@ import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
+import org.eclipse.che.ide.api.event.ng.DeletedFilesController;
 import org.eclipse.che.ide.api.resources.ExternalResourceDelta;
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ChangeInfo;
@@ -46,15 +47,18 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 @Singleton
 public class RefactoringUpdater {
 
-    private final AppContext  appContext;
-    private final EventBus    eventBus;
-    private final EditorAgent editorAgent;
+    private final AppContext             appContext;
+    private final DeletedFilesController deletedFilesController;
+    private final EventBus               eventBus;
+    private final EditorAgent            editorAgent;
 
     @Inject
     public RefactoringUpdater(AppContext appContext,
+                              DeletedFilesController deletedFilesController,
                               EventBus eventBus,
                               EditorAgent editorAgent) {
         this.appContext = appContext;
+        this.deletedFilesController = deletedFilesController;
         this.eventBus = eventBus;
         this.editorAgent = editorAgent;
     }
@@ -85,6 +89,7 @@ public class RefactoringUpdater {
                 case MOVE:
                 case RENAME_COMPILATION_UNIT:
                     delta = new ExternalResourceDelta(newPath, oldPath, ADDED | MOVED_FROM | MOVED_TO);
+                    registerRemovedFile(change);
                     break;
                 case RENAME_PACKAGE:
                     delta = new ExternalResourceDelta(newPath, oldPath, ADDED | MOVED_FROM | MOVED_TO);
@@ -92,6 +97,7 @@ public class RefactoringUpdater {
                 case UPDATE:
                     if (!isFileRemoved(change.getPath(), changes)) {
                         pathChanged.add(change.getPath());
+                        registerRemovedFile(change);
                     }
                 default:
                     continue;
@@ -138,6 +144,16 @@ public class RefactoringUpdater {
                     }
                 }
             });
+        }
+    }
+
+    private void registerRemovedFile(ChangeInfo change) {
+        for (EditorPartPresenter editorPartPresenter : editorAgent.getOpenedEditors()) {
+            String editorPath = editorPartPresenter.getEditorInput().getFile().getLocation().toString();
+            if (editorPath.equals(change.getOldPath())) {
+                deletedFilesController.add(change.getOldPath());
+                return;
+            }
         }
     }
 
