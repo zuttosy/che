@@ -85,4 +85,12 @@ public class EnvironmentImpl implements Environment {
     public int hashCode() {
         return Objects.hash(recipe, machines);
     }
+
+    @Override
+    public String toString() {
+        return "EnvironmentImpl{" +
+               "recipe=" + recipe +
+               ", machines=" + machines +
+               '}';
+    }
 }

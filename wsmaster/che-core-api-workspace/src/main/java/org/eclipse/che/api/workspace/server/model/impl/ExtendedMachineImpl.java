@@ -85,4 +85,12 @@ public class ExtendedMachineImpl implements ExtendedMachine {
     public int hashCode() {
         return Objects.hash(agents, servers);
     }
+
+    @Override
+    public String toString() {
+        return "ExtendedMachineImpl{" +
+               "agents=" + agents +
+               ", servers=" + servers +
+               '}';
+    }
 }

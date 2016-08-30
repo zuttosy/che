@@ -83,4 +83,13 @@ public class ServerConf2Impl implements ServerConf2 {
     public int hashCode() {
         return Objects.hash(port, protocol, properties);
     }
+
+    @Override
+    public String toString() {
+        return "ServerConf2Impl{" +
+               "port='" + port + '\'' +
+               ", protocol='" + protocol + '\'' +
+               ", properties=" + properties +
+               '}';
+    }
 }

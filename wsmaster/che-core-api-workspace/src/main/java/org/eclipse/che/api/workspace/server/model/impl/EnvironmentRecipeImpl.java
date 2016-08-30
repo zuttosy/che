@@ -91,4 +91,14 @@ public class EnvironmentRecipeImpl implements EnvironmentRecipe {
     public int hashCode() {
         return Objects.hash(type, contentType, content, location);
     }
+
+    @Override
+    public String toString() {
+        return "EnvironmentRecipeImpl{" +
+               "type='" + type + '\'' +
+               ", contentType='" + contentType + '\'' +
+               ", content='" + content + '\'' +
+               ", location='" + location + '\'' +
+               '}';
+    }
 }
