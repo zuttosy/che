@@ -62,7 +62,7 @@ public class HiEventServiceTest {
 
         sleep(1000);
 
-        verify(eventTreeQueueHolder, atLeastOnce()).poll();
+        verify(eventTreeQueueHolder, atLeastOnce()).take();
         verify(hiEventDetectorManager).getDetectedEvents(eq(eventTreeNode));
         verify(hiEventBroadcasterManager).manageEvents(any());
     }

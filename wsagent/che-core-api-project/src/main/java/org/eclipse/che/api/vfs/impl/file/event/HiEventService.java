@@ -44,7 +44,7 @@ public class HiEventService extends VfsEventService {
     }
 
     protected void run() {
-        final Optional<EventTreeNode> optional = eventTreeQueueHolder.poll();
+        final Optional<EventTreeNode> optional = eventTreeQueueHolder.take();
         if (optional.isPresent()) {
             final EventTreeNode treeRoot = optional.get();
             final List<HiEvent> events = hiEventDetectorManager.getDetectedEvents(treeRoot);
