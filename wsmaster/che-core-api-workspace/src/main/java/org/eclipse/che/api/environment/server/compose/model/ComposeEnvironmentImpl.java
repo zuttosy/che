@@ -46,6 +46,11 @@ public class ComposeEnvironmentImpl implements ComposeEnvironment {
         this.version = version;
     }
 
+    public ComposeEnvironmentImpl withVersion(String version) {
+        this.version = version;
+        return this;
+    }
+
     @Override
     public Map<String, ComposeServiceImpl> getServices() {
         if (services == null) {
@@ -56,6 +61,11 @@ public class ComposeEnvironmentImpl implements ComposeEnvironment {
 
     public void setServices(Map<String, ComposeServiceImpl> services) {
         this.services = services;
+    }
+
+    public ComposeEnvironmentImpl withServices(Map<String, ComposeServiceImpl> services) {
+        this.services = services;
+        return this;
     }
 
     @Override

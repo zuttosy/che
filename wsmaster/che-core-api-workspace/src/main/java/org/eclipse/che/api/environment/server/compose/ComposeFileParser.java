@@ -17,7 +17,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.EnvironmentRecipe;
-import org.eclipse.che.api.core.model.workspace.compose.ComposeEnvironment;
 import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.commons.env.EnvironmentContext;
@@ -81,7 +80,7 @@ public class ComposeFileParser {
      * @throws IllegalArgumentException
      *         when argument is null or conversion to YAML fails
      */
-    public String toYaml(ComposeEnvironment composeEnvironment) throws IllegalArgumentException {
+    public String toYaml(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
         checkNotNull(composeEnvironment, "Compose environment should not be null");
         try {
             return YAML_PARSER.writeValueAsString(composeEnvironment);

@@ -93,6 +93,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.image = image;
     }
 
+    public ComposeServiceImpl withImage(String image) {
+        this.image = image;
+        return this;
+    }
+
     @Override
     public BuildContextImpl getBuild() {
         return build;
@@ -100,6 +105,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setBuild(BuildContextImpl build) {
         this.build = build;
+    }
+
+    public ComposeServiceImpl withBuild(BuildContextImpl build) {
+        this.build = build;
+        return this;
     }
 
     @Override
@@ -114,6 +124,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.entrypoint = entrypoint;
     }
 
+    public ComposeServiceImpl withEntrypoint(List<String> entrypoint) {
+        this.entrypoint = entrypoint;
+        return this;
+    }
+
     @Override
     public List<String> getCommand() {
         if (command == null) {
@@ -126,6 +141,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.command = command;
     }
 
+    public ComposeServiceImpl withCommand(List<String> command) {
+        this.command = command;
+        return this;
+    }
+
     @Override
     public Map<String, String> getEnvironment() {
         if (environment == null) {
@@ -136,6 +156,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setEnvironment(Map<String, String> environment) {
         this.environment = environment;
+    }
+
+    public ComposeServiceImpl withEnvironment(Map<String, String> environment) {
+        this.environment = environment;
+        return this;
     }
 
     @Override
@@ -151,6 +176,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.dependsOn = dependsOn;
     }
 
+    public ComposeServiceImpl withDependsOn(List<String> dependsOn) {
+        this.dependsOn = dependsOn;
+        return this;
+    }
+
     @Override
     public String getContainerName() {
         return containerName;
@@ -158,6 +188,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setContainerName(String containerName) {
         this.containerName = containerName;
+    }
+
+    public ComposeServiceImpl withContainerName(String containerName) {
+        this.containerName = containerName;
+        return this;
     }
 
     @Override
@@ -172,6 +207,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.links = links;
     }
 
+    public ComposeServiceImpl withLinks(List<String> links) {
+        this.links = links;
+        return this;
+    }
+
     @Override
     public Map<String, String> getLabels() {
         if (labels == null) {
@@ -182,6 +222,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setLabels(Map<String, String> labels) {
         this.labels = labels;
+    }
+
+    public ComposeServiceImpl withLabels(Map<String, String> labels) {
+        this.labels = labels;
+        return this;
     }
 
     @Override
@@ -196,6 +241,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.expose = expose;
     }
 
+    public ComposeServiceImpl withExpose(List<String> expose) {
+        this.expose = expose;
+        return this;
+    }
+
     @Override
     public List<String> getPorts() {
         if (ports == null) {
@@ -206,6 +256,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setPorts(List<String> ports) {
         this.ports = ports;
+    }
+
+    public ComposeServiceImpl withPorts(List<String> ports) {
+        this.ports = ports;
+        return this;
     }
 
     @Override
@@ -220,6 +275,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.volumes = volumes;
     }
 
+    public ComposeServiceImpl withVolumes(List<String> volumes) {
+        this.volumes = volumes;
+        return this;
+    }
+
     @Override
     public List<String> getVolumesFrom() {
         if (volumesFrom == null) {
@@ -232,6 +292,11 @@ public class ComposeServiceImpl implements ComposeService {
         this.volumesFrom = volumesFrom;
     }
 
+    public ComposeServiceImpl withVolumesFrom(List<String> volumesFrom) {
+        this.volumesFrom = volumesFrom;
+        return this;
+    }
+
     @Override
     public Long getMemLimit() {
         return memLimit;
@@ -239,6 +304,11 @@ public class ComposeServiceImpl implements ComposeService {
 
     public void setMemLimit(Long memLimit) {
         this.memLimit = memLimit;
+    }
+
+    public ComposeServiceImpl withMemLimit(Long memLimit) {
+        this.memLimit = memLimit;
+        return this;
     }
 
     @Override

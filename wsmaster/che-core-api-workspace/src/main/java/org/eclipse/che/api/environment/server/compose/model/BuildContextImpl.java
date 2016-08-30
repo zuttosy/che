@@ -42,6 +42,11 @@ public class BuildContextImpl implements BuildContext {
         this.context = context;
     }
 
+    public BuildContextImpl withContext(String context) {
+        this.context = context;
+        return this;
+    }
+
     @Override
     public String getDockerfile() {
         return dockerfile;
@@ -49,6 +54,11 @@ public class BuildContextImpl implements BuildContext {
 
     public void setDockerfile(String dockerfile) {
         this.dockerfile = dockerfile;
+    }
+
+    public BuildContextImpl withDockerfile(String dockerfile) {
+        this.dockerfile = dockerfile;
+        return this;
     }
 
     @Override
