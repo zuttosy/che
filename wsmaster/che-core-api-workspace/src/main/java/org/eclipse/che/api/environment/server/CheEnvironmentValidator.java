@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -47,7 +48,7 @@ public class CheEnvironmentValidator {
     /* machine name must contain only {a-zA-Z0-9_-} characters and it's needed for validation machine names */
     private static final String  MACHINE_NAME_REGEXP  = "[a-zA-Z0-9_-]+";
     private static final Pattern MACHINE_NAME_PATTERN = Pattern.compile("^" + MACHINE_NAME_REGEXP + "$");
-    private static final Pattern SERVER_PORT          = Pattern.compile("^[1-9]+[0-9]*/(tcp|udp)$");
+    private static final Pattern SERVER_PORT          = Pattern.compile("^[1-9]+[0-9]*(/(tcp|udp))?$");
     private static final Pattern SERVER_PROTOCOL      = Pattern.compile("^[a-z][a-z0-9-+.]*$");
 
     // Compose syntax patterns
@@ -70,7 +71,7 @@ public class CheEnvironmentValidator {
      * </ul>
      */
     private static final Pattern LINK_PATTERN   =
-            Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + "):" + MACHINE_NAME_REGEXP + "$");
+            Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + ")(:" + MACHINE_NAME_REGEXP + ")?$");
 
     private static final Pattern VOLUME_FROM_PATTERN =
             Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + ")(:(ro|rw))?$");
@@ -144,7 +145,7 @@ public class CheEnvironmentValidator {
                                       .collect(toList());
 
         checkArgument(devMachines.size() == 1,
-                      "Environment '%s' should contain exactly 1 machine with ws-agent, but contains '%d'. " +
+                      "Environment '%s' should contain exactly 1 machine with ws-agent, but contains '%s'. " +
                       "All machines with this agent: %s",
                       envName, devMachines.size(), Joiner.on(", ").join(devMachines));
 
@@ -316,29 +317,6 @@ public class CheEnvironmentValidator {
      */
     private static void checkNotNull(Object object, String errorMessageTemplate, Object... errorMessageParams) {
         if (object == null) {
-            throw new IllegalArgumentException(format(errorMessageTemplate, errorMessageParams));
-        }
-    }
-
-    /**
-     * Checks that expression is true, throws {@link IllegalArgumentException} otherwise.
-     *
-     * <p>Exception uses error message built from error message template and error message parameters.
-     */
-    private static void checkArgument(boolean expression, String errorMessage) {
-        if (!expression) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-    }
-
-    /**
-     * Checks that expression is true, throws {@link IllegalArgumentException} otherwise.
-     *
-     * <p>Exception uses error message built from error message template and error message parameters.
-     */
-    private static void checkArgument(boolean expression, String errorMessageTemplate, Object... errorMessageParams)
-            throws IllegalArgumentException {
-        if (!expression) {
             throw new IllegalArgumentException(format(errorMessageTemplate, errorMessageParams));
         }
     }

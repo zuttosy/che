@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.environment.server;
 
+import com.google.common.base.Joiner;
+
+import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
@@ -23,6 +26,7 @@ import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
+import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
@@ -40,8 +44,10 @@ import java.util.Map;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.eclipse.che.dto.server.DtoFactory.newDto;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -72,11 +78,10 @@ public class CheEnvironmentValidatorTest {
         composeEnv = spy(createComposeEnv());
         when(machineInstanceProviders.hasProvider("docker")).thenReturn(true);
         when(machineInstanceProviders.getProviderTypes()).thenReturn(Arrays.asList("docker", "ssh"));
-
         when(composeFileParser.parse(any(Environment.class))).thenReturn(composeEnv);
     }
 
-//    @Test
+    @Test
     public void shouldSucceedOnValidationOfValidEnvironment() throws Exception {
         environmentValidator.validate("env", environment);
     }
@@ -84,9 +89,6 @@ public class CheEnvironmentValidatorTest {
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "Environment name should not be neither null nor empty")
     public void shouldFailValidationIfEnvNameIsNull() throws Exception {
-        // given
-        EnvironmentDto environment = createEnv();
-
         // when
         environmentValidator.validate(null, environment);
     }
@@ -94,15 +96,39 @@ public class CheEnvironmentValidatorTest {
     @Test(expectedExceptions = IllegalArgumentException.class,
           expectedExceptionsMessageRegExp = "Environment name should not be neither null nor empty")
     public void shouldFailValidationIfEnvNameIsEmpty() throws Exception {
-        // given
-        EnvironmentDto environment = createEnv();
-
         // when
         environmentValidator.validate("", environment);
     }
 
-    @Test
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "Parsing of recipe of environment '.*' failed. Error: test exception")
     public void shouldFailIfComposeFileIsBroken() throws Exception {
+        // given
+        when(composeFileParser.parse(any(Environment.class)))
+                .thenThrow(new IllegalArgumentException("test exception"));
+
+        // when
+        environmentValidator.validate("env", environment);
+    }
+
+    @Test(expectedExceptions = ServerException.class,
+          expectedExceptionsMessageRegExp = "Parsing of recipe of environment '.*' failed. Error: test exception")
+    public void shouldFailIfEnvironmentRecipeFetchingFails() throws Exception {
+        // given
+        when(composeFileParser.parse(any(Environment.class)))
+                .thenThrow(new ServerException("test exception"));
+
+        // when
+        environmentValidator.validate("env", environment);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "Compose services order of environment 'env' is not resolvable. Error: test exception")
+    public void shouldFailIfServicesOrderingFails() throws Exception {
+        when(startStrategy.order(any(ComposeEnvironmentImpl.class)))
+                .thenThrow(new IllegalArgumentException("test exception"));
+
+        environmentValidator.validate("env", environment);
     }
 
     @Test(dataProvider = "invalidEnvironmentProvider")
@@ -114,9 +140,11 @@ public class CheEnvironmentValidatorTest {
             // when
             environmentValidator.validate("env", env);
 
+            // then
             fail(format("Validation had to throw exception with message %s",
                         expectedExceptionMessage));
         } catch (IllegalArgumentException e) {
+            // then
             assertEquals(e.getLocalizedMessage(), expectedExceptionMessage);
         }
     }
@@ -149,13 +177,64 @@ public class CheEnvironmentValidatorTest {
         env.getRecipe().withLocation("location").withContent("content");
         data.add(asList(env, "Recipe of environment 'env' contains mutually exclusive fields location and content"));
 
-//        env = createEnv();
-//        env.getRecipe();
-//        data.add(asList(env, ));
-//
-//        env = createEnv();
-//        env.getRecipe();
-//        data.add(asList(env, ));
+        env = createEnv();
+        env.setMachines(null);
+        data.add(asList(env, "Environment 'env' doesn't contain machine with 'ws-agent' agent"));
+
+        env = createEnv();
+        env.setMachines(emptyMap());
+        data.add(asList(env, "Environment 'env' doesn't contain machine with 'ws-agent' agent"));
+
+        env = createEnv();
+        env.getMachines().put("missingInComposeEnvMachine",
+                              newDto(ExtendedMachineDto.class).withAgents(singletonList("ws-agent")));
+        data.add(asList(env, "Environment 'env' contains machines that are missing in environment recipe: missingInComposeEnvMachine"));
+
+        env = createEnv();
+        env.getMachines().entrySet().forEach(entry -> entry.getValue().getAgents().add("ws-agent"));
+        data.add(asList(env, "Environment 'env' should contain exactly 1 machine with ws-agent, but contains '" +
+                             env.getMachines().size() + "'. " + "All machines with this agent: " +
+                             Joiner.on(", ").join(env.getMachines().keySet())));
+
+        return data.stream()
+                   .map(list -> list.toArray(new Object[list.size()]))
+                   .toArray(value -> new Object[data.size()][]);
+    }
+
+    @Test(dataProvider = "invalidComposeEnvironmentProvider")
+    public void shouldFailValidationIfComposeEnvironmentIsBroken(ComposeEnvironmentImpl composeEnv,
+                                                                 String expectedExceptionMessage)
+            throws Exception {
+
+        // given
+        when(composeFileParser.parse(any(Environment.class))).thenReturn(composeEnv);
+
+        try {
+            // when
+            environmentValidator.validate("env", environment);
+
+            // then
+            fail(format("Validation had to throw exception with message %s",
+                        expectedExceptionMessage));
+        } catch (IllegalArgumentException e) {
+            // then
+            assertEquals(e.getLocalizedMessage(), expectedExceptionMessage);
+        }
+    }
+
+    @DataProvider
+    public static Object[][] invalidComposeEnvironmentProvider() {
+        // InvalidComposeEnvironmentObject | ExceptionMessage
+        ComposeEnvironmentImpl env;
+        List<List<Object>> data = new ArrayList<>();
+
+        env = createComposeEnv();
+        env.setServices(null);
+        data.add(asList(env, "Environment 'env' should contain at least 1 compose service"));
+
+        env = createComposeEnv();
+        env.setServices(emptyMap());
+        data.add(asList(env, "Environment 'env' should contain at least 1 compose service"));
 
         return data.stream()
                    .map(list -> list.toArray(new Object[list.size()]))
@@ -250,7 +329,7 @@ public class CheEnvironmentValidatorTest {
         return DtoConverter.asDto(env);
     }
 
-    private ComposeEnvironmentImpl createComposeEnv() {
+    private static ComposeEnvironmentImpl createComposeEnv() {
         ComposeEnvironmentImpl composeEnvironment = new ComposeEnvironmentImpl();
         composeEnvironment.setVersion("2");
         Map<String, ComposeServiceImpl> services = new HashMap<>();
@@ -259,33 +338,33 @@ public class CheEnvironmentValidatorTest {
         ComposeServiceImpl service = new ComposeServiceImpl();
         service.setMemLimit(1024L * 1024L * 1024L);
         service.setImage("codenvy/ubuntu_jdk8");
-        service.setEnvironment(singletonMap("env1", "val1"));
-        service.setCommand(asList("this", "is", "command"));
+        service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
+        service.setCommand(new ArrayList<>(asList("this", "is", "command")));
         service.setContainerName("containerName");
-        service.setDependsOn(singletonList("machine2"));
-        service.setEntrypoint(asList("this", "is", "entrypoint"));
-        service.setExpose(asList("8080", "9090/tcp", "7070/udp"));
-        service.setLabels(singletonMap("label1", "value1"));
-        service.setLinks(singletonList("machine2"));
-//        service.setPorts(singletonList("8080:8080")); Forbidden
-//        service.setVolumes(singletonList("volume")); Forbidden
-        service.setVolumesFrom(singletonList("machine2"));
+        service.setDependsOn(new ArrayList<>(singletonList("machine2")));
+        service.setEntrypoint(new ArrayList<>(asList("this", "is", "entrypoint")));
+        service.setExpose(new ArrayList<>(asList("8080", "9090/tcp", "7070/udp")));
+        service.setLabels(new HashMap<>(singletonMap("label1", "value1")));
+        service.setLinks(new ArrayList<>(singletonList("machine2")));
+//        service.setPorts(new ArrayList<>(singletonList("8080:8080"))); Forbidden
+//        service.setVolumes(new ArrayList<>(singletonList("volume"))); Forbidden
+        service.setVolumesFrom(new ArrayList<>(singletonList("machine2")));
 
         services.put("dev-machine", service);
 
         service = new ComposeServiceImpl();
         service.setMemLimit(100L);
         service.setBuild(new BuildContextImpl("context", "file"));
-        service.setEnvironment(singletonMap("env1", "val1"));
-        service.setCommand(asList("this", "is", "command"));
+        service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
+        service.setCommand(new ArrayList<>(asList("this", "is", "command")));
         service.setContainerName("containerName2");
         service.setDependsOn(null);
-        service.setEntrypoint(asList("this", "is", "entrypoint"));
-        service.setExpose(asList("8080", "9090/tcp", "7070/udp"));
-        service.setLabels(singletonMap("label1", "value1"));
-        service.setLinks(emptyList());
-//        service.setPorts(singletonList("8080:8080")); Forbidden
-//        service.setVolumes(singletonList("volume")); Forbidden
+        service.setEntrypoint(new ArrayList<>(asList("this", "is", "entrypoint")));
+        service.setExpose(new ArrayList<>(asList("8080", "9090/tcp", "7070/udp")));
+        service.setLabels(new HashMap<>(singletonMap("label1", "value1")));
+        service.setLinks(new ArrayList<>(emptyList()));
+//        service.setPorts(new ArrayList<>(singletonList("8080:8080"))); Forbidden
+//        service.setVolumes(new ArrayList<>(singletonList("volume"))); Forbidden
         service.setVolumesFrom(null);
         services.put("machine2", service);
 
