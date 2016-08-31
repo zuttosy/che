@@ -18,10 +18,12 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.machine.Recipe;
 import org.eclipse.che.api.core.model.project.ProjectConfig;
+import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.local.storage.LocalStorage;
 import org.eclipse.che.api.local.storage.LocalStorageFactory;
 import org.eclipse.che.api.machine.server.recipe.adapters.RecipeTypeAdapter;
+import org.eclipse.che.api.workspace.server.WorkspaceConfigJsonAdapter;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.spi.WorkspaceDao;
 
@@ -58,16 +60,20 @@ public class LocalWorkspaceDaoImpl implements WorkspaceDao {
     private final LocalStorage               localStorage;
 
     @Inject
-    public LocalWorkspaceDaoImpl(LocalStorageFactory factory) throws IOException {
+    public LocalWorkspaceDaoImpl(LocalStorageFactory factory, WorkspaceConfigJsonAdapter cfgAdapter) throws IOException {
         final Map<Class<?>, Object> adapters = ImmutableMap.of(Recipe.class, new RecipeTypeAdapter(),
-                                                               ProjectConfig.class, new ProjectConfigAdapter());
+                                                               ProjectConfig.class, new ProjectConfigAdapter(),
+                                                               Workspace.class, new LocalWorkspaceAdapter(cfgAdapter));
         this.localStorage = factory.create("workspaces.json", adapters);
         this.workspaces = new HashMap<>();
     }
 
     @PostConstruct
     public synchronized void loadWorkspaces() {
-        workspaces.putAll(localStorage.loadMap(new TypeToken<Map<String, WorkspaceImpl>>() {}));
+        final Map<String, Workspace> loaded = localStorage.loadMap(new TypeToken<Map<String, Workspace>>() {});
+        for (Workspace workspace : loaded.values()) {
+            workspaces.put(workspace.getId(), new WorkspaceImpl(workspace));
+        }
         for (WorkspaceImpl workspace : workspaces.values()) {
             workspace.setRuntime(null);
         }
