@@ -25,6 +25,7 @@ import org.eclipse.che.api.machine.shared.dto.recipe.RecipeDescriptor;
 import org.eclipse.che.dto.server.DtoFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.core.UriBuilder;
 
@@ -159,10 +160,12 @@ import static java.util.Collections.singletonMap;
 public class WorkspaceConfigJsonAdapter {
 
     private final HttpJsonRequestFactory httpReqFactory;
+    private final String apiEndpoint;
 
     @Inject
-    public WorkspaceConfigJsonAdapter(HttpJsonRequestFactory httpReqFactory) {
+    public WorkspaceConfigJsonAdapter(HttpJsonRequestFactory httpReqFactory, @Named("api.endpoint") String apiEndpoint) {
         this.httpReqFactory = httpReqFactory;
+        this.apiEndpoint = apiEndpoint;
     }
 
     public JsonObject adapt(JsonObject confSourceObj) throws IllegalArgumentException, ServerException {
@@ -272,10 +275,11 @@ public class WorkspaceConfigJsonAdapter {
         // type = dockerfile + content  - becomes service -> build -> context = generated_recipe_location
         if ("dockerfile".equals(type)) {
             final String contextLink;
-            if (sourceObj.has("content")) {
+            if (sourceObj.has("content") && !sourceObj.get("content").isJsonNull()) {
                 final RecipeDescriptor rd;
                 try {
-                    rd = httpReqFactory.fromUrl(UriBuilder.fromResource(RecipeService.class)
+                    rd = httpReqFactory.fromUrl(UriBuilder.fromUri(apiEndpoint)
+                                                          .path(RecipeService.class)
                                                           .path(RecipeService.class, "createRecipe")
                                                           .build()
                                                           .toString())
@@ -289,8 +293,10 @@ public class WorkspaceConfigJsonAdapter {
                     throw new ServerException(x.getLocalizedMessage(), x);
                 }
                 contextLink = rd.getLink(Constants.LINK_REL_GET_RECIPE_SCRIPT).getHref();
-            } else {
+            } else if (sourceObj.has("location") && !sourceObj.get("location").isJsonNull()){
                 contextLink = sourceObj.get("location").getAsString();
+            } else {
+                throw new IllegalArgumentException("Bad format, expected either location or content for type 'dockerfile'");
             }
             service.setBuildContext(contextLink);
         } else if ("image".equals(type)) {

@@ -66,7 +66,7 @@ public class WorkspaceConfigAdapterTest {
 
     @BeforeMethod
     private void setUp() throws Exception {
-        configAdapter = new WorkspaceConfigJsonAdapter(httpReqFactory);
+        configAdapter = new WorkspaceConfigJsonAdapter(httpReqFactory, "localhost");
         final HttpJsonRequest request = mock(HttpJsonRequest.class, new SelfReturningAnswer());
         when(httpReqFactory.fromUrl(any())).thenReturn(request);
         when(request.request()).thenReturn(response);
@@ -151,11 +151,11 @@ public class WorkspaceConfigAdapterTest {
                                                              "    mem_limit: 1073741824\n");
     }
 
-    @Test(expectedExceptions = BadRequestException.class, dataProvider = "invalidConfigs")
+    @Test(expectedExceptions = IllegalArgumentException.class, dataProvider = "invalidConfigs")
     public void testNotValidWorkspaceConfigAdaptations(String filename) throws Exception {
         final String content = loadContent(INVALID_CONFIGS_DIR_NAME + File.separatorChar + filename);
 
-        new WorkspaceConfigJsonAdapter(httpReqFactory).adapt(new JsonParser().parse(content).getAsJsonObject());
+        new WorkspaceConfigJsonAdapter(httpReqFactory, "").adapt(new JsonParser().parse(content).getAsJsonObject());
     }
 
     @DataProvider
