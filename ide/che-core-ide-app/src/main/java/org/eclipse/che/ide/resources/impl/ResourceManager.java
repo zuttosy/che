@@ -1039,6 +1039,12 @@ public final class ResourceManager {
     }
 
     private Promise<Void> onExternalDeltaUpdated(final ResourceDelta delta) {
+        if (delta.getToPath().segmentCount() == 0) {
+            workspaceRoot.synchronize();
+
+            return null;
+        }
+
         return findResource(delta.getToPath(), true).then(new Function<Optional<Resource>, Void>() {
             @Override
             public Void apply(Optional<Resource> resource) throws FunctionException {
