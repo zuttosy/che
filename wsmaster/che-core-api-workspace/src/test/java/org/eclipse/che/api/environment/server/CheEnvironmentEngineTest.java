@@ -18,7 +18,6 @@ import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.core.util.MessageConsumer;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeMachineInstanceProvider;
 import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
 import org.eclipse.che.api.environment.server.compose.model.ComposeServiceImpl;
@@ -51,7 +50,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -97,6 +95,8 @@ public class CheEnvironmentEngineTest {
     EventService                   eventService;
     @Mock
     SnapshotDao                    snapshotDao;
+    @Mock
+    EnvironmentParser environmentParser;
 
     CheEnvironmentEngine engine;
 
@@ -107,7 +107,7 @@ public class CheEnvironmentEngineTest {
                                               "/tmp",
                                               256,
                                               eventService,
-                                              new ComposeFileParser(URI.create("http://localhost")),
+                                              environmentParser,
                                               new ComposeServicesStartStrategy(),
                                               composeProvider));
 

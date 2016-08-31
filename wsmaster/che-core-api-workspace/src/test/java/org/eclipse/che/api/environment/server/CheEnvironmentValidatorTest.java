@@ -14,7 +14,6 @@ import com.google.common.base.Joiner;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.Environment;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
 import org.eclipse.che.api.environment.server.compose.model.BuildContextImpl;
 import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
@@ -64,7 +63,7 @@ public class CheEnvironmentValidatorTest {
     @Mock
     MachineInstanceProviders     machineInstanceProviders;
     @Mock
-    ComposeFileParser            composeFileParser;
+    EnvironmentParser environmentParser;
     @Mock
     ComposeServicesStartStrategy startStrategy;
 
@@ -80,7 +79,7 @@ public class CheEnvironmentValidatorTest {
         composeEnv = spy(createComposeEnv());
         when(machineInstanceProviders.hasProvider("docker")).thenReturn(true);
         when(machineInstanceProviders.getProviderTypes()).thenReturn(asList("docker", "ssh"));
-        when(composeFileParser.parse(any(Environment.class))).thenReturn(composeEnv);
+        when(environmentParser.parse(any(Environment.class))).thenReturn(composeEnv);
     }
 
     @Test
@@ -106,7 +105,7 @@ public class CheEnvironmentValidatorTest {
           expectedExceptionsMessageRegExp = "Parsing of recipe of environment '.*' failed. Error: test exception")
     public void shouldFailIfComposeFileIsBroken() throws Exception {
         // given
-        when(composeFileParser.parse(any(Environment.class)))
+        when(environmentParser.parse(any(Environment.class)))
                 .thenThrow(new IllegalArgumentException("test exception"));
 
         // when
@@ -117,7 +116,7 @@ public class CheEnvironmentValidatorTest {
           expectedExceptionsMessageRegExp = "Parsing of recipe of environment '.*' failed. Error: test exception")
     public void shouldFailIfEnvironmentRecipeFetchingFails() throws Exception {
         // given
-        when(composeFileParser.parse(any(Environment.class)))
+        when(environmentParser.parse(any(Environment.class)))
                 .thenThrow(new ServerException("test exception"));
 
         // when
@@ -209,7 +208,7 @@ public class CheEnvironmentValidatorTest {
             throws Exception {
 
         // given
-        when(composeFileParser.parse(any(Environment.class))).thenReturn(composeEnv);
+        when(environmentParser.parse(any(Environment.class))).thenReturn(composeEnv);
 
         try {
             // when
@@ -228,6 +227,8 @@ public class CheEnvironmentValidatorTest {
     public static Object[][] invalidComposeEnvironmentProvider() {
         // InvalidComposeEnvironmentObject | ExceptionMessage
         ComposeEnvironmentImpl env;
+        Map.Entry<String, ComposeServiceImpl> serviceEntry;
+        ComposeServiceImpl service;
         List<List<Object>> data = new ArrayList<>();
 
         env = createComposeEnv();
@@ -238,9 +239,65 @@ public class CheEnvironmentValidatorTest {
         env.setServices(emptyMap());
         data.add(asList(env, "Environment 'env' should contain at least 1 compose service"));
 
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        env.getServices().put("invalid service name", serviceEntry.getValue());
+        data.add(asList(env, "Name of machine 'invalid service name' in environment 'env' is invalid"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage(null);
+        service.setBuild(null);
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage("");
+        service.setBuild(null);
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage(null);
+        service.setBuild(new BuildContextImpl());
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage("");
+        service.setBuild(new BuildContextImpl());
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage(null);
+        service.setBuild(new BuildContextImpl("", "dockerfile"));
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+        env = createComposeEnv();
+        serviceEntry = getAnyService(env);
+        service = serviceEntry.getValue();
+        service.setImage("");
+        service.setBuild(new BuildContextImpl("", "dockerfile"));
+        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+
+
+
         return data.stream()
                    .map(list -> list.toArray(new Object[list.size()]))
                    .toArray(value -> new Object[data.size()][]);
+    }
+
+    private static Map.Entry<String, ComposeServiceImpl> getAnyService(ComposeEnvironmentImpl env) {
+        return env.getServices()
+                  .entrySet()
+                  .iterator()
+                  .next();
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class,

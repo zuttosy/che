@@ -31,7 +31,6 @@ import org.eclipse.che.api.core.util.CompositeLineConsumer;
 import org.eclipse.che.api.core.util.FileLineConsumer;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.core.util.MessageConsumer;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeMachineInstanceProvider;
 import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
 import org.eclipse.che.api.environment.server.compose.model.BuildContextImpl;
@@ -98,7 +97,7 @@ public class CheEnvironmentEngine {
     private final String                         defaultMachineMemorySizeMB;
     private final SnapshotDao                    snapshotDao;
     private final EventService                   eventService;
-    private final ComposeFileParser              composeFileParser;
+    private final EnvironmentParser              environmentParser;
     private final ComposeServicesStartStrategy   startStrategy;
     private final ComposeMachineInstanceProvider composeProvider;
 
@@ -110,12 +109,12 @@ public class CheEnvironmentEngine {
                                 @Named("machine.logs.location") String machineLogsDir,
                                 @Named("machine.default_mem_size_mb") int defaultMachineMemorySizeMB,
                                 EventService eventService,
-                                ComposeFileParser composeFileParser,
+                                EnvironmentParser environmentParser,
                                 ComposeServicesStartStrategy startStrategy,
                                 ComposeMachineInstanceProvider composeProvider) {
         this.snapshotDao = snapshotDao;
         this.eventService = eventService;
-        this.composeFileParser = composeFileParser;
+        this.environmentParser = environmentParser;
         this.startStrategy = startStrategy;
         this.composeProvider = composeProvider;
         this.environments = new ConcurrentHashMap<>();
@@ -487,7 +486,7 @@ public class CheEnvironmentEngine {
             throws ServerException,
                    ConflictException {
 
-        ComposeEnvironmentImpl composeEnvironment = composeFileParser.parse(env);
+        ComposeEnvironmentImpl composeEnvironment = environmentParser.parse(env);
 
         normalizeEnvironment(composeEnvironment);
 

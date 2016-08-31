@@ -19,7 +19,6 @@ import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
 import org.eclipse.che.api.core.model.workspace.ServerConf2;
 import org.eclipse.che.api.core.model.workspace.compose.ComposeService;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeServicesStartStrategy;
 import org.eclipse.che.api.environment.server.compose.model.ComposeEnvironmentImpl;
 import org.eclipse.che.api.machine.server.MachineInstanceProviders;
@@ -77,15 +76,15 @@ public class CheEnvironmentValidator {
             Pattern.compile("^(?<serviceName>" + MACHINE_NAME_REGEXP + ")(:(ro|rw))?$");
 
     private final MachineInstanceProviders     machineInstanceProviders;
-    private final ComposeFileParser            composeFileParser;
+    private final EnvironmentParser            environmentParser;
     private final ComposeServicesStartStrategy startStrategy;
 
     @Inject
     public CheEnvironmentValidator(MachineInstanceProviders machineInstanceProviders,
-                                   ComposeFileParser composeFileParser,
+                                   EnvironmentParser environmentParser,
                                    ComposeServicesStartStrategy startStrategy) {
         this.machineInstanceProviders = machineInstanceProviders;
-        this.composeFileParser = composeFileParser;
+        this.environmentParser = environmentParser;
         this.startStrategy = startStrategy;
     }
 
@@ -94,10 +93,11 @@ public class CheEnvironmentValidator {
         checkArgument(!isNullOrEmpty(envName),
                       "Environment name should not be neither null nor empty");
         checkNotNull(env.getRecipe(), "Environment recipe should not be null");
-        checkArgument("compose".equals(env.getRecipe().getType()),
-                      "Type '%s' of environment '%s' is not supported. Supported types: compose",
+        checkArgument(environmentParser.getEnvironmentTypes().contains(env.getRecipe().getType()),
+                      "Type '%s' of environment '%s' is not supported. Supported types: %s",
                       env.getRecipe().getType(),
-                      envName);
+                      envName,
+                      Joiner.on(',').join(environmentParser.getEnvironmentTypes()));
         checkArgument(!isNullOrEmpty(env.getRecipe().getContentType()),
                       "Environment recipe content type should not be neither null nor empty");
         checkArgument(env.getRecipe().getContent() != null || env.getRecipe().getLocation() != null,
@@ -108,7 +108,7 @@ public class CheEnvironmentValidator {
 
         ComposeEnvironmentImpl composeEnvironment;
         try {
-            composeEnvironment = composeFileParser.parse(env);
+            composeEnvironment = environmentParser.parse(env);
         } catch (ServerException e) {
             throw new ServerException(format("Parsing of recipe of environment '%s' failed. Error: %s",
                                              envName, e.getLocalizedMessage()));
@@ -179,8 +179,9 @@ public class CheEnvironmentValidator {
                       machineName, envName);
 
         checkArgument(!isNullOrEmpty(service.getImage()) ||
-                      (service.getBuild() != null && !isNullOrEmpty(service.getBuild().getContext())),
-                      "Filed 'image' or 'build.context' is missing in compose service '%s' in environment '%s'",
+                      (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()) ||
+                                                      !isNullOrEmpty(service.getBuild().getDockerfile()))),
+                      "Filed 'image' or 'build.context' is required in compose service '%s' in environment '%s'",
                       machineName, envName);
 
         checkArgument(service.getMemLimit() != null && service.getMemLimit() > 0,
