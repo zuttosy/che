@@ -1044,13 +1044,11 @@ public final class ResourceManager {
             public Void apply(Optional<Resource> resource) throws FunctionException {
 
                 if (resource.isPresent()) {
-                    Resource intercepted = resource.get();
-
-                    if (!store.getResource(intercepted.getLocation()).isPresent()) {
-                        store.register(intercepted);
+                    if (resource.get() instanceof Container) {
+                        ((Container)resource.get()).synchronize();
+                    } else {
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource.get(), UPDATED | DERIVED)));
                     }
-
-                    eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(intercepted, UPDATED | DERIVED)));
                 }
 
                 return null;
