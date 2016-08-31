@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.ide.api.event.ng;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import java.util.HashSet;
@@ -23,12 +22,7 @@ import java.util.Set;
  */
 @Singleton
 public class DeletedFilesController {
-    private Set<String> deletedFiles;
-
-    @Inject
-    public DeletedFilesController() {
-        this.deletedFiles = new HashSet<>();
-    }
+    private Set<String> deletedFiles = new HashSet<>();
 
     /**
      * Adds the path to the file which need to skip.
@@ -45,13 +39,14 @@ public class DeletedFilesController {
      *
      * @param path
      *         path to the file
+     *
      * @return {@code true} if set contains the specified path
      */
     public boolean remove(String path) {
         return deletedFiles.remove(path);
     }
 
-    /** Returns {@code true} if this set contains the specified path.*/
+    /** Returns {@code true} if this set contains the specified path. */
     public boolean contains(String path) {
         return deletedFiles.contains(path);
     }
