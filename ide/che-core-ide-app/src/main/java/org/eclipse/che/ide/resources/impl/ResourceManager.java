@@ -497,10 +497,6 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
-                if (isResourceOpened(source)) {
-                    deletedFilesController.add(source.getLocation().toString());
-                }
-
                 return ps.move(source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
