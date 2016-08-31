@@ -30,6 +30,9 @@ import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.ide.api.app.AppContext;
+import org.eclipse.che.ide.api.editor.EditorAgent;
+import org.eclipse.che.ide.api.editor.EditorPartPresenter;
+import org.eclipse.che.ide.api.event.ng.DeletedFilesController;
 import org.eclipse.che.ide.api.machine.DevMachine;
 import org.eclipse.che.ide.api.machine.WsAgentURLModifier;
 import org.eclipse.che.ide.api.project.ProjectServiceClient;
@@ -120,13 +123,15 @@ public final class ResourceManager {
 
     private static final Resource[] NO_RESOURCES = new Resource[0];
 
-    private final ProjectServiceClient ps;
-    private final EventBus             eventBus;
-    private final ResourceFactory      resourceFactory;
-    private final PromiseProvider      promises;
-    private final DtoFactory           dtoFactory;
-    private final ProjectTypeRegistry  typeRegistry;
-    private       DevMachine           devMachine;
+    private final ProjectServiceClient   ps;
+    private final EventBus               eventBus;
+    private final EditorAgent            editorAgent;
+    private final DeletedFilesController deletedFilesController;
+    private final ResourceFactory        resourceFactory;
+    private final PromiseProvider        promises;
+    private final DtoFactory             dtoFactory;
+    private final ProjectTypeRegistry    typeRegistry;
+    private       DevMachine             devMachine;
 
     /**
      * Link to the workspace content root. Immutable among the workspace life.
@@ -148,6 +153,8 @@ public final class ResourceManager {
     public ResourceManager(@Assisted DevMachine devMachine,
                            ProjectServiceClient ps,
                            EventBus eventBus,
+                           EditorAgent editorAgent,
+                           DeletedFilesController deletedFilesController,
                            ResourceFactory resourceFactory,
                            PromiseProvider promises,
                            DtoFactory dtoFactory,
@@ -157,6 +164,8 @@ public final class ResourceManager {
         this.devMachine = devMachine;
         this.ps = ps;
         this.eventBus = eventBus;
+        this.editorAgent = editorAgent;
+        this.deletedFilesController = deletedFilesController;
         this.resourceFactory = resourceFactory;
         this.promises = promises;
         this.dtoFactory = dtoFactory;
@@ -488,6 +497,10 @@ public final class ResourceManager {
             public Promise<Resource> apply(Optional<Resource> resource) throws FunctionException {
                 checkState(!resource.isPresent() || force, "Cannot create '" + destination.toString() + "'. Resource already exists.");
 
+                if (isResourceOpened(source)) {
+                    deletedFilesController.add(source.getLocation().toString());
+                }
+
                 return ps.move(source.getLocation(), destination.parent(), destination.lastSegment(), force)
                          .thenPromise(new Function<Void, Promise<Resource>>() {
                              @Override
@@ -563,10 +576,18 @@ public final class ResourceManager {
 
                 store.dispose(resource.getLocation(), !resource.isFile());
 
+                if (isResourceOpened(resource)) {
+                    deletedFilesController.add(resource.getLocation().toString());
+                }
+
                 eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(resource, REMOVED | DERIVED)));
 
                 if (descToRemove != null) {
                     for (Resource toRemove : descToRemove) {
+                        if (isResourceOpened(resource)) {
+                            deletedFilesController.add(toRemove.getLocation().toString());
+                        }
+
                         eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(toRemove, REMOVED | DERIVED)));
                     }
                 }
@@ -803,6 +824,22 @@ public final class ResourceManager {
         });
     }
 
+    private boolean isResourceOpened(final Resource resource) {
+        if (!resource.isFile()) {
+            return false;
+        }
+
+        File file = (File)resource;
+
+        for (EditorPartPresenter editor : editorAgent.getOpenedEditors()) {
+            String editorPath = editor.getEditorInput().getFile().getLocation().toString();
+            if (editorPath.equals(file.getPath())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private void traverse(TreeElement tree, ResourceVisitor visitor) {
         for (final TreeElement element : tree.getChildren()) {

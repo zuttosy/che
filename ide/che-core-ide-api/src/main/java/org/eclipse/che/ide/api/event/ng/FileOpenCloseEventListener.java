@@ -35,6 +35,7 @@ public class FileOpenCloseEventListener {
 
     @Inject
     public FileOpenCloseEventListener(final Provider<EditorAgent> editorAgentProvider,
+                                      final DeletedFilesController deletedFilesController,
                                       final EventBus eventBus) {
 
         Log.info(getClass(), "Adding file event listener");
@@ -72,6 +73,7 @@ public class FileOpenCloseEventListener {
                     }
                 }
 
+                deletedFilesController.remove(closingEditor.getEditorInput().getFile().getLocation().toString());
                 eventBus.fireEvent(new FileTrackingEvent(path.toString(), null, STOP));
             }
         });
