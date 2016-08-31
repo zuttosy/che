@@ -12,6 +12,7 @@ package org.eclipse.che.ide.api.event.ng;
 
 
 import org.eclipse.che.api.core.jsonrpc.shared.JsonRpcRequest;
+import org.eclipse.che.api.project.shared.dto.event.FileWatcherEventType;
 import org.eclipse.che.api.project.shared.dto.event.ProjectTreeStatusUpdateDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.resources.ExternalResourceDelta;
@@ -48,10 +49,11 @@ public class ProjectTreeStatusNotificationReceiver implements JsonRpcRequestRece
         final ProjectTreeStatusUpdateDto vfsFileStatusUpdateDto = dtoFactory.createDtoFromJson(params, ProjectTreeStatusUpdateDto.class);
 
         final String path = vfsFileStatusUpdateDto.getPath();
+        final FileWatcherEventType type = vfsFileStatusUpdateDto.getType();
 
         final int status;
 
-        switch (vfsFileStatusUpdateDto.getType()) {
+        switch (type) {
             case CREATED: {
                 status = ADDED;
 
@@ -74,8 +76,7 @@ public class ProjectTreeStatusNotificationReceiver implements JsonRpcRequestRece
             }
         }
 
-        Log.info(getClass(), "Received request path: " + path);
-        Log.info(getClass(), "Received request status: " + status);
+        Log.info(getClass(), "Received request\npath: " + path +"\ntype:"+ type +"\nstatus:" + status);
 
         appContext.getWorkspaceRoot().synchronize(new ExternalResourceDelta(Path.valueOf(path), Path.valueOf(path), status));
     }
