@@ -10,44 +10,38 @@
  *******************************************************************************/
 package org.eclipse.che.api.local;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.workspace.server.WorkspaceConfigJsonAdapter;
+import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 
 import java.lang.reflect.Type;
 
 /**
  * @author Yevhenii Voevodin
  */
-public class WorkspaceConfigDeserializer<T> implements JsonDeserializer<T> {
+public class WorkspaceConfigDeserializer implements JsonDeserializer<WorkspaceConfigImpl> {
 
-    private final Class<T>                   clazz;
-    private final String                     fieldName;
     private final WorkspaceConfigJsonAdapter adapter;
 
-    public WorkspaceConfigDeserializer(Class<T> clazz, String fieldName, WorkspaceConfigJsonAdapter adapter) {
-        this.clazz = clazz;
-        this.fieldName = fieldName;
+    public WorkspaceConfigDeserializer(WorkspaceConfigJsonAdapter adapter) {
         this.adapter = adapter;
     }
 
     @Override
-    public T deserialize(JsonElement jsonEl, Type type, JsonDeserializationContext ctx) throws JsonParseException {
+    public WorkspaceConfigImpl deserialize(JsonElement jsonEl, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         if (jsonEl.isJsonObject()) {
-            final JsonObject root = jsonEl.getAsJsonObject();
-            if (root.has(fieldName) && root.get(fieldName).isJsonObject()) {
-                try {
-                    adapter.adapt(root.getAsJsonObject(fieldName));
-                } catch (ServerException x) {
-                    throw new RuntimeException(x.getMessage(), x);
-                }
+            try {
+                adapter.adapt(jsonEl.getAsJsonObject());
+            } catch (ServerException x) {
+                throw new RuntimeException(x.getMessage(), x);
             }
         }
-        return ctx.deserialize(jsonEl, clazz);
+        return new Gson().fromJson(jsonEl, WorkspaceConfigImpl.class);
     }
 }

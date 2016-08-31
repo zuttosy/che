@@ -24,6 +24,7 @@ import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.server.model.impl.SourceStorageImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
+import org.mockito.Mockito;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -42,6 +43,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.eclipse.che.commons.lang.NameGenerator.generate;
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -63,7 +65,8 @@ public class LocalWorkspaceDaoTest {
         final Path targetDir = Paths.get(url.toURI()).getParent();
         final Path storageRoot = targetDir.resolve("workspaces");
         workspacesPath = storageRoot.resolve("workspaces.json");
-        workspaceDao = new LocalWorkspaceDaoImpl(new LocalStorageFactory(storageRoot.toString()), null);
+        final WorkspaceConfigJsonAdapter adapter = mock(WorkspaceConfigJsonAdapter.class);
+        workspaceDao = new LocalWorkspaceDaoImpl(new LocalStorageFactory(storageRoot.toString()), adapter);
     }
 
     @Test
@@ -88,16 +91,17 @@ public class LocalWorkspaceDaoTest {
     }
 
     @Test
-    public void testOldFormatIsAdaptedWhenLoadingWorkspace() throws Exception {
+    public void testOldFormatIsAdaptedWhenWorkspaceIsLoaded() throws Exception {
         final URL rootUrl = Thread.currentThread().getContextClassLoader().getResource(".");
         assertNotNull(rootUrl);
         final String path = Paths.get(rootUrl.toURI()).toString();
-        final LocalWorkspaceDaoImpl dao = new LocalWorkspaceDaoImpl(new LocalStorageFactory(path),
-                                                                    new WorkspaceConfigJsonAdapter(null, null));
+        final LocalStorageFactory storageFactory = new LocalStorageFactory(path);
+        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter(null, null);
+        final LocalWorkspaceDaoImpl workspaceDao = new LocalWorkspaceDaoImpl(storageFactory, workspaceAdapter);
 
-        dao.loadWorkspaces();
+        workspaceDao.loadWorkspaces();
 
-        final WorkspaceImpl test = dao.get("test");
+        final WorkspaceImpl test = workspaceDao.get("test");
         final EnvironmentImpl environment = test.getConfig().getEnvironments().get(test.getConfig().getDefaultEnv());
         assertEquals(environment.getRecipe().getType(), "compose");
     }

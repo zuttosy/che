@@ -40,14 +40,6 @@
         }
       ],
       "name": "demo-workspace_1"
-    },
-    "acl": [
-      {
-        "user": "*",
-        "actions": [
-          "search"
-        ]
-      }
-    ]
+    }
   }
 }
