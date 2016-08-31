@@ -62,6 +62,7 @@ public class FileTrackingOperationTransmitter {
             switch (type) {
                 case MODIFIED: {
                     LOG.debug("Received file MODIFIED trigger");
+
                     transmitModified(path);
 
                     break;
