@@ -67,14 +67,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Predicate;
 
 import static java.lang.String.format;
 import static org.eclipse.che.api.machine.server.event.InstanceStateEvent.Type.DIE;
@@ -837,7 +835,12 @@ public class CheEnvironmentEngine {
         try (StripedLocks.WriteLock lock = stripedLocks.acquireWriteLock(workspaceId)) {
             EnvironmentHolder environmentHolder = environments.get(workspaceId);
             if (environmentHolder != null) {
-                removeFirstMatching(environmentHolder.machines, m -> m.getId().equals(machineId));
+                for (Instance machine : environmentHolder.machines) {
+                    if (machine.getId().equals(machineId)) {
+                        environmentHolder.machines.remove(machine);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -996,18 +999,6 @@ public class CheEnvironmentEngine {
     @VisibleForTesting
     String generateMachineId() {
         return NameGenerator.generate("machine", 16);
-    }
-
-    private static <T> T removeFirstMatching(List<? extends T> elements, Predicate<T> predicate) {
-        T element = null;
-        for (final Iterator<? extends T> it = elements.iterator(); it.hasNext() && element == null; ) {
-            final T next = it.next();
-            if (predicate.test(next)) {
-                element = next;
-                it.remove();
-            }
-        }
-        return element;
     }
 
     private void ensurePreDestroyIsNotExecuted() throws ServerException {
