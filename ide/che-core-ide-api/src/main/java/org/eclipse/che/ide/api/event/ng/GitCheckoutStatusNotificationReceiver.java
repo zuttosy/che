@@ -57,7 +57,7 @@ public class GitCheckoutStatusNotificationReceiver implements JsonRpcRequestRece
                 Log.info(getClass(), "Received git branch checkout event: " + name);
 
                 if (notificationManager != null) {
-                    notificationManager.notify("External operation", "Branch '" + name + "' is checked out", SUCCESS, EMERGE_MODE);
+                    notificationManager.notify("Git operation", "Branch '" + name + "' is checked out", SUCCESS, EMERGE_MODE);
                 }
 
                 break;
@@ -66,7 +66,7 @@ public class GitCheckoutStatusNotificationReceiver implements JsonRpcRequestRece
                 Log.info(getClass(), "Received git revision checkout event: " + name);
 
                 if (notificationManager != null) {
-                    notificationManager.notify("External operation", "Revision '" + name + "' is checked out", SUCCESS, EMERGE_MODE);
+                    notificationManager.notify("Git operation", "Revision '" + name + "' is checked out", SUCCESS, EMERGE_MODE);
                 }
 
                 break;
