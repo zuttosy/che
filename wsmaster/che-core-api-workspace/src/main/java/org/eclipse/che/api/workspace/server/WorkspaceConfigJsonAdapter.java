@@ -29,6 +29,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.ws.rs.core.UriBuilder;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -160,7 +161,7 @@ import static java.util.Collections.singletonMap;
 public class WorkspaceConfigJsonAdapter {
 
     private final HttpJsonRequestFactory httpReqFactory;
-    private final String apiEndpoint;
+    private final String                 apiEndpoint;
 
     @Inject
     public WorkspaceConfigJsonAdapter(HttpJsonRequestFactory httpReqFactory, @Named("api.endpoint") String apiEndpoint) {
@@ -199,7 +200,7 @@ public class WorkspaceConfigJsonAdapter {
             final JsonObject oldMachineConfObj = oldMachineConfEl.getAsJsonObject();
             if (!oldMachineConfObj.has("name")) {
                 throw new IllegalArgumentException(format("Bad format of the machine in environment '%s', machine name is missing",
-                                                     envName));
+                                                          envName));
             }
             final String machineName = oldMachineConfObj.get("name").getAsString();
             newMachinesObj.add(machineName, asMachine(oldMachineConfObj, envName, machineName));
@@ -234,20 +235,25 @@ public class WorkspaceConfigJsonAdapter {
         }
         if (!oldMachineConfObj.get("servers").isJsonArray()) {
             throw new IllegalArgumentException(format("Bad format of the servers in machine '%s:%s', servers must be json array",
-                                                 envName,
-                                                 machineName));
+                                                      envName,
+                                                      machineName));
         }
         final JsonObject newServersObj = new JsonObject();
         for (JsonElement serversEl : oldMachineConfObj.get("servers").getAsJsonArray()) {
             final JsonObject oldServerObj = serversEl.getAsJsonObject();
             if (!oldServerObj.has("ref")) {
                 throw new IllegalArgumentException(format("Bad format of server in machine '%s:%s', server must contain ref",
-                                                     envName,
-                                                     machineName));
+                                                          envName,
+                                                          machineName));
             }
             final String ref = oldServerObj.get("ref").getAsString();
             oldServerObj.remove("ref");
-            oldServerObj.remove("path");
+            if (oldServerObj.has("path")) {
+                final JsonObject props = new JsonObject();
+                props.add("path", oldServerObj.get("path"));
+                oldServerObj.add("properties", props);
+                oldServerObj.remove("path");
+            }
             newServersObj.add(ref, oldServerObj);
         }
         newMachineObj.add("servers", newServersObj);
@@ -260,14 +266,14 @@ public class WorkspaceConfigJsonAdapter {
         // Convert machine source
         if (!machineObj.has("source") || !machineObj.get("source").isJsonObject()) {
             throw new IllegalArgumentException(format("Bad format, source for machine '%s:%s' is missing",
-                                                 envName,
-                                                 machineName));
+                                                      envName,
+                                                      machineName));
         }
         final JsonObject sourceObj = machineObj.getAsJsonObject("source");
         if (!sourceObj.has("type")) {
             throw new IllegalArgumentException(format("Bad format, machine '%s:%s', type is missing",
-                                                 envName,
-                                                 machineName));
+                                                      envName,
+                                                      machineName));
         }
         final String type = sourceObj.get("type").getAsString();
         // type = image                 - becomes service -> image
@@ -293,7 +299,7 @@ public class WorkspaceConfigJsonAdapter {
                     throw new ServerException(x.getLocalizedMessage(), x);
                 }
                 contextLink = rd.getLink(Constants.LINK_REL_GET_RECIPE_SCRIPT).getHref();
-            } else if (sourceObj.has("location") && !sourceObj.get("location").isJsonNull()){
+            } else if (sourceObj.has("location") && !sourceObj.get("location").isJsonNull()) {
                 contextLink = sourceObj.get("location").getAsString();
             } else {
                 throw new IllegalArgumentException("Bad format, expected either location or content for type 'dockerfile'");
@@ -311,20 +317,22 @@ public class WorkspaceConfigJsonAdapter {
                 final Integer ram = tryParse(limits.get("ram").getAsString());
                 if (ram == null || ram < 0) {
                     throw new IllegalArgumentException(format("Bad format, machine '%s:%s' ram required to be an unsigned integer value",
-                                                         envName,
-                                                         machineName));
+                                                              envName,
+                                                              machineName));
                 }
                 service.setMemoryLimit(1024L * 1024L * ram);
             }
         }
         // env1=val - environment: -env1=env2
         if (machineObj.has("envVariables") && machineObj.get("envVariables").isJsonObject()) {
-            final List<String> envList = machineObj.getAsJsonObject("envVariables")
-                                                   .entrySet()
-                                                   .stream()
-                                                   .map(e -> e.getKey() + '=' + e.getValue().getAsString())
-                                                   .collect(Collectors.toList());
-            service.setEnvironment(envList);
+            final JsonObject envVarsObj = machineObj.getAsJsonObject("envVariables");
+            if (!envVarsObj.entrySet().isEmpty()) {
+                final List<String> envList = envVarsObj.entrySet()
+                                                       .stream()
+                                                       .map(e -> e.getKey() + '=' + e.getValue().getAsString())
+                                                       .collect(Collectors.toList());
+                service.setEnvironment(envList);
+            }
         }
         return service;
     }
