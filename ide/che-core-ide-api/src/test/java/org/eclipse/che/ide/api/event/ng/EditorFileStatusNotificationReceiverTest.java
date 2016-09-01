@@ -28,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static org.eclipse.che.api.project.shared.dto.event.FileTrackingOperationDto.Type.STOP;
 import static org.eclipse.che.api.project.shared.dto.event.FileWatcherEventType.DELETED;
 import static org.eclipse.che.api.project.shared.dto.event.FileWatcherEventType.MODIFIED;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.EMERGE_MODE;
@@ -98,7 +99,6 @@ public class EditorFileStatusNotificationReceiverTest {
     public void shouldNotifyAboutUpdate() {
         when(dto.getType()).thenReturn(MODIFIED);
 
-
         receiver.receive(request);
 
         ArgumentCaptor<FileContentUpdateEvent> captor = ArgumentCaptor.forClass(FileContentUpdateEvent.class);
@@ -114,10 +114,13 @@ public class EditorFileStatusNotificationReceiverTest {
     public void shouldNotifyAboutRemove() {
         when(dto.getType()).thenReturn(DELETED);
 
-
         receiver.receive(request);
 
         verify(eventBus, never()).fireEvent(any());
+        ArgumentCaptor<FileTrackingEvent> captor = ArgumentCaptor.forClass(FileTrackingEvent.class);
+        verify(eventBus).fireEvent(captor.capture());
+        assertEquals(captor.getValue().getType(), STOP);
+        assertEquals(captor.getValue().getPath(), FILE_PATH);
 
         verify(appContext).getWorkspaceRoot();
         verify(container).synchronize(any());
@@ -135,6 +138,10 @@ public class EditorFileStatusNotificationReceiverTest {
         receiver.receive(request);
 
         verify(eventBus, never()).fireEvent(any());
+        ArgumentCaptor<FileTrackingEvent> captor = ArgumentCaptor.forClass(FileTrackingEvent.class);
+        verify(eventBus).fireEvent(captor.capture());
+        assertEquals(captor.getValue().getType(), STOP);
+        assertEquals(captor.getValue().getPath(), FILE_PATH);
 
         verify(appContext).getWorkspaceRoot();
         verify(container).synchronize(any());

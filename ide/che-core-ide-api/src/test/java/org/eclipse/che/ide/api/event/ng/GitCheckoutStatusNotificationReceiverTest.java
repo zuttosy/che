@@ -83,7 +83,7 @@ public class GitCheckoutStatusNotificationReceiverTest {
         receiver.receive(request);
 
         verify(notificationManager)
-                .notify(eq("External operation"), eq("Branch '" + NAME + "' is checked out"), eq(SUCCESS), eq(EMERGE_MODE));
+                .notify(eq("Git operation"), eq("Branch '" + NAME + "' is checked out"), eq(SUCCESS), eq(EMERGE_MODE));
     }
 
     @Test
@@ -93,6 +93,6 @@ public class GitCheckoutStatusNotificationReceiverTest {
         receiver.receive(request);
 
         verify(notificationManager)
-                .notify(eq("External operation"), eq("Revision '" + NAME + "' is checked out"), eq(SUCCESS), eq(EMERGE_MODE));
+                .notify(eq("Git operation"), eq("Revision '" + NAME + "' is checked out"), eq(SUCCESS), eq(EMERGE_MODE));
     }
 }

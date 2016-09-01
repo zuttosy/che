@@ -28,6 +28,7 @@ import org.eclipse.che.ide.util.loging.Log;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import static org.eclipse.che.api.project.shared.dto.event.FileTrackingOperationDto.Type.STOP;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.SUCCESS;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
@@ -80,6 +81,8 @@ public class EditorFileStatusNotificationReceiver implements JsonRpcRequestRecei
             case DELETED: {
 
                 Log.info(getClass(), "Received removed file event status: " + path);
+
+                eventBus.fireEvent(new FileTrackingEvent(path, null, STOP));
 
                 appContext.getWorkspaceRoot().synchronize(new ExternalResourceDelta(Path.valueOf(path), Path.valueOf(path), REMOVED));
                 if (notificationManager != null && !deletedFilesController.remove(path)) {

@@ -97,6 +97,8 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditorOperations;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditorPartView;
 import org.eclipse.che.ide.api.editor.texteditor.UndoableEditor;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
+import org.eclipse.che.ide.api.event.ng.DeletedFilesController;
+import org.eclipse.che.ide.api.event.ng.FileTrackingEvent;
 import org.eclipse.che.ide.api.hotkeys.HasHotKeyItems;
 import org.eclipse.che.ide.api.hotkeys.HotKeyItem;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -118,6 +120,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.api.project.shared.dto.event.FileTrackingOperationDto.Type.START;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.ADDED;
@@ -150,6 +153,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
     private static final String TOGGLE_LINE_BREAKPOINT = "Toggle line breakpoint";
 
     private final CodeAssistantFactory                   codeAssistantFactory;
+    private final DeletedFilesController                 deletedFilesController;
     private final BreakpointManager                      breakpointManager;
     private final BreakpointRendererFactory              breakpointRendererFactory;
     private final DialogFactory                          dialogFactory;
@@ -185,6 +189,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
 
     @Inject
     public OrionEditorPresenter(final CodeAssistantFactory codeAssistantFactory,
+                                final DeletedFilesController deletedFilesController,
                                 final BreakpointManager breakpointManager,
                                 final BreakpointRendererFactory breakpointRendererFactory,
                                 final DialogFactory dialogFactory,
@@ -200,6 +205,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
                                 final NotificationManager notificationManager,
                                 final AppContext appContext) {
         this.codeAssistantFactory = codeAssistantFactory;
+        this.deletedFilesController = deletedFilesController;
         this.breakpointManager = breakpointManager;
         this.breakpointRendererFactory = breakpointRendererFactory;
         this.dialogFactory = dialogFactory;
@@ -323,6 +329,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
             final Path movedFrom = delta.getFromPath();
 
             if (document.getFile().getLocation().equals(movedFrom)) {
+                deletedFilesController.add(movedFrom.toString());
                 document.setFile((File)resource);
                 input.setFile((File)resource);
             }
@@ -336,6 +343,10 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
                 @Override
                 public void apply(Optional<File> file) throws OperationException {
                     if (file.isPresent()) {
+                        final String oldPath = document.getFile().getLocation().toString();
+                        deletedFilesController.add(oldPath);
+                        generalEventBus.fireEvent(new FileTrackingEvent(file.get().getLocation().toString(), null, START));
+
                         document.setFile(file.get());
                         input.setFile(file.get());
 
@@ -344,7 +355,6 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
                 }
             });
         }
-
 
     }
 
