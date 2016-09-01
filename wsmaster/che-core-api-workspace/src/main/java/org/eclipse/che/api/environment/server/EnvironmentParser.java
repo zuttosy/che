@@ -112,7 +112,7 @@ public class EnvironmentParser {
         if ("dockerimage".equals(environment.getRecipe().getType())) {
             service.setImage(recipe.getLocation());
         } else {
-            if (!"x-dockerfile".equals(recipe.getContentType())) {
+            if (!"text/x-dockerfile".equals(recipe.getContentType())) {
                 throw new IllegalArgumentException(
                         format("Content type of recipe of provided environment '%s' is unsupported. Supported values are: x-dockerfile, image",
                                recipe.getContentType()));
