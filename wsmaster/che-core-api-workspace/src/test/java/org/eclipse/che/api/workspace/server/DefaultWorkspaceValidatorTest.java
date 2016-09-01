@@ -17,6 +17,8 @@ import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
+import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
+import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.mockito.InjectMocks;
@@ -230,7 +232,8 @@ public class DefaultWorkspaceValidatorTest {
                                                 .withServers(singletonMap("ref1",
                                                                           newDto(ServerConf2Dto.class).withPort("8080/tcp")
                                                                                                       .withProtocol("https")
-                                                                                                      .withProperties(singletonMap("some", "prop"))));
+                                                                                                      .withProperties(singletonMap("some", "prop"))))
+                                                .withResources(newDto(ResourcesDto.class).withLimits(newDto(LimitsDto.class).withMemoryBytes(100000L)));
         EnvironmentDto env = newDto(EnvironmentDto.class).withMachines(singletonMap("devmachine1", extendedMachine))
                                                          .withRecipe(newDto(EnvironmentRecipeDto.class).withType("type")
                                                                                                        .withContent("content")

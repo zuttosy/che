@@ -8,26 +8,24 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.core.model.workspace;
+package org.eclipse.che.api.workspace.shared.dto;
 
-import java.util.List;
-import java.util.Map;
+import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.core.model.workspace.Limits;
+import org.eclipse.che.dto.shared.DTO;
+
+import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
 
 /**
- * Additional information about machine which is needed for purposes of CHE.
- *
  * @author Alexander Garagatyi
  */
-public interface ExtendedMachine {
-    /**
-     * Returns list of agents that should be deployed into machine.
-     */
-    List<String> getAgents();
+@DTO
+public interface LimitsDto extends Limits {
+    @Override
+    @FactoryParameter(obligation = MANDATORY)
+    Long getMemoryBytes();
 
-    /**
-     * Returns mapping of references to configurations of servers deployed into machine.
-     */
-    Map<String, ? extends ServerConf2> getServers();
+    void setMemoryBytes(Long memoryBytes);
 
-    Resources getResources();
+    LimitsDto withMemoryBytes(Long memoryBytes);
 }

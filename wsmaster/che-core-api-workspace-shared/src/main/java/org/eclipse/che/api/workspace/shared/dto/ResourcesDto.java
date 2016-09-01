@@ -8,16 +8,24 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.machine.shared.dto;
+package org.eclipse.che.api.workspace.shared.dto;
 
-import org.eclipse.che.api.core.model.machine.Limits;
+import org.eclipse.che.api.core.factory.FactoryParameter;
+import org.eclipse.che.api.core.model.workspace.Resources;
 import org.eclipse.che.dto.shared.DTO;
+
+import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
 
 /**
  * @author Alexander Garagatyi
  */
-@Deprecated
 @DTO
-public interface LimitsDto extends Limits {
-    LimitsDto withRam(int memorySizeMB);
+public interface ResourcesDto extends Resources {
+    @Override
+    @FactoryParameter(obligation = MANDATORY)
+    LimitsDto getLimits();
+
+    void setLimits(LimitsDto limits);
+
+    ResourcesDto withLimits(LimitsDto limits);
 }

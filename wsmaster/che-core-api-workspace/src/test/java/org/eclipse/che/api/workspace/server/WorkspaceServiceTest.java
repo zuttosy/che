@@ -25,7 +25,7 @@ import org.eclipse.che.api.core.rest.shared.dto.ServiceError;
 import org.eclipse.che.api.environment.server.MachineProcessManager;
 import org.eclipse.che.api.environment.server.MachineServiceLinksInjector;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
-import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
+import org.eclipse.che.api.machine.server.model.impl.MachineLimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineRuntimeInfoImpl;
@@ -37,6 +37,7 @@ import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
+import org.eclipse.che.api.workspace.server.model.impl.ResourcesImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceImpl;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceRuntimeImpl;
@@ -657,7 +658,7 @@ public class WorkspaceServiceTest {
                                                               .setDev(true)
                                                               .setEnvVariables(emptyMap())
                                                               .setServers(emptyList())
-                                                              .setLimits(new LimitsImpl(1024))
+                                                              .setLimits(new MachineLimitsImpl(1024))
                                                               .setSource(new MachineSourceImpl("type").setContent("content"))
                                                               .setName(environment.getMachines()
                                                                                   .keySet()
@@ -816,7 +817,9 @@ public class WorkspaceServiceTest {
     }
 
     private static EnvironmentDto createEnvDto() {
-        ExtendedMachineImpl devMachine = new ExtendedMachineImpl(singletonList("ws-agent"), null);
+        ExtendedMachineImpl devMachine = new ExtendedMachineImpl(singletonList("ws-agent"),
+                                                                 null,
+                                                                 new ResourcesImpl(new org.eclipse.che.api.workspace.server.model.impl.LimitsImpl(10000L)));
 
         return DtoConverter.asDto(new EnvironmentImpl(new EnvironmentRecipeImpl("type", "content-type", "content", null),
                                                       singletonMap("dev-machine", devMachine)));

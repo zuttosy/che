@@ -26,7 +26,9 @@ import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
+import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
+import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
@@ -168,11 +170,18 @@ public final class DtoConverter {
     public static ExtendedMachineDto asDto(ExtendedMachine machine) {
         ExtendedMachineDto machineDto = newDto(ExtendedMachineDto.class).withAgents(machine.getAgents());
         if (machine.getServers() != null) {
-            machineDto.withServers(machine.getServers()
-                                          .entrySet()
-                                          .stream()
-                                          .collect(toMap(Map.Entry::getKey,
-                                                         entry -> asDto(entry.getValue()))));
+            machineDto.setServers(machine.getServers()
+                                         .entrySet()
+                                         .stream()
+                                         .collect(toMap(Map.Entry::getKey,
+                                                        entry -> asDto(entry.getValue()))));
+        }
+        if (machine.getResources() != null && machine.getResources().getLimits() != null) {
+            machineDto.setResources(newDto(ResourcesDto.class)
+                                            .withLimits(newDto(LimitsDto.class)
+                                                                .withMemoryBytes(machine.getResources()
+                                                                                        .getLimits()
+                                                                                        .getMemoryBytes())));
         }
         return machineDto;
     }
