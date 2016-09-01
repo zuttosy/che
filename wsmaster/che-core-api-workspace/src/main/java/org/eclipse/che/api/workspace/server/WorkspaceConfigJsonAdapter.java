@@ -10,34 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
-import org.eclipse.che.api.machine.server.recipe.RecipeService;
-import org.eclipse.che.api.machine.shared.Constants;
-import org.eclipse.che.api.machine.shared.dto.recipe.NewRecipe;
-import org.eclipse.che.api.machine.shared.dto.recipe.RecipeDescriptor;
-import org.eclipse.che.dto.server.DtoFactory;
-
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.ws.rs.core.UriBuilder;
-
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.google.common.primitives.Ints.tryParse;
 import static java.lang.String.format;
-import static java.util.Collections.singletonMap;
 
 /**
  * Adapts an old workspace configuration object format to a new format.
@@ -53,17 +34,17 @@ import static java.util.Collections.singletonMap;
  *              "name": "dev-env",
  *              "machineConfigs": [
  *                  {
- *                      "name": "dev", <- goes to recipe content
+ *                      "name": "dev", <- becomes environment defined machine
  *                      "limits": {
  *                          "ram": 2048 <- in bytes
  *                      },
- *                      "source": { <- goes to recipe content
+ *                      "source": { <- goes to recipe
  *                          "location": "https://somewhere/Dockerfile",
  *                          "type": "dockerfile"
  *                      },
  *                      "type": "docker", <- will be defined by environment recipe type
  *                      "dev": true, <- if agents contain 'ws-agent'
- *                      "envVariables" : { <- goes to recipe content
+ *                      "envVariables" : {
  *                          "env1" : "value1",
  *                          "env2" : "value2
  *                      },
@@ -75,26 +56,6 @@ import static java.util.Collections.singletonMap;
  *                                  "protocol" : "some_protocol",
  *                                  "path" : "/some/path"
  *                              }
- *                          }
- *                      ]
- *                  }
- *                  {
- *                      "name" : "db",
- *                      "limits" : {
- *                          "ram": 2048 <- in bytes
- *                      },
- *                      "source" : {
- *                          "type" : "image",
- *                          "location" : "codenvy/ubuntu_jdk8"
- *                      },
- *                      "type" : "docker",
- *                      "dev" : false,
- *                      "servers" : [
- *                          {
- *                              "ref" : "db_server",
- *                              "port" : "3311/tcp",
- *                              "protocol" : "db-protocol",
- *                              "path" : "db-path"
  *                          }
  *                      ]
  *                  }
@@ -111,21 +72,9 @@ import static java.util.Collections.singletonMap;
  *      "environments" : {
  *          "dev-env" : {
  *              "recipe" : {
- *                  "type" : "compose",
- *                  "contentType" : "application/x-yaml",
- *                  "content" : "
- *                      services :
- *                          dev-machine:
- *                              build:
- *                                  context: https://somewhere/Dockerfile
- *                              mem_limit: 2147483648
- *                              environment:
- *                                  - env1=value1
- *                                  - env2=value2
- *                          db:
- *                              image : codenvy/ubuntu_jdk8
- *                              mem_limit: 2147483648
- *                  "
+ *                  "type" : "dockerfile",
+ *                  "contentType" : "text/x-dockerfile",
+ *                  "location" : "https://somewhere/Dockerfile"
  *              },
  *              "machines" : {
  *                  "dev-machine" : {
@@ -137,15 +86,6 @@ import static java.util.Collections.singletonMap;
  *                              "properties" : {
  *                                  "prop1" : "value1"
  *                              }
- *                          }
- *                      }
- *                  },
- *                  "db" : {
- *                      "servers" : {
- *                          "db_server" : {
- *                              "port" : "3311/tcp",
- *                              "protocol" : "db-protocol",
- *                              "path" : "db-path"
  *                          }
  *                      }
  *                  }
@@ -160,198 +100,148 @@ import static java.util.Collections.singletonMap;
 @Singleton
 public class WorkspaceConfigJsonAdapter {
 
-    private final HttpJsonRequestFactory httpReqFactory;
-    private final String                 apiEndpoint;
-
-    @Inject
-    public WorkspaceConfigJsonAdapter(HttpJsonRequestFactory httpReqFactory, @Named("api.endpoint") String apiEndpoint) {
-        this.httpReqFactory = httpReqFactory;
-        this.apiEndpoint = apiEndpoint;
-    }
-
-    public JsonObject adapt(JsonObject confSourceObj) throws IllegalArgumentException, ServerException {
-        final JsonArray oldEnvironmentsArr = confSourceObj.getAsJsonArray("environments");
-        final JsonObject newEnvironmentsObj = new JsonObject();
-        for (JsonElement oldEnvEl : oldEnvironmentsArr) {
-            final JsonObject oldEnvObj = oldEnvEl.getAsJsonObject();
-            if (!oldEnvObj.has("name")) {
-                throw new IllegalArgumentException("Bad format, environment name is missing");
-            }
-            final String envName = oldEnvObj.get("name").getAsString();
-            newEnvironmentsObj.add(envName, asEnvironment(oldEnvObj, envName));
-        }
-        confSourceObj.add("environments", newEnvironmentsObj);
-        return confSourceObj;
-    }
-
-    /** Converts environment from old format to a new one. */
-    private JsonObject asEnvironment(JsonObject oldEnvObj, String envName) throws ServerException {
-        final JsonObject newEnvObj = new JsonObject();
-        // nothing to convert, machine configs are missing, it is up to
-        // component which will use adapted data to fail if machines are required
-        if (!oldEnvObj.has("machineConfigs") || !oldEnvObj.get("machineConfigs").isJsonArray()) {
-            return newEnvObj;
-        }
-        // old machine config data needs to be distributed between
-        // new machine object and environment recipe
-        final Map<String, Service> recipeServices = new LinkedHashMap<>();
-        final JsonObject newMachinesObj = new JsonObject();
-        for (JsonElement oldMachineConfEl : oldEnvObj.get("machineConfigs").getAsJsonArray()) {
-            final JsonObject oldMachineConfObj = oldMachineConfEl.getAsJsonObject();
-            if (!oldMachineConfObj.has("name")) {
-                throw new IllegalArgumentException(format("Bad format of the machine in environment '%s', machine name is missing",
-                                                          envName));
-            }
-            final String machineName = oldMachineConfObj.get("name").getAsString();
-            newMachinesObj.add(machineName, asMachine(oldMachineConfObj, envName, machineName));
-            recipeServices.put(machineName, asService(oldMachineConfObj, envName, machineName));
-        }
-        newEnvObj.add("machines", newMachinesObj);
-        // adapt recipe
-        final JsonObject recipeObj = new JsonObject();
-        recipeObj.addProperty("type", "compose");
-        recipeObj.addProperty("contentType", "application/x-yaml");
-        recipeObj.addProperty("content", new Yaml().dumpAsMap(singletonMap("services", recipeServices)));
-        newEnvObj.add("recipe", recipeObj);
-        return newEnvObj;
-    }
-
-    /** Converts an old machine configuration to a new format. */
-    private static JsonObject asMachine(JsonObject oldMachineConfObj, String envName, String machineName) throws IllegalArgumentException {
-        final JsonObject newMachineObj = new JsonObject();
-        // If machine is dev machine then new machine must contain ws-agent in agents list
-        if (oldMachineConfObj.has("dev")) {
-            final JsonElement dev = oldMachineConfObj.get("dev");
-            if (dev.isJsonPrimitive() && dev.getAsBoolean()) {
-                final JsonArray agents = new JsonArray();
-                agents.add(new JsonPrimitive("ws-agent"));
-                newMachineObj.add("agents", agents);
-            }
-        }
-        // It is up to component which uses adapted object
-        // to decide whether servers required or not
-        if (!oldMachineConfObj.has("servers")) {
-            return newMachineObj;
-        }
-        if (!oldMachineConfObj.get("servers").isJsonArray()) {
-            throw new IllegalArgumentException(format("Bad format of the servers in machine '%s:%s', servers must be json array",
-                                                      envName,
-                                                      machineName));
-        }
-        final JsonObject newServersObj = new JsonObject();
-        for (JsonElement serversEl : oldMachineConfObj.get("servers").getAsJsonArray()) {
-            final JsonObject oldServerObj = serversEl.getAsJsonObject();
-            if (!oldServerObj.has("ref")) {
-                throw new IllegalArgumentException(format("Bad format of server in machine '%s:%s', server must contain ref",
-                                                          envName,
-                                                          machineName));
-            }
-            final String ref = oldServerObj.get("ref").getAsString();
-            oldServerObj.remove("ref");
-            if (oldServerObj.has("path")) {
-                final JsonObject props = new JsonObject();
-                props.add("path", oldServerObj.get("path"));
-                oldServerObj.add("properties", props);
-                oldServerObj.remove("path");
-            }
-            newServersObj.add(ref, oldServerObj);
-        }
-        newMachineObj.add("servers", newServersObj);
-        return newMachineObj;
-    }
-
-    /** Converts machine configuration to service. */
-    private Service asService(JsonObject machineObj, String envName, String machineName) throws IllegalArgumentException, ServerException {
-        final Service service = new Service();
-        // Convert machine source
-        if (!machineObj.has("source") || !machineObj.get("source").isJsonObject()) {
-            throw new IllegalArgumentException(format("Bad format, source for machine '%s:%s' is missing",
-                                                      envName,
-                                                      machineName));
-        }
-        final JsonObject sourceObj = machineObj.getAsJsonObject("source");
-        if (!sourceObj.has("type")) {
-            throw new IllegalArgumentException(format("Bad format, machine '%s:%s', type is missing",
-                                                      envName,
-                                                      machineName));
-        }
-        final String type = sourceObj.get("type").getAsString();
-        // type = image                 - becomes service -> image
-        // type = dockerfile + location - becomes service -> build -> context = location
-        // type = dockerfile + content  - becomes service -> build -> context = generated_recipe_location
-        if ("dockerfile".equals(type)) {
-            final String contextLink;
-            if (sourceObj.has("content") && !sourceObj.get("content").isJsonNull()) {
-                final RecipeDescriptor rd;
-                try {
-                    rd = httpReqFactory.fromUrl(UriBuilder.fromUri(apiEndpoint)
-                                                          .path(RecipeService.class)
-                                                          .path(RecipeService.class, "createRecipe")
-                                                          .build()
-                                                          .toString())
-                                       .setBody(DtoFactory.newDto(NewRecipe.class)
-                                                          .withName("generated")
-                                                          .withType("docker")
-                                                          .withScript(sourceObj.get("content").getAsString()))
-                                       .request()
-                                       .asDto(RecipeDescriptor.class);
-                } catch (Exception x) {
-                    throw new ServerException(x.getLocalizedMessage(), x);
+    /**
+     * Adapts given workspace configuration environments to a new format,
+     * if it contains environments array, otherwise does nothing.
+     *
+     * @throws IllegalArgumentException
+     *         if the old format is bad, and can't be converted to a new one
+     */
+    public void adaptModifying(JsonObject conf) {
+        if (conf.has("environments") && conf.get("environments").isJsonArray()) {
+            final JsonObject newEnvironments = new JsonObject();
+            for (JsonElement environmentEl : conf.get("environments").getAsJsonArray()) {
+                if (!environmentEl.isJsonObject()) {
+                    throw new IllegalArgumentException("Bad format, expected environment to be json object");
                 }
-                contextLink = rd.getLink(Constants.LINK_REL_GET_RECIPE_SCRIPT).getHref();
-            } else if (sourceObj.has("location") && !sourceObj.get("location").isJsonNull()) {
-                contextLink = sourceObj.get("location").getAsString();
-            } else {
-                throw new IllegalArgumentException("Bad format, expected either location or content for type 'dockerfile'");
+                final JsonObject env = environmentEl.getAsJsonObject();
+                if (!env.has("name") || env.get("name").isJsonNull()) {
+                    throw new IllegalArgumentException("Bad format, expected environment to provide a name");
+                }
+                final String envName = env.get("name").getAsString();
+                newEnvironments.add(envName, asEnvironment(env, envName));
             }
-            service.setBuildContext(contextLink);
-        } else if ("image".equals(type)) {
-            service.setImage(sourceObj.get("location").getAsString());
-        } else {
-            throw new IllegalArgumentException(format("Bad format, type '%s' is not supported", type));
+            conf.add("environments", newEnvironments);
         }
-        // limits.ram(mb) - service -> mem_limit(b)
-        if (machineObj.has("limits")) {
-            final JsonObject limits = machineObj.getAsJsonObject("limits");
+    }
+
+    private static JsonObject asEnvironment(JsonObject env, String envName) {
+        final JsonObject devMachine = findDevMachine(env);
+
+        // check environment is a valid old format environment
+        if (devMachine == null) {
+            throw new IllegalArgumentException("Bad format, expected dev-machine to be present in environment " + envName);
+        }
+        if (!devMachine.has("name") || devMachine.get("name").isJsonNull()) {
+            throw new IllegalArgumentException("Bad format, expected dev-machine to provide a name");
+        }
+        if (!devMachine.has("source") || !devMachine.get("source").isJsonObject()) {
+            throw new IllegalArgumentException("Bad format, expected dev-machine to provide a source");
+        }
+        final JsonObject source = devMachine.getAsJsonObject("source");
+        if (!source.has("type") || source.get("type").isJsonObject()) {
+            throw new IllegalArgumentException("Bad format, expected dev-machine to provide a source with a type");
+        }
+
+        // convert dev-machine to a new format
+        final JsonObject newMachine = new JsonObject();
+
+        // dev-machine agents
+        final JsonArray agents = new JsonArray();
+        agents.add(new JsonPrimitive("ws-agent"));
+        newMachine.add("agents", agents);
+
+        // dev-machine ram
+        if (devMachine.has("limits")) {
+            if (!devMachine.get("limits").isJsonObject()) {
+                throw new IllegalArgumentException(format("Bad limits format in the dev-machine of '%s' environment", envName));
+            }
+            final JsonObject limits = devMachine.getAsJsonObject("limits");
             if (limits.has("ram")) {
                 final Integer ram = tryParse(limits.get("ram").getAsString());
                 if (ram == null || ram < 0) {
-                    throw new IllegalArgumentException(format("Bad format, machine '%s:%s' ram required to be an unsigned integer value",
-                                                              envName,
-                                                              machineName));
+                    throw new IllegalArgumentException(format("Bad format, ram of dev-machine in environment '%s' " +
+                                                              "must an unsigned integer value", envName));
                 }
-                service.setMemoryLimit(1024L * 1024L * ram);
+                final JsonObject newLimits = new JsonObject();
+                newLimits.addProperty("memoryBytes", 1024L * 1024L * ram);
+                final JsonObject resources = new JsonObject();
+                resources.add("limits", newLimits);
+                newMachine.add("resources", resources);
             }
         }
-        // env1=val - environment: -env1=env2
-        if (machineObj.has("envVariables") && machineObj.get("envVariables").isJsonObject()) {
-            final JsonObject envVarsObj = machineObj.getAsJsonObject("envVariables");
-            if (!envVarsObj.entrySet().isEmpty()) {
-                final List<String> envList = envVarsObj.entrySet()
-                                                       .stream()
-                                                       .map(e -> e.getKey() + '=' + e.getValue().getAsString())
-                                                       .collect(Collectors.toList());
-                service.setEnvironment(envList);
+
+        // dev-machine servers
+        if (devMachine.has("servers")) {
+            if (!devMachine.get("servers").isJsonArray()) {
+                throw new IllegalArgumentException("Bad format of servers in dev-machine, servers must be json array");
             }
+            final JsonObject newServersObj = new JsonObject();
+            for (JsonElement serversEl : devMachine.get("servers").getAsJsonArray()) {
+                final JsonObject oldServerObj = serversEl.getAsJsonObject();
+                if (!oldServerObj.has("ref")) {
+                    throw new IllegalArgumentException("Bad format of server in dev-machine, server must contain ref");
+                }
+                final String ref = oldServerObj.get("ref").getAsString();
+                oldServerObj.remove("ref");
+                if (oldServerObj.has("path")) {
+                    final JsonObject props = new JsonObject();
+                    props.add("path", oldServerObj.get("path"));
+                    oldServerObj.add("properties", props);
+                    oldServerObj.remove("path");
+                }
+                newServersObj.add(ref, oldServerObj);
+            }
+            newMachine.add("servers", newServersObj);
         }
-        return service;
+
+        // create an environment recipe
+        final JsonObject envRecipe = new JsonObject();
+        final String type = source.get("type").getAsString();
+        switch (type) {
+            case "dockerfile":
+                envRecipe.addProperty("type", "dockerfile");
+                envRecipe.addProperty("contentType", "text/x-dockerfile");
+                if (source.has("content") && !source.get("content").isJsonNull()) {
+                    envRecipe.addProperty("content", source.get("content").getAsString());
+                } else if (source.has("location") && !source.get("location").isJsonNull()) {
+                    envRecipe.addProperty("location", source.get("location").getAsString());
+                } else {
+                    throw new IllegalArgumentException("Bad format, expected dev-machine source with type 'dockerfile' " +
+                                                       "to provide either 'content' or 'location'");
+                }
+                break;
+            case "image":
+                if (!source.has("location") || source.get("location").isJsonNull()) {
+                    throw new IllegalArgumentException("Bad format, expected dev-machine source with type 'image' " +
+                                                       "to provide image 'location'");
+                }
+                envRecipe.addProperty("type", "dockerimage");
+                envRecipe.addProperty("location", source.get("location").getAsString());
+                break;
+            default:
+                throw new IllegalArgumentException(format("Bad format, dev-machine source type '%s' is not supported", type));
+        }
+
+        // create a new environment
+        final JsonObject newEnv = new JsonObject();
+        newEnv.add("recipe", envRecipe);
+        final JsonObject machines = new JsonObject();
+        machines.add(devMachine.get("name").getAsString(), newMachine);
+        newEnv.add("machines", machines);
+        return newEnv;
     }
 
-    private static class Service extends LinkedHashMap<String, Object> {
-        public void setMemoryLimit(long memoryLimit) {
-            put("mem_limit", memoryLimit);
+    /** Searches for dev-machine in default environment. */
+    public static JsonObject findDevMachine(JsonObject env) {
+        if (env.has("machineConfigs") && env.get("machineConfigs").isJsonArray()) {
+            for (JsonElement machineCfgEl : env.getAsJsonArray("machineConfigs")) {
+                final JsonObject machineCfgObj = machineCfgEl.getAsJsonObject();
+                if (machineCfgObj.has("dev") && machineCfgObj.get("dev").getAsBoolean()) {
+                    return machineCfgObj;
+                }
+            }
         }
-
-        public void setBuildContext(String location) {
-            put("build", singletonMap("context", location));
-        }
-
-        public void setImage(String image) {
-            put("image", image);
-        }
-
-        public void setEnvironment(List<String> environment) {
-            put("environment", environment);
-        }
+        return null;
     }
 }

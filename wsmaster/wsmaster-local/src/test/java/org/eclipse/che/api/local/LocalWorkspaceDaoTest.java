@@ -96,14 +96,16 @@ public class LocalWorkspaceDaoTest {
         assertNotNull(rootUrl);
         final String path = Paths.get(rootUrl.toURI()).toString();
         final LocalStorageFactory storageFactory = new LocalStorageFactory(path);
-        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter(null, null);
+        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter();
         final LocalWorkspaceDaoImpl workspaceDao = new LocalWorkspaceDaoImpl(storageFactory, workspaceAdapter);
 
         workspaceDao.loadWorkspaces();
 
         final WorkspaceImpl test = workspaceDao.get("test");
         final EnvironmentImpl environment = test.getConfig().getEnvironments().get(test.getConfig().getDefaultEnv());
-        assertEquals(environment.getRecipe().getType(), "compose");
+        assertEquals(environment.getRecipe().getType(), "dockerfile");
+        assertEquals(environment.getRecipe().getLocation(), "host/api/recipe/recipew7j6ebw6or6rqu2t/script");
+        assertEquals(environment.getMachines().size(), 1);
     }
 
     private static WorkspaceImpl createWorkspace() {

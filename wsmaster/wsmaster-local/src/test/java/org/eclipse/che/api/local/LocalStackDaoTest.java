@@ -117,7 +117,7 @@ public class LocalStackDaoTest {
         final URL rootUrl = Thread.currentThread().getContextClassLoader().getResource(".");
         assertNotNull(rootUrl);
         final String path = Paths.get(rootUrl.toURI()).toString();
-        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter(null, null);
+        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter();
         final StackLocalStorage storageFactory = new StackLocalStorage(path, workspaceAdapter);
         final LocalStackDaoImpl stackDao = new LocalStackDaoImpl(storageFactory);
 
@@ -127,7 +127,9 @@ public class LocalStackDaoTest {
         final EnvironmentImpl environment = test.getWorkspaceConfig()
                                                 .getEnvironments()
                                                 .get(test.getWorkspaceConfig().getDefaultEnv());
-        assertEquals(environment.getRecipe().getType(), "compose");
+        assertEquals(environment.getRecipe().getType(), "dockerimage");
+        assertEquals(environment.getRecipe().getLocation(), "codenvy/ubuntu_jdk8");
+        assertEquals(environment.getMachines().size(), 1);
     }
 
     private void createStackIcon() throws IOException {

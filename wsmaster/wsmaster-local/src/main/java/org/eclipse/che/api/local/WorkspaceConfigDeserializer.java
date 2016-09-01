@@ -16,7 +16,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 
-import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.workspace.server.WorkspaceConfigJsonAdapter;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 
@@ -36,11 +35,7 @@ public class WorkspaceConfigDeserializer implements JsonDeserializer<WorkspaceCo
     @Override
     public WorkspaceConfigImpl deserialize(JsonElement jsonEl, Type type, JsonDeserializationContext ctx) throws JsonParseException {
         if (jsonEl.isJsonObject()) {
-            try {
-                adapter.adapt(jsonEl.getAsJsonObject());
-            } catch (ServerException x) {
-                throw new RuntimeException(x.getMessage(), x);
-            }
+            adapter.adaptModifying(jsonEl.getAsJsonObject());
         }
         return new Gson().fromJson(jsonEl, WorkspaceConfigImpl.class);
     }

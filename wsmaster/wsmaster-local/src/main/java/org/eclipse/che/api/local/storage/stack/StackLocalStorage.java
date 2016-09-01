@@ -14,6 +14,7 @@ import com.google.common.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.api.local.StackDeserializer;
 import org.eclipse.che.api.local.WorkspaceConfigDeserializer;
 import org.eclipse.che.api.local.storage.LocalStorage;
 import org.eclipse.che.api.workspace.server.WorkspaceConfigJsonAdapter;
@@ -57,7 +58,7 @@ public class StackLocalStorage {
                              WorkspaceConfigJsonAdapter configAdapter) throws IOException {
         this.localStorage = new LocalStorage(pathToStorage,
                                              STACK_STORAGE_FILE,
-                                             singletonMap(WorkspaceConfigImpl.class, new WorkspaceConfigDeserializer(configAdapter)));
+                                             singletonMap(StackImpl.class, new StackDeserializer(configAdapter)));
         this.iconFolderPath = Paths.get(pathToStorage, ICON_FOLDER_NAME);
     }
 

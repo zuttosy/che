@@ -14,15 +14,6 @@ import com.google.common.io.CharStreams;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.eclipse.che.api.core.BadRequestException;
-import org.eclipse.che.api.core.rest.HttpJsonRequest;
-import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
-import org.eclipse.che.api.core.rest.HttpJsonResponse;
-import org.eclipse.che.api.machine.shared.dto.recipe.RecipeDescriptor;
-import org.eclipse.che.commons.test.mockito.answer.SelfReturningAnswer;
-import org.eclipse.che.dto.server.DtoFactory;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -35,11 +26,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 
-import static org.eclipse.che.api.core.util.LinksHelper.createLink;
-import static org.eclipse.che.api.machine.shared.Constants.LINK_REL_GET_RECIPE_SCRIPT;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -52,41 +38,27 @@ import static org.testng.Assert.assertTrue;
 @Listeners(MockitoTestNGListener.class)
 public class WorkspaceConfigAdapterTest {
 
-    private static final String VALID_CONFIG_FILENAME    = "old_workspace_config_format.json";
     private static final String INVALID_CONFIGS_DIR_NAME = "invalid_configs";
 
-    @Mock
-    private HttpJsonRequestFactory httpReqFactory;
-
-    @Mock
-    private HttpJsonResponse response;
-
-    @InjectMocks
     private WorkspaceConfigJsonAdapter configAdapter;
 
     @BeforeMethod
     private void setUp() throws Exception {
-        configAdapter = new WorkspaceConfigJsonAdapter(httpReqFactory, "localhost");
-        final HttpJsonRequest request = mock(HttpJsonRequest.class, new SelfReturningAnswer());
-        when(httpReqFactory.fromUrl(any())).thenReturn(request);
-        when(request.request()).thenReturn(response);
-        // for the 'site' machine a new recipe should be created
-        final RecipeDescriptor rd = DtoFactory.newDto(RecipeDescriptor.class);
-        rd.getLinks().add(createLink("GET", "https://test/test_recipe", LINK_REL_GET_RECIPE_SCRIPT));
-        when(response.asDto(any())).thenReturn(rd);
+        configAdapter = new WorkspaceConfigJsonAdapter();
     }
 
     @Test
-    public void testWorkspaceConfigAdaptation() throws Exception {
-        final String content = loadContent(VALID_CONFIG_FILENAME);
-        final JsonObject newConfig = configAdapter.adapt(new JsonParser().parse(content).getAsJsonObject());
+    public void testWorkspaceConfigAdaptationBasedOnDockerfileLocationSource() throws Exception {
+        final String content = loadContent("ws_conf_machine_source_dockerfile_location.json");
+        final JsonObject wsConfig = new JsonParser().parse(content).getAsJsonObject();
+        configAdapter.adaptModifying(wsConfig);
 
         // The type of environments must be changed from array to map
-        assertTrue(newConfig.has("environments"), "contains environments object");
-        assertTrue(newConfig.get("environments").isJsonObject(), "environments is json object");
+        assertTrue(wsConfig.has("environments"), "contains environments object");
+        assertTrue(wsConfig.get("environments").isJsonObject(), "environments is json object");
 
         // Environment must be moved out of the environment object
-        final JsonObject environmentsObj = newConfig.get("environments").getAsJsonObject();
+        final JsonObject environmentsObj = wsConfig.get("environments").getAsJsonObject();
         assertTrue(environmentsObj.has("dev-env"), "'dev-env' is present in environments list");
         assertTrue(environmentsObj.get("dev-env").isJsonObject(), "'dev-env' is json object");
 
@@ -95,7 +67,7 @@ public class WorkspaceConfigAdapterTest {
         assertTrue(environmentObj.has("machines"), "'machines' are present in environment object");
         assertTrue(environmentObj.get("machines").isJsonObject(), "'machines' is json object");
         final JsonObject machinesObj = environmentObj.get("machines").getAsJsonObject();
-        assertEquals(machinesObj.entrySet().size(), 3, "machines size");
+        assertEquals(machinesObj.entrySet().size(), 1, "machines size");
 
         // check 'dev' machine
         assertTrue(machinesObj.has("dev"), "'machines' contains machine with name 'dev-machine'");
@@ -111,51 +83,49 @@ public class WorkspaceConfigAdapterTest {
         assertEquals(devMachineServerObj.get("protocol").getAsString(), "protocol");
         assertTrue(devMachineObj.has("agents"), "dev machine has agents");
 
-        // check 'db' machine
-        assertTrue(machinesObj.has("db"), "'machines' contains machine with name 'db'");
-        assertTrue(machinesObj.get("db").isJsonObject(), "db machine is json object");
-        final JsonObject dbMachineObj = machinesObj.get("db").getAsJsonObject();
-        assertTrue(dbMachineObj.has("servers"), "db machine contains servers field");
-        assertTrue(dbMachineObj.get("servers").isJsonObject(), "db machine servers is json object");
-        final JsonObject dbMachineServersObj = dbMachineObj.get("servers").getAsJsonObject();
-        assertTrue(dbMachineServersObj.has("ref"), "contains servers with reference 'ref'");
-        assertTrue(dbMachineServersObj.get("ref").isJsonObject(), "server is json object");
-        final JsonObject dbMachineServer = dbMachineServersObj.get("ref").getAsJsonObject();
-        assertEquals(dbMachineServer.get("port").getAsString(), "3311/tcp");
-        assertEquals(dbMachineServer.get("protocol").getAsString(), "protocol");
-
-        // check 'site' machine
-        assertTrue(machinesObj.has("site"), "'machines' contains machine with name 'site'");
-        assertTrue(machinesObj.get("site").isJsonObject(), "site machine is json object");
-
         // check environment recipe
         assertTrue(environmentObj.has("recipe"), "environment contains recipe");
         assertTrue(environmentObj.get("recipe").isJsonObject(), "environment recipe is json object");
         final JsonObject recipeObj = environmentObj.get("recipe").getAsJsonObject();
-        assertEquals(recipeObj.get("type").getAsString(), "compose");
-        assertEquals(recipeObj.get("contentType").getAsString(), "application/x-yaml");
-        assertEquals(recipeObj.get("content").getAsString(), "services:\n" +
-                                                             "  dev:\n" +
-                                                             "    build:\n" +
-                                                             "      context: https://somewhere/Dockerfile\n" +
-                                                             "    mem_limit: 2147483648\n" +
-                                                             "    environment:\n" +
-                                                             "    - env1=value1\n" +
-                                                             "    - env2=value2\n" +
-                                                             "  db:\n" +
-                                                             "    image: codenvy/ubuntu_jdk8\n" +
-                                                             "    mem_limit: 2147483648\n" +
-                                                             "  site:\n" +
-                                                             "    build:\n" +
-                                                             "      context: https://test/test_recipe\n" +
-                                                             "    mem_limit: 1073741824\n");
+        assertEquals(recipeObj.get("type").getAsString(), "dockerfile");
+        assertEquals(recipeObj.get("contentType").getAsString(), "text/x-dockerfile");
+        assertEquals(recipeObj.get("location").getAsString(), "https://somewhere/Dockerfile");
+    }
+
+    @Test(dependsOnMethods = "testWorkspaceConfigAdaptationBasedOnDockerfileLocationSource")
+    public void testAdaptionOfWorkspaceConfigWithSourceBasedOnDockerfileContent() throws Exception {
+        final String content = loadContent("ws_conf_machine_source_dockerfile_content.json");
+        final JsonObject wsConfig = new JsonParser().parse(content).getAsJsonObject();
+        configAdapter.adaptModifying(wsConfig);
+
+        // check environment recipe
+        final JsonObject recipeObj = wsConfig.getAsJsonObject("environments")
+                                             .getAsJsonObject("dev-env")
+                                             .getAsJsonObject("recipe");
+        assertEquals(recipeObj.get("type").getAsString(), "dockerfile");
+        assertEquals(recipeObj.get("contentType").getAsString(), "text/x-dockerfile");
+        assertEquals(recipeObj.get("content").getAsString(), "FROM codenvy/ubuntu_jdk8");
+    }
+
+    @Test(dependsOnMethods = "testWorkspaceConfigAdaptationBasedOnDockerfileLocationSource")
+    public void testAdaptionOfWorkspaceConfigWithSourceBasedOnDockerImage() throws Exception {
+        final String content = loadContent("ws_conf_machine_source_dockerimage.json");
+        final JsonObject wsConfig = new JsonParser().parse(content).getAsJsonObject();
+        configAdapter.adaptModifying(wsConfig);
+
+        // check environment recipe
+        final JsonObject recipeObj = wsConfig.getAsJsonObject("environments")
+                                             .getAsJsonObject("dev-env")
+                                             .getAsJsonObject("recipe");
+        assertEquals(recipeObj.get("type").getAsString(), "dockerimage");
+        assertEquals(recipeObj.get("location").getAsString(), "codenvy/ubuntu_jdk8");
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class, dataProvider = "invalidConfigs")
     public void testNotValidWorkspaceConfigAdaptations(String filename) throws Exception {
         final String content = loadContent(INVALID_CONFIGS_DIR_NAME + File.separatorChar + filename);
 
-        new WorkspaceConfigJsonAdapter(httpReqFactory, "").adapt(new JsonParser().parse(content).getAsJsonObject());
+        new WorkspaceConfigJsonAdapter().adaptModifying(new JsonParser().parse(content).getAsJsonObject());
     }
 
     @DataProvider

@@ -25,7 +25,7 @@
               "name": "ws-machine",
               "type": "docker",
               "source": {
-                "location": "host/api/recipe/recipew7j6ebw6or6rqu2t/script",
+                "location": "stub",
                 "type": "dockerfile"
               },
               "dev": true,

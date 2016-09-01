@@ -73,11 +73,11 @@ public class WorkspaceConfigMessageBodyAdapter implements MessageBodyAdapter {
             if (workspaceConfObj == null) {
                 return new ByteArrayInputStream(body.getBytes(defaultCharset()));
             }
-            configAdapter.adapt(getWorkspaceConfigObj(rootEl.getAsJsonObject()));
+            configAdapter.adaptModifying(getWorkspaceConfigObj(rootEl.getAsJsonObject()));
             return new ByteArrayInputStream(rootEl.toString().getBytes(defaultCharset()));
         } catch (IllegalArgumentException x) {
             throw new WebApplicationException(x.getMessage(), x, BAD_REQUEST);
-        } catch (ServerException | RuntimeException x) {
+        } catch (RuntimeException x) {
             throw new WebApplicationException(x.getMessage(), x, INTERNAL_SERVER_ERROR);
         }
     }
