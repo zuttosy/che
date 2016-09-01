@@ -15,6 +15,7 @@ import com.google.common.annotations.Beta;
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 
 /**
  * Adapts an entity stream in an implementation specific way.
@@ -30,21 +31,11 @@ import java.io.InputStream;
 @Beta
 public interface MessageBodyAdapter {
 
-    /**
-     * Checks whether adaptation for given type should be triggered or not.
-     * If true is returned it means only that the stream MAY be adapted
-     * if {@link #adapt(InputStream)} is called.
-     *
-     * @param type
-     *         the {@code type} processed
-     * @return true if the entity may be adapted by given adapter
-     */
-    boolean canAdapt(Class<?> type);
+    /** Returns classes for which adaption will be triggered. */
+    Set<Class<?>> getTriggers();
 
     /**
      * Adapts entity stream to a new one, if necessary.
-     * It is expected that caller checked that {@link #canAdapt(Class)}
-     * returned true before invoking this method.
      *
      * @param entityStream
      *         an entity stream

@@ -10,14 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.rest.MessageBodyAdapter;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import static java.nio.charset.Charset.defaultCharset;
@@ -53,8 +55,8 @@ public class WorkspaceConfigMessageBodyAdapter implements MessageBodyAdapter {
     private WorkspaceConfigJsonAdapter configAdapter;
 
     @Override
-    public boolean canAdapt(Class<?> type) {
-        return WorkspaceConfig.class.isAssignableFrom(type);
+    public Set<Class<?>> getTriggers() {
+        return ImmutableSet.of(WorkspaceConfig.class, WorkspaceConfigDto.class);
     }
 
     @Override

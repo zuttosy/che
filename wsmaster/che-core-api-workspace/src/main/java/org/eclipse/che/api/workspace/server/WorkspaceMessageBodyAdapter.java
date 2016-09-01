@@ -10,12 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.api.workspace.server;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonObject;
 
 import org.eclipse.che.api.core.model.workspace.Workspace;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 import javax.inject.Singleton;
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Adapts an old format of {@link Workspace#getConfig()} to a new one.
@@ -26,8 +29,8 @@ import java.io.IOException;
 public class WorkspaceMessageBodyAdapter extends WorkspaceConfigMessageBodyAdapter {
 
     @Override
-    public boolean canAdapt(Class<?> type) {
-        return Workspace.class.isAssignableFrom(type);
+    public Set<Class<?>> getTriggers() {
+        return ImmutableSet.of(Workspace.class, WorkspaceDto.class);
     }
 
     @Override

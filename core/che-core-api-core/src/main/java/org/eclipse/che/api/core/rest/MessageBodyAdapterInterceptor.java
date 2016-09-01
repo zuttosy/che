@@ -22,44 +22,36 @@ import javax.ws.rs.ext.MessageBodyReader;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
+ * This interceptor must be bound for the method
+ * {@link MessageBodyReader#readFrom(Class, Type, Annotation[], MediaType, MultivaluedMap, InputStream)}
+ *
  * @author Yevhenii Voevodin
  */
 @Beta
 public class MessageBodyAdapterInterceptor implements MethodInterceptor {
 
+    private final Map<Class<?>, MessageBodyAdapter> adapters = new HashMap<>();
+
     @Inject
-    private Set<MessageBodyAdapter> adapters;
+    public void init(Set<MessageBodyAdapter> adapters) {
+        for (MessageBodyAdapter adapter : adapters) {
+            for (Class<?> trigger : adapter.getTriggers()) {
+                this.adapters.put(trigger, adapter);
+            }
+        }
+    }
 
-    private final ConcurrentMap<Class<?>, MessageBodyAdapter> cache = new ConcurrentHashMap<>();
-
-    /**
-     * This interceptor must be bound for the method
-     * {@link MessageBodyReader#readFrom(Class, Type, Annotation[], MediaType, MultivaluedMap, InputStream)}.
-     */
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         final Object[] args = invocation.getArguments();
-        final Class<?> type = (Class<?>)args[0];
-        final InputStream entityStreamObj = (InputStream)args[args.length - 1];
-
-        // check if adapter for given types is cached and use it if it is
-        if (cache.containsKey(type)) {
-            args[args.length - 1] = cache.get(type).adapt(entityStreamObj);
-            return invocation.proceed();
-        }
-
-        // find the first message body adapter that can adapt the entity stream
-        for (MessageBodyAdapter candidate : adapters) {
-            if (candidate.canAdapt(type)) {
-                cache.put(type, candidate);
-                args[args.length - 1] = candidate.adapt(entityStreamObj);
-                return invocation.proceed();
-            }
+        final MessageBodyAdapter adapter = adapters.get((Class<?>)args[0]);
+        if (adapter != null) {
+            args[args.length - 1] = adapter.adapt((InputStream)args[args.length - 1]);
         }
         return invocation.proceed();
     }
