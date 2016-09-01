@@ -42,7 +42,7 @@ import org.eclipse.che.api.machine.server.dao.SnapshotDao;
 import org.eclipse.che.api.machine.server.event.InstanceStateEvent;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.exception.SourceNotFoundException;
-import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
+import org.eclipse.che.api.machine.server.model.impl.MachineLimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineLogMessageImpl;
@@ -488,8 +488,6 @@ public class CheEnvironmentEngine {
 
         ComposeEnvironmentImpl composeEnvironment = environmentParser.parse(env);
 
-        normalizeEnvironment(composeEnvironment);
-
         List<String> servicesOrder = startStrategy.order(composeEnvironment);
 
         EnvironmentHolder environmentHolder = new EnvironmentHolder(servicesOrder,
@@ -502,15 +500,6 @@ public class CheEnvironmentEngine {
         try (StripedLocks.WriteLock lock = stripedLocks.acquireWriteLock(workspaceId)) {
             if (environments.putIfAbsent(workspaceId, environmentHolder) != null) {
                 throw new ConflictException(format("Environment of workspace '%s' already exists", workspaceId));
-            }
-        }
-    }
-
-    private void normalizeEnvironment(ComposeEnvironmentImpl composeEnvironment) {
-        for (Map.Entry<String, ComposeServiceImpl> serviceEntry : composeEnvironment.getServices()
-                                                                                    .entrySet()) {
-            if (serviceEntry.getValue().getMemLimit() == 0) {
-                serviceEntry.getValue().setMemLimit(Size.parseSize(defaultMachineMemorySizeMB));
             }
         }
     }
@@ -581,7 +570,7 @@ public class CheEnvironmentEngine {
                         MachineImpl.builder()
                                    .setConfig(MachineConfigImpl.builder()
                                                                .setDev(isDev)
-                                                               .setLimits(new LimitsImpl(
+                                                               .setLimits(new MachineLimitsImpl(
                                                                        bytesToMB(composeService.getMemLimit())))
                                                                .setType("docker")
                                                                .setName(machineName)

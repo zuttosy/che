@@ -98,8 +98,6 @@ public class CheEnvironmentValidator {
                       env.getRecipe().getType(),
                       envName,
                       Joiner.on(',').join(environmentParser.getEnvironmentTypes()));
-        checkArgument(!isNullOrEmpty(env.getRecipe().getContentType()),
-                      "Environment recipe content type should not be neither null nor empty");
         checkArgument(env.getRecipe().getContent() != null || env.getRecipe().getLocation() != null,
                       "Recipe of environment '%s' must contain location or content", envName);
         checkArgument(env.getRecipe().getContent() == null || env.getRecipe().getLocation() == null,
@@ -118,7 +116,7 @@ public class CheEnvironmentValidator {
         }
 
         checkArgument(composeEnvironment.getServices() != null && !composeEnvironment.getServices().isEmpty(),
-                      "Environment '%s' should contain at least 1 compose service",
+                      "Environment '%s' should contain at least 1 machine",
                       envName);
 
         checkArgument(env.getMachines() != null && !env.getMachines().isEmpty(),
@@ -164,7 +162,7 @@ public class CheEnvironmentValidator {
             startStrategy.order(composeEnvironment);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
-                    format("Compose services order of environment '%s' is not resolvable. Error: %s",
+                    format("Start order of machine in environment '%s' is not resolvable. Error: %s",
                            envName, e.getLocalizedMessage()));
         }
     }
@@ -181,67 +179,17 @@ public class CheEnvironmentValidator {
         checkArgument(!isNullOrEmpty(service.getImage()) ||
                       (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()) ||
                                                       !isNullOrEmpty(service.getBuild().getDockerfile()))),
-                      "Filed 'image' or 'build.context' is required in compose service '%s' in environment '%s'",
+                      "Filed 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
-        checkArgument(service.getMemLimit() != null && service.getMemLimit() > 0,
-                      "Field 'mem_limit' is missing or contain illegal value in service '%s' of environment '%s'." +
-                      " This field should specify container RAM size in bytes.",
+        checkArgument(extendedMachine.getResources() != null &&
+                      extendedMachine.getResources().getLimits() != null &&
+                      extendedMachine.getResources().getLimits().getMemoryBytes() != null &&
+                      extendedMachine.getResources().getLimits().getMemoryBytes() > 0,
+                      "Memory limit of machine '%s' in environment '%s' is missing or contain invalid value",
                       machineName, envName);
 
-        service.getExpose()
-               .forEach(expose -> checkArgument(EXPOSE_PATTERN.matcher(expose).matches(),
-                                                "Port '%s' in field 'expose' of service '%s' in environment '%s' is invalid",
-                                                expose, machineName, envName));
-
-        service.getLinks()
-               .forEach(link -> {
-                   Matcher matcher = LINK_PATTERN.matcher(link);
-
-                   checkArgument(matcher.matches(),
-                                 "Link '%s' in field 'links' of service '%s' in environment '%s' is invalid",
-                                 link, machineName, envName);
-
-                   String serviceFromLink = matcher.group("serviceName");
-                   checkArgument(servicesNames.contains(serviceFromLink),
-                                 "Service '%s' in environment '%s' contains link to non existing service '%s'",
-                                 machineName, envName, serviceFromLink);
-               });
-
-        service.getDependsOn()
-               .forEach(depends -> {
-                   checkArgument(MACHINE_NAME_PATTERN.matcher(depends).matches(),
-                                 "Dependency '%s' in field 'depends_on' of service '%s' in environment '%s' is invalid",
-                                 depends, machineName, envName);
-
-                   checkArgument(servicesNames.contains(depends),
-                                 "Service '%s' in environment '%s' contains dependency to non existing service '%s'",
-                                 machineName, envName, depends);
-               });
-
-        service.getVolumesFrom()
-               .forEach(volumesFrom -> {
-                   Matcher matcher = VOLUME_FROM_PATTERN.matcher(volumesFrom);
-
-                   checkArgument(matcher.matches(),
-                                 "Service '%s' in field 'volumes_from' of service '%s' in environment '%s' is invalid",
-                                 volumesFrom, machineName, envName);
-
-                   String serviceFromVolumesFrom = matcher.group("serviceName");
-                   checkArgument(servicesNames.contains(serviceFromVolumesFrom),
-                                 "Service '%s' in environment '%s' contains non existing service '%s' in 'volumes_from' field",
-                                 machineName, envName, serviceFromVolumesFrom);
-               });
-
-        checkArgument(service.getPorts() == null || service.getPorts().isEmpty(),
-                      "Ports binding is forbidden but found in service '%s' of environment '%s'",
-                      machineName, envName);
-
-        checkArgument(service.getVolumes() == null || service.getVolumes().isEmpty(),
-                      "Volumes binding is forbidden but found in service '%s' of environment '%s'",
-                      machineName, envName);
-
-        if (extendedMachine != null && extendedMachine.getServers() != null) {
+        if (extendedMachine.getServers() != null) {
             extendedMachine.getServers()
                            .entrySet()
                            .forEach(serverEntry -> {
@@ -256,6 +204,58 @@ public class CheEnvironmentValidator {
                                              machineName, envName, serverName, server.getProtocol());
                            });
         }
+
+        service.getExpose()
+               .forEach(expose -> checkArgument(EXPOSE_PATTERN.matcher(expose).matches(),
+                                                "Exposed port '%s' in machine '%s' in environment '%s' is invalid",
+                                                expose, machineName, envName));
+
+        service.getLinks()
+               .forEach(link -> {
+                   Matcher matcher = LINK_PATTERN.matcher(link);
+
+                   checkArgument(matcher.matches(),
+                                 "Link '%s' in machine '%s' in environment '%s' is invalid",
+                                 link, machineName, envName);
+
+                   String serviceFromLink = matcher.group("serviceName");
+                   checkArgument(servicesNames.contains(serviceFromLink),
+                                 "Machine '%s' in environment '%s' contains link to non existing machine '%s'",
+                                 machineName, envName, serviceFromLink);
+               });
+
+        service.getDependsOn()
+               .forEach(depends -> {
+                   checkArgument(MACHINE_NAME_PATTERN.matcher(depends).matches(),
+                                 "Dependency '%s' in machine '%s' in environment '%s' is invalid",
+                                 depends, machineName, envName);
+
+                   checkArgument(servicesNames.contains(depends),
+                                 "Machine '%s' in environment '%s' contains dependency to non existing machine '%s'",
+                                 machineName, envName, depends);
+               });
+
+        service.getVolumesFrom()
+               .forEach(volumesFrom -> {
+                   Matcher matcher = VOLUME_FROM_PATTERN.matcher(volumesFrom);
+
+                   checkArgument(matcher.matches(),
+                                 "Machine name '%s' in field 'volumes_from' of machine '%s' in environment '%s' is invalid",
+                                 volumesFrom, machineName, envName);
+
+                   String serviceFromVolumesFrom = matcher.group("serviceName");
+                   checkArgument(servicesNames.contains(serviceFromVolumesFrom),
+                                 "Machine '%s' in environment '%s' contains non existing machine '%s' in 'volumes_from' field",
+                                 machineName, envName, serviceFromVolumesFrom);
+               });
+
+        checkArgument(service.getPorts() == null || service.getPorts().isEmpty(),
+                      "Ports binding is forbidden but found in machine '%s' of environment '%s'",
+                      machineName, envName);
+
+        checkArgument(service.getVolumes() == null || service.getVolumes().isEmpty(),
+                      "Volumes binding is forbidden but found in machine '%s' of environment '%s'",
+                      machineName, envName);
     }
 
     public void validateMachine(MachineConfig machineCfg) throws IllegalArgumentException {

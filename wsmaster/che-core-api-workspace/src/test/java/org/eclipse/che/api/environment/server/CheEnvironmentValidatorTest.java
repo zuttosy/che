@@ -26,6 +26,8 @@ import org.eclipse.che.api.workspace.server.DtoConverter;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
+import org.eclipse.che.api.workspace.server.model.impl.LimitsImpl;
+import org.eclipse.che.api.workspace.server.model.impl.ResourcesImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
@@ -80,6 +82,7 @@ public class CheEnvironmentValidatorTest {
         when(machineInstanceProviders.hasProvider("docker")).thenReturn(true);
         when(machineInstanceProviders.getProviderTypes()).thenReturn(asList("docker", "ssh"));
         when(environmentParser.parse(any(Environment.class))).thenReturn(composeEnv);
+        when(environmentParser.getEnvironmentTypes()).thenReturn(singletonList("compose"));
     }
 
     @Test
@@ -112,6 +115,18 @@ public class CheEnvironmentValidatorTest {
         environmentValidator.validate("env", environment);
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class,
+          expectedExceptionsMessageRegExp = "Type 'compose' of environment 'env' is not supported. Supported types: otherType")
+    public void shouldFailIfEnvTypeIsNotSupported() throws Exception {
+        // given
+        when(environmentParser.parse(any(Environment.class)))
+                .thenThrow(new IllegalArgumentException("test exception"));
+        when(environmentParser.getEnvironmentTypes()).thenReturn(singletonList("otherType"));
+
+        // when
+        environmentValidator.validate("env", environment);
+    }
+
     @Test(expectedExceptions = ServerException.class,
           expectedExceptionsMessageRegExp = "Parsing of recipe of environment '.*' failed. Error: test exception")
     public void shouldFailIfEnvironmentRecipeFetchingFails() throws Exception {
@@ -124,7 +139,7 @@ public class CheEnvironmentValidatorTest {
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class,
-          expectedExceptionsMessageRegExp = "Compose services order of environment 'env' is not resolvable. Error: test exception")
+          expectedExceptionsMessageRegExp = "Start order of machine in environment 'env' is not resolvable. Error: test exception")
     public void shouldFailIfServicesOrderingFails() throws Exception {
         when(startStrategy.order(any(ComposeEnvironmentImpl.class)))
                 .thenThrow(new IllegalArgumentException("test exception"));
@@ -164,11 +179,11 @@ public class CheEnvironmentValidatorTest {
 
         env = createEnv();
         env.getRecipe().setContentType(null);
-        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
+//        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
 
         env = createEnv();
         env.getRecipe().setContentType("");
-        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
+//        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
 
         env = createEnv();
         env.getRecipe().withLocation(null).withContent(null);
@@ -233,11 +248,11 @@ public class CheEnvironmentValidatorTest {
 
         env = createComposeEnv();
         env.setServices(null);
-        data.add(asList(env, "Environment 'env' should contain at least 1 compose service"));
+        data.add(asList(env, "Environment 'env' should contain at least 1 machine"));
 
         env = createComposeEnv();
         env.setServices(emptyMap());
-        data.add(asList(env, "Environment 'env' should contain at least 1 compose service"));
+        data.add(asList(env, "Environment 'env' should contain at least 1 machine"));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
@@ -249,42 +264,42 @@ public class CheEnvironmentValidatorTest {
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(null);
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(null);
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(new BuildContextImpl());
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(new BuildContextImpl());
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(new BuildContextImpl("", "dockerfile"));
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(new BuildContextImpl("", "dockerfile"));
-        data.add(asList(env, "Filed 'image' or 'build.context' is required in compose service '" + serviceEntry.getKey() + "' in environment 'env'"));
+//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
 
 
@@ -502,8 +517,12 @@ public class CheEnvironmentValidatorTest {
                                                 new HashMap<>(singletonMap("prop1", "propValue"))));
         servers.put("ref2", new ServerConf2Impl("8080/udp", "proto1", null));
         servers.put("ref3", new ServerConf2Impl("9090", "proto1", null));
-        machines.put("dev-machine", new ExtendedMachineImpl(new ArrayList<>(asList("ws-agent", "someAgent")), servers));
-        machines.put("machine2", new ExtendedMachineImpl(new ArrayList<>(asList("someAgent2", "someAgent3")), null));
+        machines.put("dev-machine", new ExtendedMachineImpl(new ArrayList<>(asList("ws-agent", "someAgent")),
+                                                            servers,
+                                                            new ResourcesImpl(new LimitsImpl(10000L))));
+        machines.put("machine2", new ExtendedMachineImpl(new ArrayList<>(asList("someAgent2", "someAgent3")),
+                                                         null,
+                                                         new ResourcesImpl(new LimitsImpl(10000L))));
         env.setRecipe(new EnvironmentRecipeImpl("compose",
                                                 "application/x-yaml",
                                                 "content",
@@ -520,7 +539,7 @@ public class CheEnvironmentValidatorTest {
         composeEnvironment.setServices(services);
 
         ComposeServiceImpl service = new ComposeServiceImpl();
-        service.setMemLimit(1024L * 1024L * 1024L);
+        service.setMemLimit(1024L * 1024L * 1024L); // will be ignored
         service.setImage("codenvy/ubuntu_jdk8");
         service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
         service.setCommand(new ArrayList<>(asList("this", "is", "command")));
@@ -537,7 +556,7 @@ public class CheEnvironmentValidatorTest {
         services.put("dev-machine", service);
 
         service = new ComposeServiceImpl();
-        service.setMemLimit(100L);
+        service.setMemLimit(100L);// Will be ignored
         service.setBuild(new BuildContextImpl("context", "file"));
         service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
         service.setCommand(new ArrayList<>(asList("this", "is", "command")));

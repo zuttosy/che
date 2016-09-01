@@ -25,6 +25,8 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
+import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
+import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -37,9 +39,9 @@ import org.eclipse.che.ide.workspace.DefaultWorkspaceComponent;
 import org.eclipse.che.ide.workspace.create.CreateWorkspaceView.HidePopupCallBack;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.eclipse.che.api.machine.shared.Constants.WS_MACHINE_NAME;
 
@@ -234,7 +236,10 @@ public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDeleg
                                                 .withContentType("application/x-yaml");
 
         ExtendedMachineDto machine = dtoFactory.createDto(ExtendedMachineDto.class)
-                                               .withAgents(Collections.singletonList("ws-agent"));
+                                               .withAgents(singletonList("ws-agent"))
+                                               .withResources(dtoFactory.createDto(ResourcesDto.class)
+                                                                        .withLimits(dtoFactory.createDto(LimitsDto.class)
+                                                                                              .withMemoryBytes(2048L * 1024L * 1024L)));
 
         EnvironmentDto environment = dtoFactory.createDto(EnvironmentDto.class)
                                                .withRecipe(recipe)

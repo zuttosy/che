@@ -11,6 +11,7 @@
 package org.eclipse.che.api.workspace.server.model.impl;
 
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
+import org.eclipse.che.api.core.model.workspace.Resources;
 import org.eclipse.che.api.core.model.workspace.ServerConf2;
 
 import java.util.ArrayList;
@@ -25,11 +26,13 @@ import java.util.stream.Collectors;
 public class ExtendedMachineImpl implements ExtendedMachine {
     private List<String>                 agents;
     private Map<String, ServerConf2Impl> servers;
+    private ResourcesImpl                resources;
 
     public ExtendedMachineImpl() {}
 
     public ExtendedMachineImpl(List<String> agents,
-                               Map<String, ? extends ServerConf2> servers) {
+                               Map<String, ? extends ServerConf2> servers,
+                               Resources resources) {
         if (agents != null) {
             this.agents = new ArrayList<>(agents);
         }
@@ -39,19 +42,13 @@ public class ExtendedMachineImpl implements ExtendedMachine {
                                   .collect(Collectors.toMap(Map.Entry::getKey,
                                                             entry -> new ServerConf2Impl(entry.getValue())));
         }
+        if (resources != null) {
+            this.resources = new ResourcesImpl(resources);
+        }
     }
 
     public ExtendedMachineImpl(ExtendedMachine machine) {
-        if (machine.getAgents() != null) {
-            this.agents = new ArrayList<>(machine.getAgents());
-        }
-        if (machine.getServers() != null) {
-            this.servers = machine.getServers()
-                                  .entrySet()
-                                  .stream()
-                                  .collect(Collectors.toMap(Map.Entry::getKey,
-                                                            entry -> new ServerConf2Impl(entry.getValue())));
-        }
+        this(machine.getAgents(), machine.getServers(), machine.getResources());
     }
 
     @Override
@@ -73,17 +70,27 @@ public class ExtendedMachineImpl implements ExtendedMachine {
     }
 
     @Override
+    public ResourcesImpl getResources() {
+        return resources;
+    }
+
+    public void setResources(ResourcesImpl resources) {
+        this.resources = resources;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof ExtendedMachineImpl)) return false;
         ExtendedMachineImpl that = (ExtendedMachineImpl)o;
         return Objects.equals(agents, that.agents) &&
-               Objects.equals(servers, that.servers);
+               Objects.equals(servers, that.servers) &&
+               Objects.equals(resources, that.resources);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(agents, servers);
+        return Objects.hash(agents, servers, resources);
     }
 
     @Override
@@ -91,6 +98,7 @@ public class ExtendedMachineImpl implements ExtendedMachine {
         return "ExtendedMachineImpl{" +
                "agents=" + agents +
                ", servers=" + servers +
+               ", resources=" + resources +
                '}';
     }
 }

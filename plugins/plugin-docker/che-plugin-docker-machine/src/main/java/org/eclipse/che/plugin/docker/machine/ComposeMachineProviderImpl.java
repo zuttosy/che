@@ -27,7 +27,7 @@ import org.eclipse.che.api.environment.server.compose.ComposeMachineInstanceProv
 import org.eclipse.che.api.environment.server.compose.model.ComposeServiceImpl;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.exception.SourceNotFoundException;
-import org.eclipse.che.api.machine.server.model.impl.LimitsImpl;
+import org.eclipse.che.api.machine.server.model.impl.MachineLimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineSourceImpl;
@@ -281,7 +281,7 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
                                                                    .setName(machineName)
                                                                    .setType("docker")
                                                                    // casting considered as safe because more than int of megabytes is a lot!
-                                                                   .setLimits(new LimitsImpl((int)Size
+                                                                   .setLimits(new MachineLimitsImpl((int)Size
                                                                            .parseSizeToMegabytes(
                                                                                    service.getMemLimit() + "b")))
                                                                    .setSource(new MachineSourceImpl(service.getBuild() != null ?

@@ -8,15 +8,16 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.core.model.machine;
+package org.eclipse.che.api.machine.shared.dto;
+
+import org.eclipse.che.api.core.model.machine.MachineLimits;
+import org.eclipse.che.dto.shared.DTO;
 
 /**
- * Describes machine limits such as RAM size.
- *
  * @author Alexander Garagatyi
  */
 @Deprecated
-public interface Limits {
-    /** Get memory size (in megabytes) that is allocated for starting machine. */
-    int getRam();
+@DTO
+public interface MachineLimitsDto extends MachineLimits {
+    MachineLimitsDto withRam(int memorySizeMB);
 }

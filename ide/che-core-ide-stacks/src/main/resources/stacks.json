@@ -39,13 +39,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/alpine-jdk\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/alpine-jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -138,13 +142,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -197,13 +205,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -261,13 +273,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_android\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_android",
+            "type": "dockerimage"
           }
         }
       },
@@ -334,13 +350,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/cpp_gcc\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/cpp_gcc",
+            "type": "dockerimage"
           }
         }
       },
@@ -401,13 +421,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/dotnet_core\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/dotnet_core",
+            "type": "dockerimage"
           }
         }
       },
@@ -478,13 +502,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_go\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_go",
+            "type": "dockerimage"
           }
         }
       },
@@ -553,13 +581,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/hadoop-dev\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/hadoop-dev",
+            "type": "dockerimage"
           }
         }
       },
@@ -636,13 +668,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/node\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/node",
+            "type": "dockerimage"
           }
         }
       },
@@ -712,13 +748,17 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/php\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/php",
+            "type": "dockerimage"
           }
         }
       },
@@ -799,7 +839,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -875,7 +920,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -947,7 +997,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1014,7 +1069,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1092,7 +1152,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1173,7 +1238,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1244,7 +1314,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1312,7 +1387,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1399,7 +1479,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1463,7 +1548,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
@@ -1520,7 +1610,12 @@
               "agents": [
                 "ws-agent"
               ],
-              "servers": {}
+              "servers": {},
+              "resources": {
+                "limits": {
+                  "memoryBytes": 2147483648
+                }
+              }
             }
           },
           "recipe": {
