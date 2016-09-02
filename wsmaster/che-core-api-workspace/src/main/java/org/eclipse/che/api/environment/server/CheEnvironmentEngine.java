@@ -42,9 +42,9 @@ import org.eclipse.che.api.machine.server.dao.SnapshotDao;
 import org.eclipse.che.api.machine.server.event.InstanceStateEvent;
 import org.eclipse.che.api.machine.server.exception.MachineException;
 import org.eclipse.che.api.machine.server.exception.SourceNotFoundException;
-import org.eclipse.che.api.machine.server.model.impl.MachineLimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineConfigImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
+import org.eclipse.che.api.machine.server.model.impl.MachineLimitsImpl;
 import org.eclipse.che.api.machine.server.model.impl.MachineLogMessageImpl;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
 import org.eclipse.che.api.machine.server.spi.Instance;
@@ -94,7 +94,7 @@ public class CheEnvironmentEngine {
     private final StripedLocks                   stripedLocks;
     private final File                           machineLogsDir;
     private final MachineInstanceProviders       machineInstanceProviders;
-    private final String                         defaultMachineMemorySizeMB;
+    private final long                           defaultMachineMemorySizeBytes;
     private final SnapshotDao                    snapshotDao;
     private final EventService                   eventService;
     private final EnvironmentParser              environmentParser;
@@ -120,7 +120,7 @@ public class CheEnvironmentEngine {
         this.environments = new ConcurrentHashMap<>();
         this.machineInstanceProviders = machineInstanceProviders;
         this.machineLogsDir = new File(machineLogsDir);
-        this.defaultMachineMemorySizeMB = defaultMachineMemorySizeMB + "MB";
+        this.defaultMachineMemorySizeBytes = Size.parseSize(defaultMachineMemorySizeMB + "MB");
         // 16 - experimental value for stripes count, it comes from default hash map size
         this.stripedLocks = new StripedLocks(16);
         eventService.subscribe(new MachineCleaner());
@@ -488,6 +488,8 @@ public class CheEnvironmentEngine {
 
         ComposeEnvironmentImpl composeEnvironment = environmentParser.parse(env);
 
+        normalizeEnvironment(composeEnvironment);
+
         List<String> servicesOrder = startStrategy.order(composeEnvironment);
 
         EnvironmentHolder environmentHolder = new EnvironmentHolder(servicesOrder,
@@ -500,6 +502,15 @@ public class CheEnvironmentEngine {
         try (StripedLocks.WriteLock lock = stripedLocks.acquireWriteLock(workspaceId)) {
             if (environments.putIfAbsent(workspaceId, environmentHolder) != null) {
                 throw new ConflictException(format("Environment of workspace '%s' already exists", workspaceId));
+            }
+        }
+    }
+
+    private void normalizeEnvironment(ComposeEnvironmentImpl composeEnvironment) {
+        for (Map.Entry<String, ComposeServiceImpl> serviceEntry : composeEnvironment.getServices()
+                                                                                    .entrySet()) {
+            if (serviceEntry.getValue().getMemLimit() == 0) {
+                serviceEntry.getValue().setMemLimit(defaultMachineMemorySizeBytes);
             }
         }
     }

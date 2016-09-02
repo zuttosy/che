@@ -394,14 +394,11 @@
                         "devmachine": {
                             "agents": [
                                 "ws-agent"
-                            ],
-                            "attributes" : {
-                                "memoryLimitBytes": "2147483648"
-                            }
+                            ]
                         }
                     },
                     "recipe": {
-                        "content": "service:\n  devmachine:\n    image: codenvy/ubuntu_jdk8",
+                        "content": "service:\n  devmachine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
                         "type": "compose",
                         "contentType": "application/x-yaml"
                     }

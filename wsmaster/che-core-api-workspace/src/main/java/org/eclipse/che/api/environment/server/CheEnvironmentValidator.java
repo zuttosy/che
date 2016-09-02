@@ -181,6 +181,21 @@ public class CheEnvironmentValidator {
                       "Field 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
+        if (extendedMachine.getAttributes() != null &&
+            extendedMachine.getAttributes().get("memoryLimitBytes") != null) {
+
+            try {
+                long memoryLimitBytes = Long.parseLong(extendedMachine.getAttributes().get("memoryLimitBytes"));
+                checkArgument(memoryLimitBytes > 0,
+                              "Value of attribute 'memoryLimitBytes' of machine '%s' in environment '%s' is illegal",
+                              machineName, envName);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        format("Value of attribute 'memoryLimitBytes' of machine '%s' in environment '%s' is illegal",
+                               machineName, envName));
+            }
+        }
+
         if (extendedMachine.getServers() != null) {
             extendedMachine.getServers()
                            .entrySet()

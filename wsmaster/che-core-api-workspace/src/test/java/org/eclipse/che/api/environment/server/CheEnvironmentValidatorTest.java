@@ -167,6 +167,7 @@ public class CheEnvironmentValidatorTest {
     public static Object[][] invalidEnvironmentProvider() {
         // InvalidEnvironmentObject | ExceptionMessage
         EnvironmentDto env;
+        Map.Entry<String, ExtendedMachineDto> machineEntry;
         List<List<Object>> data = new ArrayList<>();
 
         data.add(asList(createEnv().withRecipe(null), "Environment recipe should not be null"));
@@ -201,6 +202,24 @@ public class CheEnvironmentValidatorTest {
         data.add(asList(env, "Environment 'env' should contain exactly 1 machine with ws-agent, but contains '" +
                              env.getMachines().size() + "'. " + "All machines with this agent: " +
                              Joiner.on(", ").join(env.getMachines().keySet())));
+
+        env = createEnv();
+        machineEntry = env.getMachines().entrySet().iterator().next();
+        machineEntry.getValue().setAttributes(singletonMap("memoryLimitBytes", "0"));
+        data.add(asList(env, format("Value of attribute 'memoryLimitBytes' of machine '%s' in environment 'env' is illegal",
+                                    machineEntry.getKey())));
+
+        env = createEnv();
+        machineEntry = env.getMachines().entrySet().iterator().next();
+        machineEntry.getValue().setAttributes(singletonMap("memoryLimitBytes", "-1"));
+        data.add(asList(env, format("Value of attribute 'memoryLimitBytes' of machine '%s' in environment 'env' is illegal",
+                                    machineEntry.getKey())));
+
+        env = createEnv();
+        machineEntry = env.getMachines().entrySet().iterator().next();
+        machineEntry.getValue().setAttributes(singletonMap("memoryLimitBytes", ""));
+        data.add(asList(env, format("Value of attribute 'memoryLimitBytes' of machine '%s' in environment 'env' is illegal",
+                                    machineEntry.getKey())));
 
         return data.stream()
                    .map(list -> list.toArray(new Object[list.size()]))
