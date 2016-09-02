@@ -102,6 +102,9 @@ import org.eclipse.che.ide.api.event.ng.FileTrackingEvent;
 import org.eclipse.che.ide.api.hotkeys.HasHotKeyItems;
 import org.eclipse.che.ide.api.hotkeys.HotKeyItem;
 import org.eclipse.che.ide.api.notification.NotificationManager;
+import org.eclipse.che.ide.api.parts.EditorPartStack;
+import org.eclipse.che.ide.api.parts.EditorTab;
+import org.eclipse.che.ide.api.parts.PartPresenter;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.resources.File;
 import org.eclipse.che.ide.api.resources.Resource;
@@ -112,6 +115,7 @@ import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionLinkedModelDataOverlay;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionLinkedModelGroupOverlay;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionLinkedModelOverlay;
+import org.eclipse.che.ide.part.editor.multipart.EditorMultiPartStackPresenter;
 import org.eclipse.che.ide.resource.Path;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
@@ -158,6 +162,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
     private final BreakpointRendererFactory              breakpointRendererFactory;
     private final DialogFactory                          dialogFactory;
     private final DocumentStorage                        documentStorage;
+    private final EditorMultiPartStackPresenter          editorMultiPartStackPresenter;
     private final EditorLocalizationConstants            constant;
     private final EditorWidgetFactory<OrionEditorWidget> editorWidgetFactory;
     private final EditorInitializePromiseHolder          editorModule;
@@ -194,6 +199,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
                                 final BreakpointRendererFactory breakpointRendererFactory,
                                 final DialogFactory dialogFactory,
                                 final DocumentStorage documentStorage,
+                                final EditorMultiPartStackPresenter editorMultiPartStackPresenter,
                                 final EditorLocalizationConstants constant,
                                 final EditorWidgetFactory<OrionEditorWidget> editorWigetFactory,
                                 final EditorInitializePromiseHolder editorModule,
@@ -210,6 +216,7 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
         this.breakpointRendererFactory = breakpointRendererFactory;
         this.dialogFactory = dialogFactory;
         this.documentStorage = documentStorage;
+        this.editorMultiPartStackPresenter = editorMultiPartStackPresenter;
         this.constant = constant;
         this.editorWidgetFactory = editorWigetFactory;
         this.editorModule = editorModule;
@@ -343,12 +350,13 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
                 @Override
                 public void apply(Optional<File> file) throws OperationException {
                     if (file.isPresent()) {
-                        final String oldPath = document.getFile().getLocation().toString();
-                        deletedFilesController.add(oldPath);
+                        final Path location = document.getFile().getLocation();
+                        deletedFilesController.add(location.toString());
                         generalEventBus.fireEvent(new FileTrackingEvent(file.get().getLocation().toString(), null, START));
 
                         document.setFile(file.get());
                         input.setFile(file.get());
+                        updateTabReference(file.get(), location);
 
                         updateContent();
                     }
@@ -356,6 +364,18 @@ public class OrionEditorPresenter extends AbstractEditorPresenter implements Tex
             });
         }
 
+    }
+
+    private void updateTabReference(File file, Path oldPath) {
+        final PartPresenter activePart = editorMultiPartStackPresenter.getActivePart();
+        final EditorPartStack activePartStack = editorMultiPartStackPresenter.getPartStackByPart(activePart);
+        if (activePartStack == null) {
+            return;
+        }
+        final EditorTab editorTab = activePartStack.getTabByPath(oldPath);
+        if (editorTab != null) {
+            editorTab.setFile(file);
+        }
     }
 
     private void onResourceRemoved(ResourceDelta delta) {

@@ -137,17 +137,11 @@ public class EditorGroupSynchronizationImpl implements EditorGroupSynchronizatio
             return;
         }
 
-        if (!(virtualFile instanceof File)) {
-            return;
-        }
-
-        final File file = (File)virtualFile;
-
         documentStorage.getDocument(virtualFile, new DocumentStorage.DocumentCallback() {
 
             @Override
             public void onDocumentReceived(final String content) {
-                updateContent(content, event.getModificationStamp(), file);
+                updateContent(content, event.getModificationStamp(), virtualFile);
             }
 
             @Override
@@ -157,7 +151,7 @@ public class EditorGroupSynchronizationImpl implements EditorGroupSynchronizatio
         });
     }
 
-    private void updateContent(String newContent, String oldStamp, File file) {
+    private void updateContent(String newContent, String oldStamp, VirtualFile virtualFile) {
         final DocumentHandle documentHandle = getDocumentHandleFor(groupLeaderEditor);
         if (documentHandle == null) {
             return;
@@ -166,6 +160,13 @@ public class EditorGroupSynchronizationImpl implements EditorGroupSynchronizatio
         final Document document = documentHandle.getDocument();
         final String oldContent = document.getContents();
         final TextPosition cursorPosition = document.getCursorPosition();
+
+        if (!(virtualFile instanceof File)){
+            replaceContent(document, newContent, oldContent, cursorPosition);
+            return;
+        }
+
+        final File file = (File)virtualFile;
         final String newStamp = file.getModificationStamp();
 
         if (oldStamp == null && !Objects.equals(newContent, oldContent)) {
