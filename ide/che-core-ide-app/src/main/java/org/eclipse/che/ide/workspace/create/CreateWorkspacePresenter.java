@@ -231,9 +231,8 @@ public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDeleg
         String wsName = view.getWorkspaceName();
 
         EnvironmentRecipeDto recipe = dtoFactory.createDto(EnvironmentRecipeDto.class)
-                                                .withType("compose")
-                                                .withLocation(view.getRecipeUrl())
-                                                .withContentType("application/x-yaml");
+                                                .withType("dockerimage")
+                                                .withLocation(view.getRecipeUrl());
 
         ExtendedMachineDto machine = dtoFactory.createDto(ExtendedMachineDto.class)
                                                .withAgents(singletonList("ws-agent"))

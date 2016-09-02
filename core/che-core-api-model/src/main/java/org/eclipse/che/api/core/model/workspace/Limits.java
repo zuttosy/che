@@ -11,8 +11,13 @@
 package org.eclipse.che.api.core.model.workspace;
 
 /**
+ * Represents limitation of resources of machine.
+ *
  * @author Alexander Garagatyi
  */
 public interface Limits {
+    /**
+     * Returns RAM limitation in bytes.
+     */
     Long getMemoryBytes();
 }

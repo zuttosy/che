@@ -25,6 +25,8 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
+import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
+import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.commons.test.mockito.answer.SelfReturningAnswer;
@@ -38,6 +40,7 @@ import org.eclipse.che.ide.workspace.DefaultWorkspaceComponent;
 import org.eclipse.che.ide.workspace.WorkspaceComponent;
 import org.eclipse.che.ide.workspace.create.CreateWorkspaceView.HidePopupCallBack;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -117,6 +120,10 @@ public class CreateWorkspacePresenterTest {
     private CommandDto         commandDto;
     @Mock
     private WorkspaceDto  usersWorkspaceDto;
+    @Mock
+    private ResourcesDto resources;
+    @Mock
+    private LimitsDto limits;
 
 
 
@@ -156,6 +163,8 @@ public class CreateWorkspacePresenterTest {
         when(dtoFactory.createDto(EnvironmentRecipeDto.class)).thenReturn(environmentRecipeDto);
         extendedMachineDto = mock(ExtendedMachineDto.class, new SelfReturningAnswer());
         when(dtoFactory.createDto(ExtendedMachineDto.class)).thenReturn(extendedMachineDto);
+        when(dtoFactory.createDto(ResourcesDto.class)).thenReturn(resources);
+        when(dtoFactory.createDto(LimitsDto.class)).thenReturn(limits);
 
         when(wsComponentProvider.get()).thenReturn(workspaceComponent);
 
@@ -164,12 +173,12 @@ public class CreateWorkspacePresenterTest {
         when(view.getRecipeUrl()).thenReturn("recipe");
     }
 
-//    @Test
+    @Test
     public void delegateShouldBeSet() {
         verify(view).setDelegate(presenter);
     }
 
-//    @Test
+    @Test
     public void dialogShouldBeShown() {
         presenter.show(Collections.singletonList(usersWorkspaceDto), componentCallback);
 
@@ -179,7 +188,7 @@ public class CreateWorkspacePresenterTest {
         verify(view).show();
     }
 
-//    @Test
+    @Test
     public void errorLabelShouldBeShownWhenWorkspaceNameLengthIsInCorrect() {
         when(view.getWorkspaceName()).thenReturn("te");
 
@@ -190,7 +199,7 @@ public class CreateWorkspacePresenterTest {
         verify(locale, never()).createWsNameAlreadyExist();
     }
 
-//    @Test
+    @Test
     public void errorLabelShouldBeShownWhenWorkspaceNameIsInCorrect() {
         when(view.getWorkspaceName()).thenReturn("test/*");
 
@@ -201,7 +210,7 @@ public class CreateWorkspacePresenterTest {
         verify(locale, never()).createWsNameAlreadyExist();
     }
 
-//    @Test
+    @Test
     public void errorLabelShouldBeShownWhenWorkspaceNameAlreadyExist() {
         when(workspaceConfigDto.getName()).thenReturn("test");
 
@@ -216,7 +225,7 @@ public class CreateWorkspacePresenterTest {
     }
 
 
-//    @Test
+    @Test
     public void errorLabelShouldNotBeShownWhenFormIsCorrect() {
         when(view.getRecipeUrl()).thenReturn("http://localhost/correct/url");
 
@@ -233,7 +242,7 @@ public class CreateWorkspacePresenterTest {
         verify(view).setEnableCreateButton(true);
     }
 
-//    @Test
+    @Test
     public void errorLabelShouldBeShownWhenRecipeUrlIsNotCorrect() {
         when(view.getRecipeUrl()).thenReturn("xxx://localh/correct/url");
 
@@ -248,7 +257,7 @@ public class CreateWorkspacePresenterTest {
         verify(view).setVisibleUrlError(anyBoolean());
     }
 
-//    @Test
+    @Test
     public void recipesShouldBeFoundAndShown() throws Exception {
         List<RecipeDescriptor> recipes = Collections.singletonList(recipeDescriptor);
 
@@ -277,7 +286,7 @@ public class CreateWorkspacePresenterTest {
         recipeOperation.getValue().apply(recipes);
     }
 
-//    @Test
+    @Test
     public void errorLabelShouldBeShowWhenRecipesNotFound() throws Exception {
         List<RecipeDescriptor> recipes = new ArrayList<>();
 
@@ -288,14 +297,14 @@ public class CreateWorkspacePresenterTest {
         verify(view, never()).showFoundByTagRecipes(Matchers.<List<RecipeDescriptor>>anyObject());
     }
 
-//    @Test
+    @Test
     public void predefinedRecipesShouldBeFound() {
         presenter.onPredefinedRecipesClicked();
 
         verify(view).showPredefinedRecipes(Matchers.<List<RecipeDescriptor>>anyObject());
     }
 
-//    @Test
+    @Test
     public void dialogShouldBeHiddenWhenUserClicksOnCreateButton() {
         clickOnCreateButton();
 
@@ -318,7 +327,7 @@ public class CreateWorkspacePresenterTest {
         verify(view).show();
     }
 
-//    @Test
+    @Test
     public void workspaceConfigShouldBeGot() {
         when(view.getWorkspaceName()).thenReturn("name");
         when(view.getRecipeUrl()).thenReturn("test");
@@ -330,7 +339,7 @@ public class CreateWorkspacePresenterTest {
         verify(dtoFactory).createDto(EnvironmentDto.class);
     }
 
-//    @Test
+    @Test
     public void workspaceShouldBeCreatedForDevMachine() throws Exception {
         when(machineConfigDto.isDev()).thenReturn(true);
 
@@ -353,7 +362,7 @@ public class CreateWorkspacePresenterTest {
         workspaceOperation.getValue().apply(usersWorkspaceDto);
     }
 
-//    @Test
+    @Test
     public void workspaceShouldBeCreatedForNotDevMachine() throws Exception {
         when(machineConfigDto.isDev()).thenReturn(false);
 
@@ -362,7 +371,7 @@ public class CreateWorkspacePresenterTest {
         verify(workspaceComponent).startWorkspace(usersWorkspaceDto, componentCallback);
     }
 
-//    @Test
+    @Test
     public void errorShouldBeCaughtWhenCreatesWorkSpace() throws Exception {
         final PromiseError promiseError = mock(PromiseError.class);
 

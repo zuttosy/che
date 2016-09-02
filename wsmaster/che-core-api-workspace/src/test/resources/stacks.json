@@ -143,7 +143,7 @@
                     "recipe": {
                         "location": "https://raw.githubusercontent.com/eclipse/che/master/Dockerfile",
                         "type": "dockerfile",
-                        "contentType": "application/x-dockerfile"
+                        "contentType": "text/x-dockerfile"
                     }
                 }
             },
@@ -233,7 +233,7 @@
                     "recipe": {
                         "content": "FROM codenvy/ubuntu_jdk8",
                         "type": "dockerfile",
-                        "contentType": "application/x-dockerfile"
+                        "contentType": "text/x-dockerfile"
                     }
                 }
             },

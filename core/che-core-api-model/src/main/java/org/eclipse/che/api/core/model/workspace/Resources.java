@@ -11,8 +11,13 @@
 package org.eclipse.che.api.core.model.workspace;
 
 /**
+ * Represents configuration of resources of machine.
+ *
  * @author Alexander Garagatyi
  */
 public interface Resources {
+    /**
+     * Returns limitation of resources of machine.
+     */
     Limits getLimits();
 }

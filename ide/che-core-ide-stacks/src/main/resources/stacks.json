@@ -703,7 +703,7 @@
     "id": "php-default",
     "creator": "ide",
     "name": "PHP",
-    "description": "Default PHP Stack with PHP 5.5, most popular extensions and composer.",
+    "description": "Default PHP Stack with PHP 5.5, most popular extensions and dockerimager.",
     "scope": "general",
     "tags": [
       "Ubuntu",
@@ -712,7 +712,7 @@
       "mysql",
       "sqlite",
       "Apaide",
-      "Composer"
+      "dockerimager"
     ],
     "components": [
       {
@@ -732,7 +732,7 @@
         "version": "---"
       },
       {
-        "name": "Composer",
+        "name": "dockerimager",
         "version": "---"
       }
     ],
@@ -848,9 +848,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:latest\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_python:latest",
+            "type": "dockerimage"
           }
         }
       },
@@ -929,9 +928,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_rails\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_rails",
+            "type": "dockerimage"
           }
         }
       },
@@ -1006,9 +1004,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/debian_jre\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/debian_jre",
+            "type": "dockerimage"
           }
         }
       },
@@ -1078,9 +1075,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/centos_jdk8\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/centos_jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -1161,9 +1157,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/debian_jdk8\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/debian_jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -1222,7 +1217,7 @@
         "version": "---"
       },
       {
-        "name": "Composer",
+        "name": "dockerimager",
         "version": "---"
       }
     ],
@@ -1247,9 +1242,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/php:gae\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/php:gae",
+            "type": "dockerimage"
           }
         }
       },
@@ -1323,9 +1317,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:2.7\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_python:2.7",
+            "type": "dockerimage"
           }
         }
       },
@@ -1396,9 +1389,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_python:gae_python2.7\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_python:gae_python2.7",
+            "type": "dockerimage"
           }
         }
       },
@@ -1488,9 +1480,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/selenium\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/selenium",
+            "type": "dockerimage"
           }
         }
       },
@@ -1557,9 +1548,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: tomitribe/ubuntu_tomee_173_jdk8\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "tomitribe/ubuntu_tomee_173_jdk8",
+            "type": "dockerimage"
           }
         }
       },
@@ -1619,9 +1609,8 @@
             }
           },
           "recipe": {
-            "content": "services:\n  dev-machine:\n    image: codenvy/ubuntu_jre\n    mem_limit: 2147483648",
-            "contentType": "application/x-yaml",
-            "type": "compose"
+            "location": "codenvy/ubuntu_jre",
+            "type": "dockerimage"
           }
         }
       },
