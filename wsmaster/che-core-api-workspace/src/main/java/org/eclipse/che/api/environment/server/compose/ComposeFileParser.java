@@ -40,26 +40,6 @@ public class ComposeFileParser {
      */
     public ComposeEnvironmentImpl parse(String recipeContent, String contentType) throws IllegalArgumentException,
                                                                                          ServerException {
-        return parseEnvironmentRecipeContent(recipeContent, contentType);
-    }
-
-    /**
-     * Converts Docker Compose environment model into YAML file.
-     *
-     * @param composeEnvironment Docker Compose environment model file
-     * @throws IllegalArgumentException
-     *         when argument is null or conversion to YAML fails
-     */
-    public String toYaml(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
-        checkNotNull(composeEnvironment, "Compose environment should not be null");
-        try {
-            return YAML_PARSER.writeValueAsString(composeEnvironment);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private ComposeEnvironmentImpl parseEnvironmentRecipeContent(String recipeContent, String contentType) {
         ComposeEnvironmentImpl composeEnvironment;
         switch (contentType) {
             case "application/x-yaml":
@@ -78,6 +58,22 @@ public class ComposeFileParser {
                                                    "' is unsupported. Supported values are: application/x-yaml");
         }
         return composeEnvironment;
+    }
+
+    /**
+     * Converts Docker Compose environment model into YAML file.
+     *
+     * @param composeEnvironment Docker Compose environment model file
+     * @throws IllegalArgumentException
+     *         when argument is null or conversion to YAML fails
+     */
+    public String toYaml(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
+        checkNotNull(composeEnvironment, "Compose environment should not be null");
+        try {
+            return YAML_PARSER.writeValueAsString(composeEnvironment);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(e.getLocalizedMessage(), e);
+        }
     }
 
     /**

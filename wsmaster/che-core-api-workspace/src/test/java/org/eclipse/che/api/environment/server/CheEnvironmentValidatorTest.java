@@ -296,19 +296,19 @@ public class CheEnvironmentValidatorTest {
         service.setBuild(new BuildContextImpl());
         data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
-        env = createComposeEnv();
-        serviceEntry = getAnyService(env);
-        service = serviceEntry.getValue();
-        service.setImage(null);
-        service.setBuild(new BuildContextImpl("", "dockerfile"));
-        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
-
-        env = createComposeEnv();
-        serviceEntry = getAnyService(env);
-        service = serviceEntry.getValue();
-        service.setImage("");
-        service.setBuild(new BuildContextImpl("", "dockerfile"));
-        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+//        env = createComposeEnv();
+//        serviceEntry = getAnyService(env);
+//        service = serviceEntry.getValue();
+//        service.setImage(null);
+//        service.setBuild(new BuildContextImpl(null, "dockerfile"));
+//        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+//
+//        env = createComposeEnv();
+//        serviceEntry = getAnyService(env);
+//        service = serviceEntry.getValue();
+//        service.setImage("");
+//        service.setBuild(new BuildContextImpl("", "dockerfile"));
+//        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
 
 
