@@ -76,6 +76,7 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.REMOVED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.SYNCHRONIZED;
 import static org.eclipse.che.ide.api.resources.ResourceDelta.UPDATED;
+import static org.eclipse.che.ide.util.Arrays.add;
 import static org.eclipse.che.ide.util.Arrays.removeAll;
 import static org.eclipse.che.ide.util.NameUtils.checkFileName;
 import static org.eclipse.che.ide.util.NameUtils.checkFolderName;
@@ -313,6 +314,8 @@ public final class ResourceManager {
                         checkState(updatedProject.isPresent(), "Updated resource is not present");
                         checkState(updatedProject.get().isProject(), "Updated resource is not a project");
 
+                        eventBus.fireEvent(new ResourceChangedEvent(new ResourceDeltaImpl(updatedProject.get(), UPDATED)));
+
                         return (Project)updatedProject.get();
                     }
                 });
@@ -469,20 +472,27 @@ public final class ResourceManager {
                                                                     .withLocation(sourceStorage.getLocation())
                                                                     .withParameters(sourceStorage.getParameters());
 
-                return ps.importProject(path, sourceStorageDto).then(new Function<Void, Project>() {
+                return ps.importProject(path, sourceStorageDto).thenPromise(new Function<Void, Promise<Project>>() {
                     @Override
-                    public Project apply(Void ignored) throws FunctionException {
+                    public Promise<Project> apply(Void ignored) throws FunctionException {
 
-                        Resource project = resourceFactory.newProjectImpl(importRequest.getBody(), ResourceManager.this);
+                        return ps.getProject(path).then(new Function<ProjectConfigDto, Project>() {
+                            @Override
+                            public Project apply(ProjectConfigDto config) throws FunctionException {
+                                cachedConfigs = add(cachedConfigs, config);
 
-                        checkState(project != null, "Failed to locate imported project's configuration");
+                                Resource project = resourceFactory.newProjectImpl(config, ResourceManager.this);
 
-                        store.register(project);
+                                checkState(project != null, "Failed to locate imported project's configuration");
 
-                        eventBus.fireEvent(new ResourceChangedEvent(
-                                new ResourceDeltaImpl(project, (resource.isPresent() ? UPDATED : ADDED) | DERIVED)));
+                                store.register(project);
 
-                        return (Project)project;
+                                eventBus.fireEvent(new ResourceChangedEvent(
+                                        new ResourceDeltaImpl(project, (resource.isPresent() ? UPDATED : ADDED) | DERIVED)));
+
+                                return (Project)project;
+                            }
+                        });
                     }
                 });
             }
