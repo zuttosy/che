@@ -90,14 +90,17 @@ public class EnvironmentParser {
 
         composeEnvironment.getServices().forEach((name, service) -> {
             ExtendedMachine extendedMachine = environment.getMachines().get(name);
-            checkArgument(extendedMachine != null &&
-                          extendedMachine.getResources() != null &&
-                          extendedMachine.getResources().getLimits() != null &&
-                          extendedMachine.getResources().getLimits().getMemoryBytes() > 0,
-                         "Memory limit of machine '%s' is missing or contain invalid value",
-                         name);
+            if (extendedMachine != null &&
+                extendedMachine.getAttributes() != null &&
+                extendedMachine.getAttributes().containsKey("memoryLimitBytes")) {
 
-            service.setMemLimit(extendedMachine.getResources().getLimits().getMemoryBytes());
+                try {
+                    service.setMemLimit(Long.parseLong(extendedMachine.getAttributes().get("memoryLimitBytes")));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            format("Value of attribute 'memoryLimitBytes' of machine '%s' is illegal", name));
+                }
+            }
         });
 
         return composeEnvironment;

@@ -39,7 +39,6 @@ import org.eclipse.che.api.machine.shared.dto.event.MachineStatusEvent;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
-import org.eclipse.che.api.workspace.server.model.impl.ResourcesImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.commons.env.EnvironmentContext;
 import org.eclipse.che.commons.lang.Size;
@@ -612,14 +611,10 @@ public class CheEnvironmentEngineTest {
         servers.put("ref3", new ServerConf2Impl("9090", "proto1", null));
         machines.put("dev-machine", new ExtendedMachineImpl(new ArrayList<>(asList("ws-agent", "someAgent")),
                                                             servers,
-                                                            new ResourcesImpl(
-                                                                    new org.eclipse.che.api.workspace.server.model.impl.LimitsImpl(
-                                                                            10000L))));
+                                                            new HashMap<>(singletonMap("memoryLimitBytes", "10000"))));
         machines.put("machine2", new ExtendedMachineImpl(new ArrayList<>(asList("someAgent2", "someAgent3")),
                                                          null,
-                                                         new ResourcesImpl(
-                                                                 new org.eclipse.che.api.workspace.server.model.impl.LimitsImpl(
-                                                                         10000L))));
+                                                         new HashMap<>(singletonMap("memoryLimitBytes", "10000"))));
         String environmentRecipeContent =
                 "services:\n  " +
                 "dev-machine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 4294967296\n  " +

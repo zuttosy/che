@@ -24,10 +24,8 @@ import org.eclipse.che.api.workspace.server.spi.StackDao;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
-import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectProblemDto;
-import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.ServerConf2Dto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
@@ -158,9 +156,7 @@ public class StackLoaderTest {
         Map<String, ExtendedMachineDto> machines = new HashMap<>();
         machines.put("someMachineName", newDto(ExtendedMachineDto.class).withAgents(Arrays.asList("agent1", "agent2"))
                                                                         .withServers(servers)
-                                                                        .withResources(newDto(ResourcesDto.class)
-                                                                                               .withLimits(newDto(LimitsDto.class)
-                                                                                                                   .withMemoryBytes(512L * 1024L * 1024L))));
+                                                                        .withAttributes(singletonMap("memoryLimitBytes", "" + 512L * 1024L * 1024L)));
 
         EnvironmentDto environmentDto = newDto(EnvironmentDto.class).withRecipe(environmentRecipe)
                                                                     .withMachines(machines);

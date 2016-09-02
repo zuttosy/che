@@ -40,10 +40,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -143,10 +141,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -206,10 +202,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -274,10 +268,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -351,10 +343,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -422,10 +412,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -503,10 +491,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -582,10 +568,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -669,10 +653,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -749,10 +731,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -840,10 +820,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -920,10 +898,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -996,10 +972,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1067,10 +1041,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1149,10 +1121,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1234,10 +1204,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1309,10 +1277,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1381,10 +1347,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1472,10 +1436,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1540,10 +1502,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },
@@ -1601,10 +1561,8 @@
                 "ws-agent"
               ],
               "servers": {},
-              "resources": {
-                "limits": {
-                  "memoryBytes": 2147483648
-                }
+              "attributes" : {
+                "memoryLimitBytes": "2147483648"
               }
             }
           },

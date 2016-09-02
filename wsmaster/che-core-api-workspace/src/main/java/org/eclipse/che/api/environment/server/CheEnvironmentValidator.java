@@ -181,13 +181,6 @@ public class CheEnvironmentValidator {
                       "Field 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
-        checkArgument(extendedMachine.getResources() != null &&
-                      extendedMachine.getResources().getLimits() != null &&
-                      extendedMachine.getResources().getLimits().getMemoryBytes() != null &&
-                      extendedMachine.getResources().getLimits().getMemoryBytes() > 0,
-                      "Memory limit of machine '%s' in environment '%s' is missing or contain invalid value",
-                      machineName, envName);
-
         if (extendedMachine.getServers() != null) {
             extendedMachine.getServers()
                            .entrySet()

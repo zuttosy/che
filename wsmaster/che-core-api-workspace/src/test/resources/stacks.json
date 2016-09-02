@@ -40,10 +40,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -133,10 +131,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -223,10 +219,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -313,10 +307,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -403,10 +395,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },

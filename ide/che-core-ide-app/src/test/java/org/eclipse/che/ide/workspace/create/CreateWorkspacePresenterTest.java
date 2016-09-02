@@ -25,8 +25,6 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
-import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
-import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.commons.test.mockito.answer.SelfReturningAnswer;
@@ -120,12 +118,6 @@ public class CreateWorkspacePresenterTest {
     private CommandDto         commandDto;
     @Mock
     private WorkspaceDto  usersWorkspaceDto;
-    @Mock
-    private ResourcesDto resources;
-    @Mock
-    private LimitsDto limits;
-
-
 
     @Captor
     private ArgumentCaptor<Operation<List<RecipeDescriptor>>> recipeOperation;
@@ -163,8 +155,6 @@ public class CreateWorkspacePresenterTest {
         when(dtoFactory.createDto(EnvironmentRecipeDto.class)).thenReturn(environmentRecipeDto);
         extendedMachineDto = mock(ExtendedMachineDto.class, new SelfReturningAnswer());
         when(dtoFactory.createDto(ExtendedMachineDto.class)).thenReturn(extendedMachineDto);
-        when(dtoFactory.createDto(ResourcesDto.class)).thenReturn(resources);
-        when(dtoFactory.createDto(LimitsDto.class)).thenReturn(limits);
 
         when(wsComponentProvider.get()).thenReturn(workspaceComponent);
 

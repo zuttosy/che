@@ -32,9 +32,7 @@ import org.eclipse.che.api.machine.shared.dto.ServerConfDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
-import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
 import org.eclipse.che.api.workspace.shared.dto.ProjectConfigDto;
-import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.SourceStorageDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.dto.server.DtoFactory;
@@ -184,9 +182,7 @@ public class FactoryBuilderTest {
                                                                                       .withContent("some content"))
                                         .withMachines(singletonMap("devmachine",
                                                                    newDto(ExtendedMachineDto.class).withAgents(singletonList("ws-agent"))
-                                                                                                   .withResources(newDto(ResourcesDto.class)
-                                                                                                                          .withLimits(newDto(LimitsDto.class)
-                                                                                                                                              .withMemoryBytes(512L * 1024L * 1024L)))));
+                                                                                                   .withAttributes(singletonMap("memoryLimitBytes", "" + 512L * 1024L * 1024L))));
 
         WorkspaceConfigDto workspaceConfig = dto.createDto(WorkspaceConfigDto.class)
                                                 .withProjects(singletonList(project))

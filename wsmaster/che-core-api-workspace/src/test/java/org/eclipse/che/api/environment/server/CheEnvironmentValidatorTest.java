@@ -26,8 +26,6 @@ import org.eclipse.che.api.workspace.server.DtoConverter;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
-import org.eclipse.che.api.workspace.server.model.impl.LimitsImpl;
-import org.eclipse.che.api.workspace.server.model.impl.ResourcesImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
@@ -511,10 +509,10 @@ public class CheEnvironmentValidatorTest {
         servers.put("ref3", new ServerConf2Impl("9090", "proto1", null));
         machines.put("dev-machine", new ExtendedMachineImpl(new ArrayList<>(asList("ws-agent", "someAgent")),
                                                             servers,
-                                                            new ResourcesImpl(new LimitsImpl(10000L))));
+                                                            new HashMap<>(singletonMap("memoryLimitBytes", "10000"))));
         machines.put("machine2", new ExtendedMachineImpl(new ArrayList<>(asList("someAgent2", "someAgent3")),
                                                          null,
-                                                         new ResourcesImpl(new LimitsImpl(10000L))));
+                                                         new HashMap<>(singletonMap("memoryLimitBytes", "10000"))));
         env.setRecipe(new EnvironmentRecipeImpl("compose",
                                                 "application/x-yaml",
                                                 "content",
@@ -531,7 +529,7 @@ public class CheEnvironmentValidatorTest {
         composeEnvironment.setServices(services);
 
         ComposeServiceImpl service = new ComposeServiceImpl();
-        service.setMemLimit(1024L * 1024L * 1024L); // will be ignored
+        service.setMemLimit(1024L * 1024L * 1024L);
         service.setImage("codenvy/ubuntu_jdk8");
         service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
         service.setCommand(new ArrayList<>(asList("this", "is", "command")));
@@ -548,7 +546,7 @@ public class CheEnvironmentValidatorTest {
         services.put("dev-machine", service);
 
         service = new ComposeServiceImpl();
-        service.setMemLimit(100L);// Will be ignored
+        service.setMemLimit(100L);
         service.setBuild(new BuildContextImpl("context", "file"));
         service.setEnvironment(new HashMap<>(singletonMap("env1", "val1")));
         service.setCommand(new ArrayList<>(asList("this", "is", "command")));

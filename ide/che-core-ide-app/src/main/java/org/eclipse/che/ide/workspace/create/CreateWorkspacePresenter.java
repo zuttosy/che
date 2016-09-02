@@ -25,8 +25,6 @@ import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.EnvironmentRecipeDto;
 import org.eclipse.che.api.workspace.shared.dto.ExtendedMachineDto;
-import org.eclipse.che.api.workspace.shared.dto.LimitsDto;
-import org.eclipse.che.api.workspace.shared.dto.ResourcesDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -53,9 +51,10 @@ import static org.eclipse.che.api.machine.shared.Constants.WS_MACHINE_NAME;
 @Singleton
 public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDelegate {
 
-    private static final RegExp FILE_NAME   = RegExp.compile("^[A-Za-z0-9_\\s-\\.]+$");
-    private static final String URL_PATTERN = "^((ftp|http|https)://[\\w@.\\-\\_]+(:\\d{1,5})?(/[\\w#!:.?+=&%@!\\_\\-/]+)*){1}$";
-    private static final RegExp URL         = RegExp.compile(URL_PATTERN);
+    private static final   RegExp FILE_NAME          = RegExp.compile("^[A-Za-z0-9_\\s-\\.]+$");
+    private static final   String URL_PATTERN        = "^((ftp|http|https)://[\\w@.\\-\\_]+(:\\d{1,5})?(/[\\w#!:.?+=&%@!\\_\\-/]+)*){1}$";
+    private static final   RegExp URL                = RegExp.compile(URL_PATTERN);
+    protected static final String MEMORY_LIMIT_BYTES = Long.toString(2000L * 1024L * 1024L);
 
     static final String RECIPE_TYPE     = "docker";
     static final int    SKIP_COUNT      = 0;
@@ -236,9 +235,7 @@ public class CreateWorkspacePresenter implements CreateWorkspaceView.ActionDeleg
 
         ExtendedMachineDto machine = dtoFactory.createDto(ExtendedMachineDto.class)
                                                .withAgents(singletonList("ws-agent"))
-                                               .withResources(dtoFactory.createDto(ResourcesDto.class)
-                                                                        .withLimits(dtoFactory.createDto(LimitsDto.class)
-                                                                                              .withMemoryBytes(2048L * 1024L * 1024L)));
+                                               .withAttributes(singletonMap("memoryLimitBytes", MEMORY_LIMIT_BYTES));
 
         EnvironmentDto environment = dtoFactory.createDto(EnvironmentDto.class)
                                                .withRecipe(recipe)
