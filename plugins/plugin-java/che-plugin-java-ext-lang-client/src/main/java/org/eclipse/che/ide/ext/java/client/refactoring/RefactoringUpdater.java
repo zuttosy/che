@@ -22,9 +22,12 @@ import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.event.FileContentUpdateEvent;
 import org.eclipse.che.ide.api.event.ng.DeletedFilesController;
+import org.eclipse.che.ide.api.parts.PartPresenter;
+import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.resources.ExternalResourceDelta;
 import org.eclipse.che.ide.api.resources.ResourceDelta;
 import org.eclipse.che.ide.ext.java.shared.dto.refactoring.ChangeInfo;
+import org.eclipse.che.ide.part.editor.multipart.EditorMultiPartStackPresenter;
 import org.eclipse.che.ide.resource.Path;
 import org.eclipse.che.ide.resources.reveal.RevealResourceEvent;
 
@@ -47,17 +50,23 @@ import static org.eclipse.che.ide.api.resources.ResourceDelta.MOVED_TO;
 @Singleton
 public class RefactoringUpdater {
 
-    private final AppContext             appContext;
-    private final DeletedFilesController deletedFilesController;
-    private final EventBus               eventBus;
-    private final EditorAgent            editorAgent;
+    private final AppContext                    appContext;
+    private final EditorMultiPartStackPresenter editorMultiPartStack;
+    private final WorkspaceAgent                workspaceAgent;
+    private final DeletedFilesController        deletedFilesController;
+    private final EventBus                      eventBus;
+    private final EditorAgent                   editorAgent;
 
     @Inject
     public RefactoringUpdater(AppContext appContext,
+                              EditorMultiPartStackPresenter editorMultiPartStack,
+                              WorkspaceAgent workspaceAgent,
                               DeletedFilesController deletedFilesController,
                               EventBus eventBus,
                               EditorAgent editorAgent) {
         this.appContext = appContext;
+        this.editorMultiPartStack = editorMultiPartStack;
+        this.workspaceAgent = workspaceAgent;
         this.deletedFilesController = deletedFilesController;
         this.eventBus = eventBus;
         this.editorAgent = editorAgent;
@@ -132,6 +141,7 @@ public class RefactoringUpdater {
                                     new FileContentUpdateEvent(editorPartPresenter.getEditorInput().getFile().getLocation().toString()));
                         }
                     }
+                    setActiveEditor();
                 }
             });
         } else {
@@ -142,6 +152,7 @@ public class RefactoringUpdater {
                         eventBus.fireEvent(
                                 new FileContentUpdateEvent(editorPartPresenter.getEditorInput().getFile().getLocation().toString()));
                     }
+                    setActiveEditor();
                 }
             });
         }
@@ -165,5 +176,12 @@ public class RefactoringUpdater {
         }
 
         return false;
+    }
+
+    private void setActiveEditor() {
+        PartPresenter activePart = editorMultiPartStack.getActivePart();
+        if (activePart != null) {
+            workspaceAgent.setActivePart(activePart);
+        }
     }
 }
