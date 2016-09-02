@@ -133,7 +133,7 @@ public class EnvironmentParser {
         } else {
             if (!"text/x-dockerfile".equals(recipe.getContentType())) {
                 throw new IllegalArgumentException(
-                        format("Content type of recipe of provided environment '%s' is unsupported. Supported values are: x-dockerfile, image",
+                        format("Content type '%s' of recipe of environment is unsupported. Supported values are: x-dockerfile",
                                recipe.getContentType()));
             }
 
