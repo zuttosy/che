@@ -197,6 +197,7 @@ public class WorkspaceConfigJsonAdapter {
         final JsonObject envRecipe = new JsonObject();
         final String type = source.get("type").getAsString();
         switch (type) {
+            case "recipe":
             case "dockerfile":
                 envRecipe.addProperty("type", "dockerfile");
                 envRecipe.addProperty("contentType", "text/x-dockerfile");
