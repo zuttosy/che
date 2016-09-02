@@ -17,7 +17,6 @@ import org.eclipse.che.dto.shared.DTO;
 import java.util.List;
 import java.util.Map;
 
-import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.MANDATORY;
 import static org.eclipse.che.api.core.factory.FactoryParameter.Obligation.OPTIONAL;
 
 /**
@@ -42,10 +41,10 @@ public interface ExtendedMachineDto extends ExtendedMachine {
     ExtendedMachineDto withServers(Map<String, ServerConf2Dto> servers);
 
     @Override
-    @FactoryParameter(obligation = MANDATORY)
-    ResourcesDto getResources();
+    @FactoryParameter(obligation = OPTIONAL)
+    Map<String, String> getAttributes();
 
-    void setResources(ResourcesDto resources);
+    void setAttributes(Map<String, String> attributes);
 
-    ExtendedMachineDto withResources(ResourcesDto resources);
+    ExtendedMachineDto withAttributes(Map<String, String> attributes);
 }

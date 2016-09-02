@@ -30,6 +30,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 /**
+ * Parses {@link Environment} into {@link ComposeEnvironmentImpl}.
+ *
  * @author Alexander Garagatyi
  */
 public class EnvironmentParser {
@@ -45,10 +47,24 @@ public class EnvironmentParser {
         this.recipeDownloader = recipeDownloader;
     }
 
+    /**
+     * Returns list of supported types of environments.
+     */
     public List<String> getEnvironmentTypes() {
         return types;
     }
 
+    /**
+     * Parses {@link Environment} into {@link ComposeEnvironmentImpl}.
+     *
+     * @param environment
+     *         environment to parse
+     * @return environment representation as compose environment
+     * @throws IllegalArgumentException
+     *         if provided environment is illegal
+     * @throws ServerException
+     *         if fetching of environment recipe content fails
+     */
     public ComposeEnvironmentImpl parse(Environment environment) throws IllegalArgumentException,
                                                                         ServerException {
 
@@ -74,14 +90,17 @@ public class EnvironmentParser {
 
         composeEnvironment.getServices().forEach((name, service) -> {
             ExtendedMachine extendedMachine = environment.getMachines().get(name);
-            checkArgument(extendedMachine != null &&
-                          extendedMachine.getResources() != null &&
-                          extendedMachine.getResources().getLimits() != null &&
-                          extendedMachine.getResources().getLimits().getMemoryBytes() > 0,
-                         "Memory limit of machine '%s' is missing or contain invalid value",
-                         name);
+            if (extendedMachine != null &&
+                extendedMachine.getAttributes() != null &&
+                extendedMachine.getAttributes().containsKey("memoryLimitBytes")) {
 
-            service.setMemLimit(extendedMachine.getResources().getLimits().getMemoryBytes());
+                try {
+                    service.setMemLimit(Long.parseLong(extendedMachine.getAttributes().get("memoryLimitBytes")));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException(
+                            format("Value of attribute 'memoryLimitBytes' of machine '%s' is illegal", name));
+                }
+            }
         });
 
         return composeEnvironment;
@@ -114,7 +133,7 @@ public class EnvironmentParser {
         } else {
             if (!"text/x-dockerfile".equals(recipe.getContentType())) {
                 throw new IllegalArgumentException(
-                        format("Content type of recipe of provided environment '%s' is unsupported. Supported values are: x-dockerfile, image",
+                        format("Content type '%s' of recipe of environment is unsupported. Supported values are: x-dockerfile",
                                recipe.getContentType()));
             }
 

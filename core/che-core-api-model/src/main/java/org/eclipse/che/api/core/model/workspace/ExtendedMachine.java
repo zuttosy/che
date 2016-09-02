@@ -29,5 +29,8 @@ public interface ExtendedMachine {
      */
     Map<String, ? extends ServerConf2> getServers();
 
-    Resources getResources();
+    /**
+     * Returns attributes of resources of machine.
+     */
+    Map<String, String> getAttributes();
 }

@@ -40,10 +40,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -133,17 +131,15 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
                     "recipe": {
                         "location": "https://raw.githubusercontent.com/eclipse/che/master/Dockerfile",
                         "type": "dockerfile",
-                        "contentType": "application/x-dockerfile"
+                        "contentType": "text/x-dockerfile"
                     }
                 }
             },
@@ -223,17 +219,15 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
                     "recipe": {
                         "content": "FROM codenvy/ubuntu_jdk8",
                         "type": "dockerfile",
-                        "contentType": "application/x-dockerfile"
+                        "contentType": "text/x-dockerfile"
                     }
                 }
             },
@@ -313,10 +307,8 @@
                             "agents": [
                                 "ws-agent"
                             ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
+                            "attributes" : {
+                                "memoryLimitBytes": "2147483648"
                             }
                         }
                     },
@@ -402,16 +394,11 @@
                         "devmachine": {
                             "agents": [
                                 "ws-agent"
-                            ],
-                            "resources": {
-                                "limits": {
-                                    "memoryBytes": 2147483648
-                                }
-                            }
+                            ]
                         }
                     },
                     "recipe": {
-                        "content": "service:\n  devmachine:\n    image: codenvy/ubuntu_jdk8",
+                        "content": "service:\n  devmachine:\n    image: codenvy/ubuntu_jdk8\n    mem_limit: 2147483648",
                         "type": "compose",
                         "contentType": "application/x-yaml"
                     }

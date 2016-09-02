@@ -342,6 +342,7 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
 
         String containerName = generateContainerName(namespace, workspaceId, machineId, machineName);
         String imageName = "eclipse-che/" + containerName;
+        // workaround: dockerfile content can be in service.build.dockerfile
         if ((service.getBuild() == null ||
              (service.getBuild().getContext() == null && service.getBuild().getDockerfile() == null)) &&
             service.getImage() == null) {
@@ -369,6 +370,7 @@ public class ComposeMachineProviderImpl implements ComposeMachineInstanceProvide
         File workDir = null;
         try {
             BuildImageParams buildImageParams;
+            // workaround: dockerfile content can be in service.build.dockerfile
             if (service.getBuild() != null &&
                 service.getBuild().getContext() == null &&
                 service.getBuild().getDockerfile() != null) {

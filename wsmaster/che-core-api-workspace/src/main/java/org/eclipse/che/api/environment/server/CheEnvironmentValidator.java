@@ -176,18 +176,27 @@ public class CheEnvironmentValidator {
                       "Name of machine '%s' in environment '%s' is invalid",
                       machineName, envName);
 
+        // TODO remove workaround with dockerfile content in context.dockerfile
         checkArgument(!isNullOrEmpty(service.getImage()) ||
                       (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()) ||
                                                       !isNullOrEmpty(service.getBuild().getDockerfile()))),
-                      "Filed 'image' or 'build.context' is required in machine '%s' in environment '%s'",
+                      "Field 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
-        checkArgument(extendedMachine.getResources() != null &&
-                      extendedMachine.getResources().getLimits() != null &&
-                      extendedMachine.getResources().getLimits().getMemoryBytes() != null &&
-                      extendedMachine.getResources().getLimits().getMemoryBytes() > 0,
-                      "Memory limit of machine '%s' in environment '%s' is missing or contain invalid value",
-                      machineName, envName);
+        if (extendedMachine.getAttributes() != null &&
+            extendedMachine.getAttributes().get("memoryLimitBytes") != null) {
+
+            try {
+                long memoryLimitBytes = Long.parseLong(extendedMachine.getAttributes().get("memoryLimitBytes"));
+                checkArgument(memoryLimitBytes > 0,
+                              "Value of attribute 'memoryLimitBytes' of machine '%s' in environment '%s' is illegal",
+                              machineName, envName);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(
+                        format("Value of attribute 'memoryLimitBytes' of machine '%s' in environment '%s' is illegal",
+                               machineName, envName));
+            }
+        }
 
         if (extendedMachine.getServers() != null) {
             extendedMachine.getServers()

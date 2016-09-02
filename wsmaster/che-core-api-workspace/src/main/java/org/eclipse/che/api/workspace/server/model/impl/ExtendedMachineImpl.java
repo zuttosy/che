@@ -11,10 +11,10 @@
 package org.eclipse.che.api.workspace.server.model.impl;
 
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
-import org.eclipse.che.api.core.model.workspace.Resources;
 import org.eclipse.che.api.core.model.workspace.ServerConf2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,13 +26,13 @@ import java.util.stream.Collectors;
 public class ExtendedMachineImpl implements ExtendedMachine {
     private List<String>                 agents;
     private Map<String, ServerConf2Impl> servers;
-    private ResourcesImpl                resources;
+    private Map<String, String>          attributes;
 
     public ExtendedMachineImpl() {}
 
     public ExtendedMachineImpl(List<String> agents,
                                Map<String, ? extends ServerConf2> servers,
-                               Resources resources) {
+                               Map<String, String> attributes) {
         if (agents != null) {
             this.agents = new ArrayList<>(agents);
         }
@@ -42,13 +42,13 @@ public class ExtendedMachineImpl implements ExtendedMachine {
                                   .collect(Collectors.toMap(Map.Entry::getKey,
                                                             entry -> new ServerConf2Impl(entry.getValue())));
         }
-        if (resources != null) {
-            this.resources = new ResourcesImpl(resources);
+        if (attributes != null) {
+            this.attributes = new HashMap<>(attributes);
         }
     }
 
     public ExtendedMachineImpl(ExtendedMachine machine) {
-        this(machine.getAgents(), machine.getServers(), machine.getResources());
+        this(machine.getAgents(), machine.getServers(), machine.getAttributes());
     }
 
     @Override
@@ -70,12 +70,12 @@ public class ExtendedMachineImpl implements ExtendedMachine {
     }
 
     @Override
-    public ResourcesImpl getResources() {
-        return resources;
+    public Map<String, String> getAttributes() {
+        return attributes;
     }
 
-    public void setResources(ResourcesImpl resources) {
-        this.resources = resources;
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
     }
 
     @Override
@@ -85,12 +85,12 @@ public class ExtendedMachineImpl implements ExtendedMachine {
         ExtendedMachineImpl that = (ExtendedMachineImpl)o;
         return Objects.equals(agents, that.agents) &&
                Objects.equals(servers, that.servers) &&
-               Objects.equals(resources, that.resources);
+               Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(agents, servers, resources);
+        return Objects.hash(agents, servers, attributes);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class ExtendedMachineImpl implements ExtendedMachine {
         return "ExtendedMachineImpl{" +
                "agents=" + agents +
                ", servers=" + servers +
-               ", resources=" + resources +
+               ", attributes=" + attributes +
                '}';
     }
 }
