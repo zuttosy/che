@@ -176,8 +176,10 @@ public class CheEnvironmentValidator {
                       "Name of machine '%s' in environment '%s' is invalid",
                       machineName, envName);
 
+        // TODO remove workaround with dockerfile content in context.dockerfile
         checkArgument(!isNullOrEmpty(service.getImage()) ||
-                      (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()))),
+                      (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()) ||
+                                                      !isNullOrEmpty(service.getBuild().getDockerfile()))),
                       "Field 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
