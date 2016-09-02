@@ -84,7 +84,9 @@ public class WorkspaceConfigJsonAdapterTest {
         assertTrue(devMachineObj.has("agents"), "dev machine has agents");
         assertTrue(devMachineObj.has("attributes"), "dev machine has attributes");
         assertTrue(devMachineObj.get("attributes").isJsonObject(), "dev machine attributes is json object");
-        assertEquals(devMachineObj.get("attributes").);
+        final JsonObject attributes = devMachineObj.getAsJsonObject("attributes");
+        assertTrue(attributes.has("memoryLimitBytes"), "has memory limit");
+        assertEquals(attributes.get("memoryLimitBytes").getAsString(), "2147483648");
 
         // check environment recipe
         assertTrue(environmentObj.has("recipe"), "environment contains recipe");

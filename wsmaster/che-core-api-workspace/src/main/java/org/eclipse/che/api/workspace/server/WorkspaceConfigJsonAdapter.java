@@ -164,7 +164,7 @@ public class WorkspaceConfigJsonAdapter {
                                                               "must an unsigned integer value", envName));
                 }
                 final JsonObject attributes = new JsonObject();
-                attributes.addProperty("memoryBytesLimit", Long.toString(1024L * 1024L * ram));
+                attributes.addProperty("memoryLimitBytes", Long.toString(1024L * 1024L * ram));
                 newMachine.add("attributes", attributes);
             }
         }
