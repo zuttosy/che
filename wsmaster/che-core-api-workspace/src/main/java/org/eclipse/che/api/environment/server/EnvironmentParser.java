@@ -30,6 +30,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 /**
+ * Parses {@link Environment} into {@link ComposeEnvironmentImpl}.
+ *
  * @author Alexander Garagatyi
  */
 public class EnvironmentParser {
@@ -45,10 +47,24 @@ public class EnvironmentParser {
         this.recipeDownloader = recipeDownloader;
     }
 
+    /**
+     * Returns list of supported types of environments.
+     */
     public List<String> getEnvironmentTypes() {
         return types;
     }
 
+    /**
+     * Parses {@link Environment} into {@link ComposeEnvironmentImpl}.
+     *
+     * @param environment
+     *         environment to parse
+     * @return environment representation as compose environment
+     * @throws IllegalArgumentException
+     *         if provided environment is illegal
+     * @throws ServerException
+     *         if fetching of environment recipe content fails
+     */
     public ComposeEnvironmentImpl parse(Environment environment) throws IllegalArgumentException,
                                                                         ServerException {
 

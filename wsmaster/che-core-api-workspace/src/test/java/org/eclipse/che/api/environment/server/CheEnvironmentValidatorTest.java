@@ -65,12 +65,12 @@ public class CheEnvironmentValidatorTest {
     @Mock
     MachineInstanceProviders     machineInstanceProviders;
     @Mock
-    EnvironmentParser environmentParser;
+    EnvironmentParser            environmentParser;
     @Mock
     ComposeServicesStartStrategy startStrategy;
 
     @InjectMocks
-    CheEnvironmentValidator  environmentValidator;
+    CheEnvironmentValidator environmentValidator;
 
     EnvironmentDto         environment;
     ComposeEnvironmentImpl composeEnv;
@@ -178,14 +178,6 @@ public class CheEnvironmentValidatorTest {
         data.add(asList(env, "Type 'docker' of environment 'env' is not supported. Supported types: compose"));
 
         env = createEnv();
-        env.getRecipe().setContentType(null);
-//        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
-
-        env = createEnv();
-        env.getRecipe().setContentType("");
-//        data.add(asList(env, "Environment recipe content type should not be neither null nor empty"));
-
-        env = createEnv();
         env.getRecipe().withLocation(null).withContent(null);
         data.add(asList(env, "Recipe of environment 'env' must contain location or content"));
 
@@ -264,42 +256,42 @@ public class CheEnvironmentValidatorTest {
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(null);
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(null);
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(new BuildContextImpl());
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(new BuildContextImpl());
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage(null);
         service.setBuild(new BuildContextImpl("", "dockerfile"));
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
         env = createComposeEnv();
         serviceEntry = getAnyService(env);
         service = serviceEntry.getValue();
         service.setImage("");
         service.setBuild(new BuildContextImpl("", "dockerfile"));
-//        data.add(asList(env, format("Filed 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
+        data.add(asList(env, format("Field 'image' or 'build.context' is required in machine '%s' in environment 'env'", serviceEntry.getKey())));
 
 
 

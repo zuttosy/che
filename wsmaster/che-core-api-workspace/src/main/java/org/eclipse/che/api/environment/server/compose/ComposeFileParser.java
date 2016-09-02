@@ -22,7 +22,7 @@ import java.io.IOException;
 import static java.lang.String.format;
 
 /**
- * Parses containers description in an environment to {@link ComposeEnvironmentImpl}.
+ * Converters compose file to {@link ComposeEnvironmentImpl} and vise versa.
  *
  * @author Alexander Garagatyi
  */
@@ -30,7 +30,7 @@ public class ComposeFileParser {
     private static final ObjectMapper YAML_PARSER = new ObjectMapper(new YAMLFactory());
 
     /**
-     * Parses recipe environment into Docker Compose model.
+     * Parses compose file into Docker Compose model.
      *
      * @param recipeContent compose file to parse
      * @throws IllegalArgumentException

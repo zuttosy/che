@@ -177,9 +177,8 @@ public class CheEnvironmentValidator {
                       machineName, envName);
 
         checkArgument(!isNullOrEmpty(service.getImage()) ||
-                      (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()) ||
-                                                      !isNullOrEmpty(service.getBuild().getDockerfile()))),
-                      "Filed 'image' or 'build.context' is required in machine '%s' in environment '%s'",
+                      (service.getBuild() != null && (!isNullOrEmpty(service.getBuild().getContext()))),
+                      "Field 'image' or 'build.context' is required in machine '%s' in environment '%s'",
                       machineName, envName);
 
         checkArgument(extendedMachine.getResources() != null &&
