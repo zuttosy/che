@@ -36,7 +36,7 @@ import static org.testng.Assert.assertTrue;
  * @author Yevhenii Voevodin
  */
 @Listeners(MockitoTestNGListener.class)
-public class WorkspaceConfigAdapterTest {
+public class WorkspaceConfigJsonAdapterTest {
 
     private static final String INVALID_CONFIGS_DIR_NAME = "invalid_configs";
 
@@ -82,6 +82,9 @@ public class WorkspaceConfigAdapterTest {
         assertEquals(devMachineServerObj.get("port").getAsString(), "9090/udp");
         assertEquals(devMachineServerObj.get("protocol").getAsString(), "protocol");
         assertTrue(devMachineObj.has("agents"), "dev machine has agents");
+        assertTrue(devMachineObj.has("attributes"), "dev machine has attributes");
+        assertTrue(devMachineObj.get("attributes").isJsonObject(), "dev machine attributes is json object");
+        assertEquals(devMachineObj.get("attributes").);
 
         // check environment recipe
         assertTrue(environmentObj.has("recipe"), "environment contains recipe");

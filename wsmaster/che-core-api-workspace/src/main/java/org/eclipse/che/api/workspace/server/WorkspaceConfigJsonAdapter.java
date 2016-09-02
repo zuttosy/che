@@ -163,11 +163,9 @@ public class WorkspaceConfigJsonAdapter {
                     throw new IllegalArgumentException(format("Bad format, ram of dev-machine in environment '%s' " +
                                                               "must an unsigned integer value", envName));
                 }
-                final JsonObject newLimits = new JsonObject();
-                newLimits.addProperty("memoryBytes", 1024L * 1024L * ram);
-                final JsonObject resources = new JsonObject();
-                resources.add("limits", newLimits);
-                newMachine.add("resources", resources);
+                final JsonObject attributes = new JsonObject();
+                attributes.addProperty("memoryBytesLimit", Long.toString(1024L * 1024L * ram));
+                newMachine.add("attributes", attributes);
             }
         }
 
