@@ -18,7 +18,6 @@ import org.eclipse.che.api.factory.shared.dto.FactoryV4_0;
 import org.eclipse.che.api.workspace.server.WorkspaceConfigMessageBodyAdapter;
 
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -35,7 +34,7 @@ public class FactoryMessageBodyAdapter extends WorkspaceConfigMessageBodyAdapter
     }
 
     @Override
-    protected JsonObject getWorkspaceConfigObj(JsonObject root) throws IOException {
+    protected JsonObject getWorkspaceConfigObj(JsonObject root) {
         return root.getAsJsonObject("workspace");
     }
 }

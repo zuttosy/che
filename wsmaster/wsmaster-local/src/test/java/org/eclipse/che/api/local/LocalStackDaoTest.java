@@ -21,6 +21,7 @@ import org.eclipse.che.api.workspace.server.model.impl.EnvironmentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackComponentImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackSourceImpl;
+import org.eclipse.che.api.workspace.server.stack.StackJsonAdapter;
 import org.eclipse.che.api.workspace.server.stack.image.StackIcon;
 import org.eclipse.che.api.workspace.shared.stack.Stack;
 import org.eclipse.che.api.workspace.shared.stack.StackSource;
@@ -78,7 +79,7 @@ public class LocalStackDaoTest {
         stackJsonPath = storageRoot.resolve("stacks.json");
         parentIconFolder = storageRoot.resolve("images").resolve("stackdskhfdskf");
         pathToIcon = parentIconFolder.resolve("java-type.svg");
-        WorkspaceConfigJsonAdapter adapter = mock(WorkspaceConfigJsonAdapter.class);
+        StackJsonAdapter adapter = mock(StackJsonAdapter.class);
         stackDao = new LocalStackDaoImpl(new StackLocalStorage(storageRoot.toString(), adapter));
     }
 
@@ -117,7 +118,7 @@ public class LocalStackDaoTest {
         final URL rootUrl = Thread.currentThread().getContextClassLoader().getResource(".");
         assertNotNull(rootUrl);
         final String path = Paths.get(rootUrl.toURI()).toString();
-        final WorkspaceConfigJsonAdapter workspaceAdapter = new WorkspaceConfigJsonAdapter();
+        final StackJsonAdapter workspaceAdapter = new StackJsonAdapter(new WorkspaceConfigJsonAdapter());
         final StackLocalStorage storageFactory = new StackLocalStorage(path, workspaceAdapter);
         final LocalStackDaoImpl stackDao = new LocalStackDaoImpl(storageFactory);
 

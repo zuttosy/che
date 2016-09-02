@@ -20,6 +20,7 @@ import org.eclipse.che.api.local.storage.LocalStorage;
 import org.eclipse.che.api.workspace.server.WorkspaceConfigJsonAdapter;
 import org.eclipse.che.api.workspace.server.model.impl.WorkspaceConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.stack.StackImpl;
+import org.eclipse.che.api.workspace.server.stack.StackJsonAdapter;
 import org.eclipse.che.api.workspace.server.stack.image.StackIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +56,10 @@ public class StackLocalStorage {
 
     @Inject
     public StackLocalStorage(@Named("che.conf.storage") String pathToStorage,
-                             WorkspaceConfigJsonAdapter configAdapter) throws IOException {
+                             StackJsonAdapter stackJsonAdapter) throws IOException {
         this.localStorage = new LocalStorage(pathToStorage,
                                              STACK_STORAGE_FILE,
-                                             singletonMap(StackImpl.class, new StackDeserializer(configAdapter)));
+                                             singletonMap(StackImpl.class, new StackDeserializer(stackJsonAdapter)));
         this.iconFolderPath = Paths.get(pathToStorage, ICON_FOLDER_NAME);
     }
 

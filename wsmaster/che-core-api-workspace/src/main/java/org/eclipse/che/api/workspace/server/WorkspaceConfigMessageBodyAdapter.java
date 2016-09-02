@@ -52,7 +52,7 @@ public class WorkspaceConfigMessageBodyAdapter implements MessageBodyAdapter {
     private static final Pattern CONTAINS_ENVIRONMENTS_ARRAY_PATTERN = Pattern.compile(".*\"environments\"\\s*:\\s*\\[.*", DOTALL);
 
     @Inject
-    private WorkspaceConfigJsonAdapter configAdapter;
+    protected WorkspaceConfigJsonAdapter configAdapter;
 
     @Override
     public Set<Class<?>> getTriggers() {
@@ -62,21 +62,7 @@ public class WorkspaceConfigMessageBodyAdapter implements MessageBodyAdapter {
     @Override
     public InputStream adapt(InputStream entityStream) throws WebApplicationException, IOException {
         try (Reader r = new InputStreamReader(entityStream)) {
-            final String body = CharStreams.toString(r);
-            if (!CONTAINS_ENVIRONMENTS_ARRAY_PATTERN.matcher(body).matches()) {
-                return new ByteArrayInputStream(body.getBytes(defaultCharset()));
-            }
-            final JsonParser parser = new JsonParser();
-            final JsonElement rootEl = parser.parse(body);
-            if (!rootEl.isJsonObject()) {
-                return new ByteArrayInputStream(body.getBytes(defaultCharset()));
-            }
-            final JsonObject workspaceConfObj = getWorkspaceConfigObj(rootEl.getAsJsonObject());
-            if (workspaceConfObj == null) {
-                return new ByteArrayInputStream(body.getBytes(defaultCharset()));
-            }
-            configAdapter.adaptModifying(getWorkspaceConfigObj(rootEl.getAsJsonObject()));
-            return new ByteArrayInputStream(rootEl.toString().getBytes(defaultCharset()));
+            return new ByteArrayInputStream(adapt(CharStreams.toString(r)).getBytes(defaultCharset()));
         } catch (IllegalArgumentException x) {
             throw new WebApplicationException(x.getMessage(), x, BAD_REQUEST);
         } catch (RuntimeException x) {
@@ -84,5 +70,29 @@ public class WorkspaceConfigMessageBodyAdapter implements MessageBodyAdapter {
         }
     }
 
-    protected JsonObject getWorkspaceConfigObj(JsonObject root) throws IOException { return root; }
+    /** Adapts a string to a string instead of adapting streams */
+    protected String adapt(String body) {
+        if (!isOldFormat(body)) {
+            return body;
+        }
+        final JsonParser parser = new JsonParser();
+        final JsonElement rootEl = parser.parse(body);
+        if (!rootEl.isJsonObject()) {
+            return body;
+        }
+        final JsonObject workspaceConfObj = getWorkspaceConfigObj(rootEl.getAsJsonObject());
+        if (workspaceConfObj == null) {
+            return body;
+        }
+        configAdapter.adaptModifying(getWorkspaceConfigObj(rootEl.getAsJsonObject()));
+        return rootEl.toString();
+    }
+
+    /** Checks whether the body is in old workspace config format. */
+    protected boolean isOldFormat(String body) {
+        return CONTAINS_ENVIRONMENTS_ARRAY_PATTERN.matcher(body).matches();
+    }
+
+    /** Gets workspace configuration from the json root. */
+    protected JsonObject getWorkspaceConfigObj(JsonObject root) { return root; }
 }
