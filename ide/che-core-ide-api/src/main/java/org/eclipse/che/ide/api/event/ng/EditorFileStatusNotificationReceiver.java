@@ -71,7 +71,7 @@ public class EditorFileStatusNotificationReceiver implements JsonRpcRequestRecei
 
         switch (status) {
             case MODIFIED: {
-                Log.info(getClass(), "Received updated file event status: " + path);
+                Log.debug(getClass(), "Received updated file event status: " + path);
 
                 eventBus.fireEvent(new FileContentUpdateEvent(path, vfsFileStatusUpdateDto.getHashCode()));
 
@@ -79,7 +79,7 @@ public class EditorFileStatusNotificationReceiver implements JsonRpcRequestRecei
             }
             case DELETED: {
 
-                Log.info(getClass(), "Received removed file event status: " + path);
+                Log.debug(getClass(), "Received removed file event status: " + path);
 
                 appContext.getWorkspaceRoot().synchronize(new ExternalResourceDelta(Path.valueOf(path), Path.valueOf(path), REMOVED));
                 if (notificationManager != null && !deletedFilesController.remove(path)) {

@@ -40,7 +40,6 @@ public class ProjectTreeStatusNotificationReceiver implements JsonRpcRequestRece
     public ProjectTreeStatusNotificationReceiver(DtoFactory dtoFactory, AppContext appContext) {
         this.dtoFactory = dtoFactory;
         this.appContext = appContext;
-
     }
 
     @Override
@@ -76,7 +75,7 @@ public class ProjectTreeStatusNotificationReceiver implements JsonRpcRequestRece
             }
         }
 
-        Log.info(getClass(), "Received request\npath: " + path +"\ntype:"+ type +"\nstatus:" + status);
+        Log.debug(getClass(), "Received request\npath: " + path +"\ntype:"+ type +"\nstatus:" + status);
 
         appContext.getWorkspaceRoot().synchronize(new ExternalResourceDelta(Path.valueOf(path), Path.valueOf(path), status));
     }

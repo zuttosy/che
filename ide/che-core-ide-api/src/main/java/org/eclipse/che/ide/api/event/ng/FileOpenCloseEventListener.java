@@ -38,7 +38,7 @@ public class FileOpenCloseEventListener {
                                       final DeletedFilesController deletedFilesController,
                                       final EventBus eventBus) {
 
-        Log.info(getClass(), "Adding file event listener");
+        Log.debug(getClass(), "Adding file event listener");
         eventBus.addHandler(FileEvent.TYPE, new FileEvent.FileEventHandler() {
             @Override
             public void onFileOperation(FileEvent event) {

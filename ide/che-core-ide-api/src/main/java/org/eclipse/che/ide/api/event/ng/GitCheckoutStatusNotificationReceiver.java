@@ -54,7 +54,7 @@ public class GitCheckoutStatusNotificationReceiver implements JsonRpcRequestRece
 
         switch (type) {
             case BRANCH: {
-                Log.info(getClass(), "Received git branch checkout event: " + name);
+                Log.debug(getClass(), "Received git branch checkout event: " + name);
 
                 if (notificationManager != null) {
                     notificationManager.notify("Git operation", "Branch '" + name + "' is checked out", SUCCESS, EMERGE_MODE);
@@ -63,7 +63,7 @@ public class GitCheckoutStatusNotificationReceiver implements JsonRpcRequestRece
                 break;
             }
             case REVISION: {
-                Log.info(getClass(), "Received git revision checkout event: " + name);
+                Log.debug(getClass(), "Received git revision checkout event: " + name);
 
                 if (notificationManager != null) {
                     notificationManager.notify("Git operation", "Revision '" + name + "' is checked out", SUCCESS, EMERGE_MODE);

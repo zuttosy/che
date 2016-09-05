@@ -38,7 +38,7 @@ public class ClientServerEventService {
         this.transmitter = transmitter;
         this.dtoFactory = dtoFactory;
 
-        Log.info(getClass(), "Adding file event listener");
+        Log.debug(getClass(), "Adding file event listener");
         eventBus.addHandler(FileTrackingEvent.TYPE, new FileTrackingEvent.FileTrackingEventHandler() {
             @Override
             public void onEvent(FileTrackingEvent event) {
