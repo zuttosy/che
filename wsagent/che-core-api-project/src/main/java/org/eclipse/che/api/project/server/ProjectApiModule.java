@@ -107,8 +107,6 @@ public class ProjectApiModule extends AbstractModule {
 
         bind(FileTrackingOperationTransmitter.class).asEagerSingleton();
 
-        bind(FileTrackingOperationTransmitter.class).asEagerSingleton();
-
         MapBinder<String, JsonRpcRequestReceiver> requestReceivers =
                 MapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
 
