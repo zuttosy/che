@@ -21,6 +21,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 
 /**
  * Data object for {@link Command}.
@@ -37,13 +38,14 @@ public class CommandImpl implements Command {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String commandLine;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String type;
 
     @ElementCollection
+    @Lob
     private Map<String, String> attributes;
 
     public CommandImpl() {}

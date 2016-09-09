@@ -16,10 +16,12 @@ import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import org.eclipse.che.commons.annotation.Nullable;
 
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -49,10 +51,11 @@ public class SshPairImpl implements SshPair {
     @Id
     private String service;
     @Id
+    @Lob
     private String name;
-    @Basic
+    @Column(columnDefinition = "TEXT")
     private String publicKey;
-    @Basic
+    @Column(columnDefinition = "TEXT")
     private String privateKey;
 
     @ManyToOne

@@ -15,6 +15,7 @@ import org.eclipse.che.api.user.server.model.impl.UserImpl;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.PrimaryKeyJoinColumn;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ public class PreferenceEntity {
     private UserImpl user;
 
     @ElementCollection
+    @Lob
     private Map<String, String> preferences;
 
     public PreferenceEntity() {}
