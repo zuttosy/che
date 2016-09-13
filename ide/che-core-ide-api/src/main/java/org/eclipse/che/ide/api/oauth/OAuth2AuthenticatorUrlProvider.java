@@ -33,16 +33,22 @@ public class OAuth2AuthenticatorUrlProvider {
     public static String get(String restContext, String providerName, String userId, List<String> scopes) {
         final String scope = Joiner.on(',').join(scopes);
 
-        return restContext + oAuthServicePath + "?oauth_provider=" + providerName +
-                                                "&scope=" + scope +
-                                                "&userId=" + userId +
-                                                "&redirect_after_login=" + redirect();
+        final String providerQueryParam = "?oauth_provider=" + providerName;
+        final String scopeQueryParam = "&scope=" + scope;
+        final String userIdQueryParam = "&userId=" + userId;
+        final String redirectQueryParam = "&redirect_after_login=" + redirect();
+
+        return restContext
+               + oAuthServicePath
+               + providerQueryParam
+               + (scopes.isEmpty() ? "" : scopeQueryParam)
+               + (userId.isEmpty() ? "" : userIdQueryParam)
+               + redirectQueryParam;
     }
 
     private static String redirect() {
         return Window.Location.getProtocol() + "//" + Window.Location.getHost() + "/ws/";
     }
-
 
 
 }
