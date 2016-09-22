@@ -18,6 +18,7 @@ import com.google.gwt.inject.client.multibindings.GinMultibinder;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 
@@ -64,7 +65,6 @@ import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.ide.api.machine.MachineServiceClientImpl;
 import org.eclipse.che.ide.api.machine.RecipeServiceClient;
 import org.eclipse.che.ide.api.machine.RecipeServiceClientImpl;
-import org.eclipse.che.ide.ui.loaders.PopupLoaderFactory;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.oauth.OAuth2Authenticator;
 import org.eclipse.che.ide.api.oauth.OAuth2AuthenticatorRegistry;
@@ -136,15 +136,24 @@ import org.eclipse.che.ide.jsonrpc.JsonRpcRequestTransmitter;
 import org.eclipse.che.ide.jsonrpc.JsonRpcResponseReceiver;
 import org.eclipse.che.ide.jsonrpc.JsonRpcResponseTransmitter;
 import org.eclipse.che.ide.jsonrpc.impl.BasicJsonRpcObjectValidator;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcDispatcher;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcInitializer;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcRequestDispatcher;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcRequestTransmitter;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcResponseDispatcher;
+import org.eclipse.che.ide.jsonrpc.external.ExternalWebSocketJsonRpcResponseTransmitter;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcDispatcher;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcInitializer;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcRequestDispatcher;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcRequestTransmitter;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcResponseDispatcher;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcResponseTransmitter;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcTransmitter;
 import org.eclipse.che.ide.jsonrpc.impl.JsonRpcDispatcher;
 import org.eclipse.che.ide.jsonrpc.impl.JsonRpcInitializer;
 import org.eclipse.che.ide.jsonrpc.impl.JsonRpcObjectValidator;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcDispatcher;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcInitializer;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcRequestDispatcher;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcRequestTransmitter;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcResponseDispatcher;
-import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcResponseTransmitter;
+import org.eclipse.che.ide.jsonrpc.impl.JsonRpcRequestRegistry;
+import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcTransmitter;
 import org.eclipse.che.ide.keybinding.KeyBindingManager;
 import org.eclipse.che.ide.machine.CommandPropertyValueProviderRegistryImpl;
 import org.eclipse.che.ide.menu.MainMenuView;
@@ -239,6 +248,7 @@ import org.eclipse.che.ide.ui.dialogs.message.MessageDialogViewImpl;
 import org.eclipse.che.ide.ui.dropdown.DropDownListFactory;
 import org.eclipse.che.ide.ui.dropdown.DropDownWidget;
 import org.eclipse.che.ide.ui.dropdown.DropDownWidgetImpl;
+import org.eclipse.che.ide.ui.loaders.PopupLoaderFactory;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
 import org.eclipse.che.ide.ui.multisplitpanel.SubPanel;
 import org.eclipse.che.ide.ui.multisplitpanel.SubPanelFactory;
@@ -262,15 +272,32 @@ import org.eclipse.che.ide.upload.folder.UploadFolderFromZipViewImpl;
 import org.eclipse.che.ide.util.executor.UserActivityManager;
 import org.eclipse.che.ide.websocket.ng.WebSocketMessageReceiver;
 import org.eclipse.che.ide.websocket.ng.WebSocketMessageTransmitter;
-import org.eclipse.che.ide.websocket.ng.impl.BasicWebSocketEndpoint;
-import org.eclipse.che.ide.websocket.ng.impl.BasicWebSocketMessageTransmitter;
 import org.eclipse.che.ide.websocket.ng.impl.BasicWebSocketTransmissionValidator;
-import org.eclipse.che.ide.websocket.ng.impl.DelayableWebSocket;
-import org.eclipse.che.ide.websocket.ng.impl.SessionWebSocketInitializer;
+import org.eclipse.che.ide.websocket.ng.external.ExternalDelayableWebSocket;
+import org.eclipse.che.ide.websocket.ng.external.ExternalPendingMessagesReSender;
+import org.eclipse.che.ide.websocket.ng.external.ExternalSessionWebSocketInitializer;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketConnection;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketConnectionSustainer;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketCreator;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketEndpoint;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketMessageTransmitter;
+import org.eclipse.che.ide.websocket.ng.external.ExternalWebSocketTransmissionDispatcher;
+import org.eclipse.che.ide.websocket.ng.internal.InternalDelayableWebSocket;
+import org.eclipse.che.ide.websocket.ng.internal.InternalPendingMessagesReSender;
+import org.eclipse.che.ide.websocket.ng.internal.InternalSessionWebSocketInitializer;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketConnection;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketConnectionSustainer;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketCreator;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketEndpoint;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketMessageTransmitter;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketTransmissionDispatcher;
+import org.eclipse.che.ide.websocket.ng.impl.PendingMessagesReSender;
 import org.eclipse.che.ide.websocket.ng.impl.WebSocket;
-import org.eclipse.che.ide.websocket.ng.impl.WebSocketCreator;
+import org.eclipse.che.ide.websocket.ng.impl.WebSocketConnection;
+import org.eclipse.che.ide.websocket.ng.impl.WebSocketConnectionSustainer;
 import org.eclipse.che.ide.websocket.ng.impl.WebSocketEndpoint;
 import org.eclipse.che.ide.websocket.ng.impl.WebSocketInitializer;
+import org.eclipse.che.ide.websocket.ng.impl.WebSocketTransmissionDispatcher;
 import org.eclipse.che.ide.websocket.ng.impl.WebSocketTransmissionValidator;
 import org.eclipse.che.ide.workspace.PartStackPresenterFactory;
 import org.eclipse.che.ide.workspace.PartStackViewFactory;
@@ -346,8 +373,8 @@ public class CoreGinModule extends AbstractGinModule {
         configureEditorAPI();
         configureProjectTree();
 
-        configureJsonRpc();
-        configureWebSocket();
+        configureInternalJsonRpc();
+        configureInternalWebSocket();
         configureClientServerEventService();
 
         GinMultibinder<PersistenceComponent> persistenceComponentsMultibinder =
@@ -371,50 +398,85 @@ public class CoreGinModule extends AbstractGinModule {
         bind(ClientServerEventService.class).asEagerSingleton();
 
         GinMapBinder<String, JsonRpcRequestReceiver> requestReceivers =
-                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
+                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class, Names.named("internal"));
 
         requestReceivers.addBinding("event:file-in-vfs-status-changed").to(EditorFileStatusNotificationReceiver.class);
         requestReceivers.addBinding("event:project-tree-status-changed").to(ProjectTreeStatusNotificationReceiver.class);
     }
 
-    private void configureJsonRpc() {
+    private void configureInternalJsonRpc() {
         bind(JsonRpcWebSocketAgentEventListener.class).asEagerSingleton();
 
-        bind(JsonRpcInitializer.class).to(WebSocketJsonRpcInitializer.class);
+        bind(JsonRpcInitializer.class).annotatedWith(Names.named("internal")).to(InternalWebSocketJsonRpcInitializer.class);
+        bind(JsonRpcRequestRegistry.class).annotatedWith(Names.named("internal")).to(JsonRpcRequestRegistry.class);
+        bind(JsonRpcRequestTransmitter.class).annotatedWith(Names.named("internal")).to(InternalWebSocketJsonRpcRequestTransmitter.class);
+        bind(WebSocketJsonRpcTransmitter.class).annotatedWith(Names.named("internal")).to(InternalWebSocketJsonRpcTransmitter.class);
+        bind(JsonRpcResponseTransmitter.class).annotatedWith(Names.named("internal")).to(InternalWebSocketJsonRpcResponseTransmitter.class);
+        bind(JsonRpcObjectValidator.class).annotatedWith(Names.named("internal")).to(BasicJsonRpcObjectValidator.class);
 
-        bind(JsonRpcRequestTransmitter.class).to(WebSocketJsonRpcRequestTransmitter.class);
-        bind(JsonRpcResponseTransmitter.class).to(WebSocketJsonRpcResponseTransmitter.class);
 
-        bind(JsonRpcObjectValidator.class).to(BasicJsonRpcObjectValidator.class);
+        GinMapBinder<String, JsonRpcDispatcher> internalDispatchers =
+                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcDispatcher.class, Names.named("internal"));
+        internalDispatchers.addBinding("request").to(InternalWebSocketJsonRpcRequestDispatcher.class);
+        internalDispatchers.addBinding("response").to(InternalWebSocketJsonRpcResponseDispatcher.class);
 
-        GinMapBinder<String, JsonRpcDispatcher> dispatchers = GinMapBinder.newMapBinder(binder(), String.class, JsonRpcDispatcher.class);
-        dispatchers.addBinding("request").to(WebSocketJsonRpcRequestDispatcher.class);
-        dispatchers.addBinding("response").to(WebSocketJsonRpcResponseDispatcher.class);
-
-        GinMapBinder<String, JsonRpcRequestReceiver> requestReceivers =
-                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
-
-        GinMapBinder<String, JsonRpcResponseReceiver> responseReceivers =
-                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcResponseReceiver.class);
+        GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class, Names.named("internal"));
+        GinMapBinder.newMapBinder(binder(), String.class, JsonRpcResponseReceiver.class, Names.named("internal"));
     }
 
-    private void configureWebSocket() {
-        bind(WebSocketInitializer.class).to(SessionWebSocketInitializer.class);
+    private void configureExternalJsonRpc() {
+        bind(JsonRpcInitializer.class).annotatedWith(Names.named("external")).to(ExternalWebSocketJsonRpcInitializer.class);
+        bind(WebSocketJsonRpcTransmitter.class).annotatedWith(Names.named("external")).to(InternalWebSocketJsonRpcTransmitter.class);
+        bind(JsonRpcRequestTransmitter.class).annotatedWith(Names.named("external")).to(ExternalWebSocketJsonRpcRequestTransmitter.class);
+        bind(JsonRpcResponseTransmitter.class).annotatedWith(Names.named("external")).to(ExternalWebSocketJsonRpcResponseTransmitter.class);
+        bind(JsonRpcRequestRegistry.class).annotatedWith(Names.named("external")).to(JsonRpcRequestRegistry.class);
+        bind(JsonRpcObjectValidator.class).annotatedWith(Names.named("external")).to(BasicJsonRpcObjectValidator.class);
 
-        bind(WebSocketEndpoint.class).to(BasicWebSocketEndpoint.class);
+        GinMapBinder<String, JsonRpcDispatcher> externalDispatchers =
+                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcDispatcher.class, Names.named("external"));
+        externalDispatchers.addBinding("request").to(ExternalWebSocketJsonRpcRequestDispatcher.class);
+        externalDispatchers.addBinding("response").to(ExternalWebSocketJsonRpcResponseDispatcher.class);
 
-        bind(WebSocketTransmissionValidator.class).to(BasicWebSocketTransmissionValidator.class);
+        GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class, Names.named("external"));
+        GinMapBinder.newMapBinder(binder(), String.class, JsonRpcResponseReceiver.class, Names.named("external"));
+    }
 
-        bind(WebSocketMessageTransmitter.class).to(BasicWebSocketMessageTransmitter.class);
+    private void configureInternalWebSocket() {
+        bind(WebSocketInitializer.class).annotatedWith(Names.named("internal")).to(InternalSessionWebSocketInitializer.class);
+        bind(WebSocketEndpoint.class).annotatedWith(Names.named("internal")).to(InternalWebSocketEndpoint.class);
+        bind(PendingMessagesReSender.class).annotatedWith(Names.named("internal")).to(InternalPendingMessagesReSender.class);
+        bind(WebSocketConnection.class).annotatedWith(Names.named("internal")).to(InternalWebSocketConnection.class);
+        bind(WebSocketConnectionSustainer.class).annotatedWith(Names.named("internal")).to(InternalWebSocketConnectionSustainer.class);
+        bind(WebSocketTransmissionValidator.class).annotatedWith(Names.named("internal")).to(BasicWebSocketTransmissionValidator.class);
+        bind(WebSocketTransmissionDispatcher.class).annotatedWith(Names.named("internal"))
+                                                   .to(InternalWebSocketTransmissionDispatcher.class);
+        bind(WebSocketMessageTransmitter.class).annotatedWith(Names.named("internal")).to(InternalWebSocketMessageTransmitter.class);
 
         install(new GinFactoryModuleBuilder()
-                        .implement(WebSocket.class, DelayableWebSocket.class)
-                        .build(WebSocketCreator.class));
+                        .implement(WebSocket.class, InternalDelayableWebSocket.class)
+                        .build(InternalWebSocketCreator.class));
 
-        GinMapBinder<String, WebSocketMessageReceiver> receivers =
-                GinMapBinder.newMapBinder(binder(), String.class, WebSocketMessageReceiver.class);
+        GinMapBinder.newMapBinder(binder(), String.class, WebSocketMessageReceiver.class, Names.named("internal"))
+                    .addBinding("jsonrpc-2.0").to(InternalWebSocketJsonRpcDispatcher.class);
+    }
 
-        receivers.addBinding("jsonrpc-2.0").to(WebSocketJsonRpcDispatcher.class);
+    private void configureExternalWebSocket() {
+        bind(WebSocketInitializer.class).annotatedWith(Names.named("external")).to(ExternalSessionWebSocketInitializer.class);
+        bind(WebSocketEndpoint.class).annotatedWith(Names.named("external")).to(ExternalWebSocketEndpoint.class);
+        bind(PendingMessagesReSender.class).annotatedWith(Names.named("external")).to(ExternalPendingMessagesReSender.class);
+        bind(WebSocketConnection.class).annotatedWith(Names.named("external")).to(ExternalWebSocketConnection.class);
+        bind(WebSocketConnectionSustainer.class).annotatedWith(Names.named("external")).to(ExternalWebSocketConnectionSustainer.class);
+        bind(WebSocketTransmissionValidator.class).annotatedWith(Names.named("external")).to(BasicWebSocketTransmissionValidator.class);
+        bind(WebSocketTransmissionDispatcher.class).annotatedWith(Names.named("external"))
+                                                   .to(ExternalWebSocketTransmissionDispatcher.class);
+        bind(WebSocketMessageTransmitter.class).annotatedWith(Names.named("external")).to(ExternalWebSocketMessageTransmitter.class);
+
+        install(new GinFactoryModuleBuilder()
+                        .implement(WebSocket.class, ExternalDelayableWebSocket.class)
+                        .build(ExternalWebSocketCreator.class));
+
+        GinMapBinder.newMapBinder(binder(), String.class, WebSocketMessageReceiver.class, Names.named("external"))
+                    .addBinding("jsonrpc-2.0").to(ExternalWebSocketJsonRpcDispatcher.class);
     }
 
     private void configureComponents() {
@@ -487,7 +549,8 @@ public class CoreGinModule extends AbstractGinModule {
 
         // Machine
         bind(CommandPropertyValueProviderRegistry.class).to(CommandPropertyValueProviderRegistryImpl.class).in(Singleton.class);
-        GinMultibinder<CommandPropertyValueProvider> macroProviders = GinMultibinder.newSetBinder(binder(), CommandPropertyValueProvider.class);
+        GinMultibinder<CommandPropertyValueProvider> macroProviders =
+                GinMultibinder.newSetBinder(binder(), CommandPropertyValueProvider.class);
         macroProviders.addBinding().to(EditorCurrentFileNameProvider.class);
         macroProviders.addBinding().to(EditorCurrentFilePathProvider.class);
         macroProviders.addBinding().to(EditorCurrentFileRelativePathProvider.class);

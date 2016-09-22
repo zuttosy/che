@@ -13,6 +13,7 @@ package org.eclipse.che.ide.jsonrpc.impl;
 import org.eclipse.che.api.core.jsonrpc.shared.JsonRpcRequest;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.jsonrpc.JsonRpcRequestReceiver;
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcRequestDispatcher;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,15 +21,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +67,7 @@ public class WebSocketJsonRpcRequestDispatcherTest {
     public void shouldRunMatchingReceiver() {
         when(request.getMethod()).thenReturn("test-method");
         when(receivers.entrySet()).thenReturn(singletonMap("test-method", receiver).entrySet());
-        dispatcher = new WebSocketJsonRpcRequestDispatcher(receivers, dtoFactory);
+        dispatcher = new InternalWebSocketJsonRpcRequestDispatcher(receivers, dtoFactory);
 
         dispatcher.dispatch(MESSAGE);
 

@@ -28,14 +28,11 @@ import java.util.Objects;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketTransmissionDispatcher {
+public abstract class WebSocketTransmissionDispatcher {
     private final Map<String, WebSocketMessageReceiver> receivers;
     private final WebSocketTransmissionValidator        validator;
     private final DtoFactory                            dtoFactory;
 
-
-    @Inject
     public WebSocketTransmissionDispatcher(Map<String, WebSocketMessageReceiver> receivers,
                                            WebSocketTransmissionValidator validator,
                                            DtoFactory dtoFactory) {

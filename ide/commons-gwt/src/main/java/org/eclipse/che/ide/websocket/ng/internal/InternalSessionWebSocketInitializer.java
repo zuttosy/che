@@ -8,37 +8,28 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.jsonrpc.impl;
+package org.eclipse.che.ide.websocket.ng.internal;
 
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.ng.impl.SessionWebSocketInitializer;
-import org.eclipse.che.ide.websocket.ng.impl.WebSocketInitializer;
+import org.eclipse.che.ide.websocket.ng.impl.WebSocketConnection;
+import org.eclipse.che.ide.websocket.ng.impl.WebSocketConnectionSustainer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.Map;
+
+import static org.eclipse.che.ide.websocket.ng.impl.WebSocketConnection.IMMEDIATELY;
 
 /**
  * @author Dmitry Kuleshov
  */
-public abstract class WebSocketJsonRpcInitializer implements JsonRpcInitializer {
-    private final WebSocketInitializer webSocketInitializer;
-
-    public WebSocketJsonRpcInitializer(WebSocketInitializer webSocketInitializer) {
-        this.webSocketInitializer = webSocketInitializer;
-    }
-
-    @Override
-    public void initialize(Map<String, String> properties) {
-        Log.debug(getClass(), "Initializing with properties: " + properties);
-
-        webSocketInitializer.initialize(properties);
-    }
-
-    @Override
-    public void terminate() {
-        Log.debug(getClass(), "Terminating");
-
-        webSocketInitializer.terminate();
+@Singleton
+public class InternalSessionWebSocketInitializer extends SessionWebSocketInitializer {
+    @Inject
+    public InternalSessionWebSocketInitializer(@Named("internal") WebSocketConnection connection,
+                                               @Named("internal") WebSocketConnectionSustainer sustainer) {
+        super(connection, sustainer);
     }
 }

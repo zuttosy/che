@@ -24,7 +24,6 @@ import java.util.Map;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
 public class JsonRpcRequestRegistry {
     private final Map<Integer, String> requests = new HashMap<>();
 

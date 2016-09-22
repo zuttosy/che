@@ -17,6 +17,7 @@ import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.ng.WebSocketMessageReceiver;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
 import java.util.Set;
@@ -35,13 +36,12 @@ import java.util.Set;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
 public class BasicWebSocketTransmissionValidator implements WebSocketTransmissionValidator {
 
     private final Set<String> protocols;
 
     @Inject
-    public BasicWebSocketTransmissionValidator(Map<String, WebSocketMessageReceiver> receivers) {
+    public BasicWebSocketTransmissionValidator(@Named("internal") Map<String, WebSocketMessageReceiver> receivers) {
         this.protocols = receivers.keySet();
     }
 

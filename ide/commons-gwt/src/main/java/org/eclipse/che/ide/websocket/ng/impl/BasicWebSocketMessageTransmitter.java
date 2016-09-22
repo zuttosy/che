@@ -26,7 +26,7 @@ import javax.inject.Singleton;
  * @author Dmitry Kuleshov
  */
 @Singleton
-public class BasicWebSocketMessageTransmitter implements WebSocketMessageTransmitter {
+public abstract class BasicWebSocketMessageTransmitter implements WebSocketMessageTransmitter {
     private final WebSocketConnection            connection;
     private final PendingMessagesReSender        reSender;
     private final WebSocketTransmissionValidator validator;

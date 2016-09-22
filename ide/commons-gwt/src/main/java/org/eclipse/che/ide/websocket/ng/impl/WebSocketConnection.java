@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import org.eclipse.che.api.core.websocket.shared.WebSocketTransmission;
 import org.eclipse.che.ide.util.loging.Log;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
@@ -22,8 +23,7 @@ import javax.inject.Singleton;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketConnection {
+public abstract class WebSocketConnection {
     public static final int IMMEDIATELY = 0;
 
     private final WebSocketCreator webSocketCreator;
@@ -31,7 +31,6 @@ public class WebSocketConnection {
     private WebSocket webSocket;
     private String    url;
 
-    @Inject
     public WebSocketConnection(WebSocketCreator webSocketCreator) {
         this.webSocketCreator = webSocketCreator;
     }

@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.ide.jsonrpc.impl;
 
+import org.eclipse.che.ide.jsonrpc.internal.InternalWebSocketJsonRpcInitializer;
 import org.eclipse.che.ide.websocket.ng.impl.SessionWebSocketInitializer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,17 +26,17 @@ import static org.mockito.Mockito.verify;
 
 
 /**
- * Tests for {@link WebSocketJsonRpcInitializer}
+ * Tests for {@link InternalWebSocketJsonRpcInitializer}
  *
  * @author Dmitry Kuleshov
  */
 
 @RunWith(MockitoJUnitRunner.class)
-public class WebSocketJsonRpcInitializerTest {
+public class InternalWebSocketJsonRpcInitializerTest {
     @Mock
-    private SessionWebSocketInitializer webSocketInitializer;
+    private SessionWebSocketInitializer         webSocketInitializer;
     @InjectMocks
-    private WebSocketJsonRpcInitializer jsonRpcInitializer;
+    private InternalWebSocketJsonRpcInitializer jsonRpcInitializer;
 
     @Test
     public void shouldRunWebSocketInitializeWithCorrectProperties(){

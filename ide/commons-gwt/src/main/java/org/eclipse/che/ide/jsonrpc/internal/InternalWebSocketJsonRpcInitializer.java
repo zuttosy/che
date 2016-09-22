@@ -8,37 +8,24 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.jsonrpc.impl;
+package org.eclipse.che.ide.jsonrpc.internal;
 
+import org.eclipse.che.ide.jsonrpc.impl.WebSocketJsonRpcInitializer;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.ng.impl.SessionWebSocketInitializer;
 import org.eclipse.che.ide.websocket.ng.impl.WebSocketInitializer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 import java.util.Map;
 
 /**
  * @author Dmitry Kuleshov
  */
-public abstract class WebSocketJsonRpcInitializer implements JsonRpcInitializer {
-    private final WebSocketInitializer webSocketInitializer;
-
-    public WebSocketJsonRpcInitializer(WebSocketInitializer webSocketInitializer) {
-        this.webSocketInitializer = webSocketInitializer;
-    }
-
-    @Override
-    public void initialize(Map<String, String> properties) {
-        Log.debug(getClass(), "Initializing with properties: " + properties);
-
-        webSocketInitializer.initialize(properties);
-    }
-
-    @Override
-    public void terminate() {
-        Log.debug(getClass(), "Terminating");
-
-        webSocketInitializer.terminate();
+public class InternalWebSocketJsonRpcInitializer extends WebSocketJsonRpcInitializer {
+    @Inject
+    public InternalWebSocketJsonRpcInitializer(@Named("internal") WebSocketInitializer webSocketInitializer) {
+        super(webSocketInitializer);
     }
 }

@@ -23,19 +23,15 @@ import javax.inject.Singleton;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketJsonRpcResponseTransmitter implements JsonRpcResponseTransmitter {
+public abstract class WebSocketJsonRpcResponseTransmitter implements JsonRpcResponseTransmitter {
     private final WebSocketJsonRpcTransmitter transmitter;
 
-    @Inject
     public WebSocketJsonRpcResponseTransmitter(WebSocketJsonRpcTransmitter transmitter) {
         this.transmitter = transmitter;
     }
 
-    @Override
     public void transmit(JsonRpcResponse response) {
         Log.debug(getClass(), "Transmitting a response " + response.toString());
         transmitter.transmit("response", response.toString());
     }
-
 }

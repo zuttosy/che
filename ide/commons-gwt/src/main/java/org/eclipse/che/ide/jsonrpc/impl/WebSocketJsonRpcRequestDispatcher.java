@@ -10,21 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.ide.jsonrpc.impl;
 
-import com.google.gwt.regexp.shared.RegExp;
-
 import org.eclipse.che.api.core.jsonrpc.shared.JsonRpcRequest;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.jsonrpc.JsonRpcRequestReceiver;
 import org.eclipse.che.ide.util.loging.Log;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-
-import static com.google.gwt.regexp.shared.RegExp.compile;
 
 /**
  * Dispatches JSON RPC requests among all registered implementations of {@link JsonRpcRequestReceiver}
@@ -32,13 +25,10 @@ import static com.google.gwt.regexp.shared.RegExp.compile;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketJsonRpcRequestDispatcher implements JsonRpcDispatcher {
+public abstract class WebSocketJsonRpcRequestDispatcher implements JsonRpcDispatcher {
     private final Map<String, JsonRpcRequestReceiver> receivers;
+    private final DtoFactory                          dtoFactory;
 
-    private final DtoFactory dtoFactory;
-
-    @Inject
     public WebSocketJsonRpcRequestDispatcher(Map<String, JsonRpcRequestReceiver> receivers, DtoFactory dtoFactory) {
         this.receivers = receivers;
         this.dtoFactory = dtoFactory;

@@ -22,6 +22,7 @@ import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.jsonrpc.impl.JsonRpcInitializer;
 import org.eclipse.che.ide.util.loging.Log;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import static java.util.Collections.singletonMap;
@@ -37,7 +38,7 @@ public class JsonRpcWebSocketAgentEventListener implements WsAgentStateHandler {
     private final AppContext         appContext;
 
     @Inject
-    public JsonRpcWebSocketAgentEventListener(JsonRpcInitializer initializer, AppContext appContext, EventBus eventBus) {
+    public JsonRpcWebSocketAgentEventListener(@Named("internal") JsonRpcInitializer initializer, AppContext appContext, EventBus eventBus) {
         this.appContext = appContext;
         this.initializer = initializer;
 

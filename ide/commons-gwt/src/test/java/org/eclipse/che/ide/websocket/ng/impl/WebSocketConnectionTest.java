@@ -11,6 +11,8 @@
 package org.eclipse.che.ide.websocket.ng.impl;
 
 import org.eclipse.che.api.core.websocket.shared.WebSocketTransmission;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketConnection;
+import org.eclipse.che.ide.websocket.ng.internal.InternalWebSocketCreator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,9 +39,9 @@ public class WebSocketConnectionTest {
     private static final int    DELAY   = 0;
     private static final String MESSAGE = "message";
     @Mock
-    private WebSocketCreator    connector;
+    private InternalWebSocketCreator connector;
     @InjectMocks
-    private WebSocketConnection connection;
+    private WebSocketConnection      connection;
 
     @Mock
     private WebSocket webSocket;
@@ -98,7 +100,7 @@ public class WebSocketConnectionTest {
     @Test
     public void shouldBeNotOpenWhenConnectionIsNull() {
         when(connector.create(anyString(), any())).thenReturn(null);
-        new WebSocketConnection(connector).isOpen();
+        new InternalWebSocketConnection(connector).isOpen();
 
         assertFalse(connection.isOpen());
     }

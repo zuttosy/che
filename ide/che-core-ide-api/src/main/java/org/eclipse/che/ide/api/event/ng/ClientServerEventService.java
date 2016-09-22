@@ -21,6 +21,7 @@ import org.eclipse.che.ide.jsonrpc.JsonRpcRequestTransmitter;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
@@ -32,7 +33,7 @@ public class ClientServerEventService {
     private final DtoFactory                dtoFactory;
 
     @Inject
-    public ClientServerEventService(final JsonRpcRequestTransmitter transmitter,
+    public ClientServerEventService(@Named("internal") final JsonRpcRequestTransmitter transmitter,
                                     final EventBus eventBus,
                                     final DtoFactory dtoFactory) {
         this.transmitter = transmitter;

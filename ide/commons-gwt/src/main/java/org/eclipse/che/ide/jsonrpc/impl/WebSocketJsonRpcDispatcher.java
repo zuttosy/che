@@ -30,13 +30,11 @@ import java.util.Objects;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketJsonRpcDispatcher implements WebSocketMessageReceiver {
+public abstract class WebSocketJsonRpcDispatcher implements WebSocketMessageReceiver {
     private final Map<String, JsonRpcDispatcher> dispatchers;
     private final JsonRpcObjectValidator         validator;
     private final DtoFactory                     dtoFactory;
 
-    @Inject
     public WebSocketJsonRpcDispatcher(Map<String, JsonRpcDispatcher> dispatchers, JsonRpcObjectValidator validator, DtoFactory dtoFactory) {
         this.dispatchers = dispatchers;
         this.validator = validator;

@@ -21,12 +21,10 @@ import static org.eclipse.che.ide.websocket.ng.impl.WebSocketConnection.IMMEDIAT
 /**
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class SessionWebSocketInitializer implements WebSocketInitializer {
+public abstract class SessionWebSocketInitializer implements WebSocketInitializer {
     private final WebSocketConnection          connection;
     private final WebSocketConnectionSustainer sustainer;
 
-    @Inject
     public SessionWebSocketInitializer(WebSocketConnection connection, WebSocketConnectionSustainer sustainer) {
         this.connection = connection;
         this.sustainer = sustainer;

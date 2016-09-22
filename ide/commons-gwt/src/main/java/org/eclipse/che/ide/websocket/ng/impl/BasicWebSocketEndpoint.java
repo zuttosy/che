@@ -20,13 +20,11 @@ import javax.inject.Singleton;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class BasicWebSocketEndpoint implements WebSocketEndpoint {
+public abstract class BasicWebSocketEndpoint implements WebSocketEndpoint {
     private final WebSocketConnectionSustainer    sustainer;
     private final PendingMessagesReSender         reSender;
     private final WebSocketTransmissionDispatcher dispatcher;
 
-    @Inject
     public BasicWebSocketEndpoint(WebSocketConnectionSustainer sustainer,
                                   PendingMessagesReSender pending,
                                   WebSocketTransmissionDispatcher dispatcher) {

@@ -24,13 +24,11 @@ import javax.inject.Singleton;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketJsonRpcTransmitter {
+public abstract class WebSocketJsonRpcTransmitter {
     private final WebSocketMessageTransmitter transmitter;
     private final DtoFactory                  dtoFactory;
     private final JsonRpcObjectValidator      validator;
 
-    @Inject
     public WebSocketJsonRpcTransmitter(WebSocketMessageTransmitter transmitter, DtoFactory dtoFactory, JsonRpcObjectValidator validator) {
         this.transmitter = transmitter;
         this.dtoFactory = dtoFactory;

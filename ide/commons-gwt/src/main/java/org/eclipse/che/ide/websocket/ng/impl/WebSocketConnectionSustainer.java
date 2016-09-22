@@ -27,8 +27,7 @@ import javax.inject.Singleton;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
-public class WebSocketConnectionSustainer {
+public abstract class WebSocketConnectionSustainer {
     private static final int RECONNECTION_DELAY = 500;
     private static final int RECONNECTION_LIMIT = 5;
 
@@ -37,7 +36,6 @@ public class WebSocketConnectionSustainer {
     private boolean active;
     private int     attempt;
 
-    @Inject
     public WebSocketConnectionSustainer(WebSocketConnection connection) {
         this.connection = connection;
     }

@@ -24,7 +24,6 @@ import java.util.List;
  *
  * @author Dmitry Kuleshov
  */
-@Singleton
 public class PendingMessagesReSender {
     private static final int MAX_MESSAGES = 100;
 

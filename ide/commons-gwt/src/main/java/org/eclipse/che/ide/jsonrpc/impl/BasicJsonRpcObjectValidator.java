@@ -16,6 +16,7 @@ import org.eclipse.che.api.core.jsonrpc.shared.JsonRpcObject;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +40,7 @@ public class BasicJsonRpcObjectValidator implements JsonRpcObjectValidator {
     private final Set<String> registeredTypes;
 
     @Inject
-    public BasicJsonRpcObjectValidator(Map<String, JsonRpcDispatcher> dispatchers) {
+    public BasicJsonRpcObjectValidator(@Named("internal") Map<String, JsonRpcDispatcher> dispatchers) {
         this.registeredTypes = dispatchers.keySet();
     }
 
