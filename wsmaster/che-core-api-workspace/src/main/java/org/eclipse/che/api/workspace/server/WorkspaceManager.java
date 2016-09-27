@@ -26,6 +26,7 @@ import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
 import org.eclipse.che.api.core.notification.EventService;
+import org.eclipse.che.api.machine.server.exception.SnapshotException;
 import org.eclipse.che.api.machine.server.spi.SnapshotDao;
 import org.eclipse.che.api.machine.server.model.impl.MachineImpl;
 import org.eclipse.che.api.machine.server.model.impl.SnapshotImpl;
@@ -299,6 +300,8 @@ public class WorkspaceManager {
         requireNonNull(id, "Required non-null workspace id");
         requireNonNull(update, "Required non-null workspace update");
         final WorkspaceImpl workspace = workspaceDao.get(id);
+        ensureRuntimeInfoNotChangedIfWorkspaceRunning(id, workspace, update);
+        updateWorkspaceSnapshots(id, workspace, update);
         workspace.setConfig(new WorkspaceConfigImpl(update.getConfig()));
         update.getAttributes().put(UPDATED_ATTRIBUTE_NAME, Long.toString(currentTimeMillis()));
         workspace.setAttributes(update.getAttributes());
@@ -760,6 +763,20 @@ public class WorkspaceManager {
         }
     }
 
+    private void updateWorkspaceSnapshots(String id, Workspace workspace, Workspace update) throws SnapshotException {
+        if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) {
+            for (SnapshotImpl snapshot : snapshotDao.findSnapshots(id)) {
+                try {
+                    snapshotDao.removeSnapshot(snapshot.getId());
+                    snapshot.setEnvName(update.getConfig().getDefaultEnv());
+                    snapshotDao.saveSnapshot(snapshot);
+                } catch (NotFoundException ignore) {
+                    // snapshot has been deleted or hasn't created yet, just skip it
+                }
+            }
+        }
+    }
+
     @VisibleForTesting
     void checkWorkspaceIsRunning(WorkspaceImpl workspace, String operation) throws ConflictException {
         if (workspace.getStatus() != RUNNING) {
@@ -839,4 +856,26 @@ public class WorkspaceManager {
         final String namespace = nsPart.isEmpty() ? sessionUser().getUserName() : nsPart;
         return workspaceDao.get(wsName, namespace);
     }
+
+    /**
+     * Checks whether possible to update workspace parameters.
+     * If no, ConflictException will be thrown.
+     *
+     * @param id
+     *         id of workspace under updating
+     * @param workspace
+     *         original workspace
+     * @param update
+     *         update workspace request
+     * @throws ConflictException
+     *         if some updates cannot be applied now
+     */
+    private void ensureRuntimeInfoNotChangedIfWorkspaceRunning(String id, Workspace workspace, Workspace update) throws ConflictException {
+        if (runtimes.hasRuntime(id)) { // we can change any parameter in stopped workspace
+            if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) {
+                throw new ConflictException("Cannot affect name of runtime when workspace is running");
+            }
+        }
+    }
+
 }
