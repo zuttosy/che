@@ -395,8 +395,8 @@ public class FactoryServiceTest {
     @Test
     public void shouldReturnFactoryListByNameAttribute() throws Exception {
         final Factory factory = createFactory();
-        when(factoryManager.getByAttribute(1, 0, ImmutableList.of(Pair.of("factory.name", factory.getName()))))
-                .thenReturn(ImmutableList.of(factory));
+        doReturn(ImmutableList.of(factory))
+                .when(factoryManager).getByAttribute(1, 0, ImmutableList.of(Pair.of("factory.name", factory.getName())));
 
         final Response response = given().auth()
                                          .basic(ADMIN_USER_NAME, ADMIN_USER_PASSWORD)
@@ -415,8 +415,8 @@ public class FactoryServiceTest {
     public void shouldReturnFactoryListByCreatorAttribute() throws Exception {
         final Factory factory1 = createNamedFactory("factory1");
         final Factory factory2 = createNamedFactory("factory2");
-        when(factoryManager.getByAttribute(2, 0, ImmutableList.of(Pair.of("factory.creator.name", user.getName()))))
-                .thenReturn(ImmutableList.of(factory1, factory2));
+        doReturn(ImmutableList.of(factory1, factory2))
+                .when(factoryManager).getByAttribute(2, 0, ImmutableList.of(Pair.of("factory.creator.name", user.getName())));
 
         final Response response = given().auth()
                                          .basic(ADMIN_USER_NAME, ADMIN_USER_PASSWORD)
