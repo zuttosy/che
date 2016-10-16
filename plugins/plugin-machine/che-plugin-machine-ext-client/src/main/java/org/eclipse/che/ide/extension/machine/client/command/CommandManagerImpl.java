@@ -22,6 +22,8 @@ import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.js.JsPromiseError;
+import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.command.CommandImpl;
@@ -31,6 +33,8 @@ import org.eclipse.che.ide.api.command.CommandType;
 import org.eclipse.che.ide.api.command.CommandTypeRegistry;
 import org.eclipse.che.ide.api.machine.MachineServiceClient;
 import org.eclipse.che.ide.api.macro.MacroProcessor;
+import org.eclipse.che.ide.api.project.MutableProjectConfig;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.workspace.WorkspaceReadyEvent;
 import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.ide.dto.DtoFactory;
@@ -46,6 +50,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Collections.emptyList;
 
 /**
  * Implementation of {@link CommandManager}.
@@ -65,7 +72,9 @@ public class CommandManagerImpl implements CommandManager {
     private final CommandConsoleFactory   commandConsoleFactory;
     private final ProcessesPanelPresenter processesPanelPresenter;
 
-    private final Map<String, CommandImpl>    commands;
+    private final Map<String, CommandImpl>               workspaceCommands;
+    private final Map<Project, Map<String, CommandImpl>> projectCommands;
+
     private final Set<CommandChangedListener> commandChangedListeners;
 
     @Inject
@@ -87,33 +96,35 @@ public class CommandManagerImpl implements CommandManager {
         this.commandConsoleFactory = commandConsoleFactory;
         this.processesPanelPresenter = processesPanelPresenter;
 
-        commands = new HashMap<>();
+        workspaceCommands = new HashMap<>();
+        projectCommands = new HashMap<>();
+
         commandChangedListeners = new HashSet<>();
 
         eventBus.addHandler(WorkspaceReadyEvent.getType(), new WorkspaceReadyEvent.WorkspaceReadyHandler() {
             @Override
             public void onWorkspaceReady(WorkspaceReadyEvent event) {
-                retrieveAllCommands();
+                retrieveWorkspaceCommands();
             }
         });
     }
 
-    private void retrieveAllCommands() {
+    private void retrieveWorkspaceCommands() {
         workspaceServiceClient.getCommands(appContext.getWorkspaceId()).then(new Operation<List<CommandDto>>() {
             @Override
             public void apply(List<CommandDto> arg) throws OperationException {
                 for (Command command : arg) {
-                    commands.put(command.getName(), new CommandImpl(command));
+                    workspaceCommands.put(command.getName(), new CommandImpl(command));
                 }
             }
         });
     }
 
     @Override
-    public List<CommandImpl> getCommands() {
+    public List<CommandImpl> getWorkspaceCommands() {
         // return copy of the commands in order to prevent it modification directly
-        List<CommandImpl> list = new ArrayList<>(commands.size());
-        for (CommandImpl command : commands.values()) {
+        List<CommandImpl> list = new ArrayList<>(workspaceCommands.size());
+        for (CommandImpl command : workspaceCommands.values()) {
             list.add(new CommandImpl(command));
         }
 
@@ -122,33 +133,23 @@ public class CommandManagerImpl implements CommandManager {
 
     @Override
     public Promise<CommandImpl> create(String type) {
-        final CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
+        CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
 
-        Map<String, String> attributes = new HashMap<String, String>();
-        attributes.put(PREVIEW_URL_ATTR, commandType.getPreviewUrlTemplate());
-
-        final CommandImpl command = new CommandImpl(getUniqueCommandName(type, null),
-                                                    commandType.getCommandLineTemplate(),
-                                                    type,
-                                                    attributes);
-        return add(command);
+        return create(getUniqueCommandName(type, null), commandType.getCommandLineTemplate(), type, new HashMap<>());
     }
 
     @Override
     public Promise<CommandImpl> create(String desirableName, String commandLine, String type, Map<String, String> attributes) {
         final CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
 
-        Map<String, String> attr = (attributes != null) ? attributes : new HashMap<String, String>();
-        attr.put(PREVIEW_URL_ATTR, commandType.getPreviewUrlTemplate());
+        attributes.put(PREVIEW_URL_ATTR, commandType.getPreviewUrlTemplate());
 
-        final CommandImpl command = new CommandImpl(getUniqueCommandName(type, desirableName),
-                                                    commandLine != null ? commandLine : commandType.getCommandLineTemplate(),
-                                                    type,
-                                                    attr);
-        return add(command);
+        final CommandImpl command = new CommandImpl(desirableName, commandLine, type, attributes);
+
+        return addWorkspaceCommand(command);
     }
 
-    private Promise<CommandImpl> add(final CommandImpl command) {
+    private Promise<CommandImpl> addWorkspaceCommand(final CommandImpl command) {
         final CommandDto commandDto = dtoFactory.createDto(CommandDto.class)
                                                 .withName(getUniqueCommandName(command.getType(), command.getName()))
                                                 .withCommandLine(command.getCommandLine())
@@ -161,7 +162,7 @@ public class CommandManagerImpl implements CommandManager {
                 final CommandImpl newCommand = new CommandImpl(command);
                 newCommand.setName(commandDto.getName());
 
-                commands.put(newCommand.getName(), newCommand);
+                workspaceCommands.put(newCommand.getName(), newCommand);
 
                 fireCommandAdded(newCommand);
 
@@ -189,12 +190,11 @@ public class CommandManagerImpl implements CommandManager {
                                      .then(new Function<WorkspaceDto, CommandImpl>() {
                                          @Override
                                          public CommandImpl apply(WorkspaceDto arg) throws FunctionException {
-                                             final CommandImpl updatedCommand = new CommandImpl(commandDto.getName(),
-                                                                                                command.getCommandLine(),
-                                                                                                command.getType(),
-                                                                                                command.getAttributes());
-                                             commands.remove(commandName);
-                                             commands.put(updatedCommand.getName(), updatedCommand);
+                                             final CommandImpl updatedCommand = new CommandImpl(command);
+                                             updatedCommand.setName(commandDto.getName());
+
+                                             workspaceCommands.remove(commandName);
+                                             workspaceCommands.put(updatedCommand.getName(), updatedCommand);
 
                                              fireCommandUpdated(updatedCommand);
 
@@ -208,7 +208,122 @@ public class CommandManagerImpl implements CommandManager {
         return workspaceServiceClient.deleteCommand(appContext.getWorkspaceId(), name).then(new Function<WorkspaceDto, Void>() {
             @Override
             public Void apply(WorkspaceDto arg) throws FunctionException {
-                fireCommandRemoved(commands.remove(name));
+                fireCommandRemoved(workspaceCommands.remove(name));
+                return null;
+            }
+        });
+    }
+
+    @Override
+    public List<CommandImpl> getProjectCommands(Project project) {
+        List<String> attributeValues = project.getAttributes("commands");
+        if (attributeValues == null) {
+            return emptyList();
+        }
+
+        Map<String, CommandImpl> commands = new HashMap<>(attributeValues.size());
+
+        for (String commandJson : attributeValues) {
+            Command command = dtoFactory.createDtoFromJson(commandJson, CommandDto.class);
+
+            commands.put(command.getName(), new CommandImpl(command));
+        }
+
+        projectCommands.put(project, commands);
+
+        return new ArrayList<>(commands.values());
+    }
+
+    @Override
+    public Promise<CommandImpl> createProjectCommand(Project project, String type) {
+        CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
+
+        return createProjectCommand(project, getUniqueCommandName(type, null), commandType.getCommandLineTemplate(), type, new HashMap<>());
+    }
+
+    @Override
+    public Promise<CommandImpl> createProjectCommand(Project project,
+                                                     String desirableName,
+                                                     String commandLine,
+                                                     String type,
+                                                     Map<String, String> attributes) {
+        final CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
+
+        attributes.put(PREVIEW_URL_ATTR, commandType.getPreviewUrlTemplate());
+
+        final CommandImpl command = new CommandImpl(desirableName, commandLine, type, attributes);
+
+        return addProjectCommand(project, command);
+    }
+
+    private Promise<CommandImpl> addProjectCommand(Project project, final CommandImpl command) {
+        Map<String, CommandImpl> commands = projectCommands.get(project);
+
+        if (commands == null) {
+            commands = new HashMap<>();
+        }
+
+        command.setName(getUniqueCommandName(command.getType(), command.getName()));
+
+        if (commands.get(command.getName()) != null) {
+            // shouldn't occur normally
+            return Promises.reject(JsPromiseError.create("Command with name " + command.getName() +
+                                                         " is already associated to the project " + project.getName()));
+        }
+
+        commands.put(command.getName(), command);
+
+        return updateProject(project, new ArrayList<>(commands.values())).then(new Function<Void, CommandImpl>() {
+            @Override
+            public CommandImpl apply(Void arg) throws FunctionException {
+                return command;
+            }
+        });
+    }
+
+    @Override
+    public Promise<CommandImpl> updateProjectCommand(Project project, String name, CommandImpl command) {
+        return null;
+    }
+
+    @Override
+    public Promise<Void> removeProjectCommand(Project project, String name) {
+        Map<String, CommandImpl> commands = projectCommands.get(project);
+
+        if (commands == null) {
+            return Promises.reject(JsPromiseError.create("Command " + name + " isn't associated with the project " + project.getName()));
+        }
+
+        CommandImpl command = commands.remove(name);
+
+        if (command == null) {
+            return Promises.reject(JsPromiseError.create("Command " + name + " isn't associated with the project " + project.getName()));
+        }
+
+        return updateProject(project, new ArrayList<>(commands.values()));
+    }
+
+    private Promise<Void> updateProject(Project project, List<CommandImpl> commands) {
+        MutableProjectConfig config = new MutableProjectConfig(project);
+        Map<String, List<String>> attributes = config.getAttributes();
+
+        // TODO: attributes may be null
+
+        List<String> commandsList = new ArrayList<>(attributes.size());
+        for (CommandImpl command : commands) {
+            CommandDto commandDto = dtoFactory.createDto(CommandDto.class)
+                                              .withName(command.getName())
+                                              .withType(command.getType())
+                                              .withCommandLine(command.getCommandLine())
+                                              .withAttributes(command.getAttributes());
+            commandsList.add(dtoFactory.toJson(commandDto));
+        }
+
+        attributes.put("commands", commandsList);
+
+        return project.update().withBody(config).send().then(new Function<Project, Void>() {
+            @Override
+            public Void apply(Project arg) throws FunctionException {
                 return null;
             }
         });
@@ -278,11 +393,11 @@ public class CommandManagerImpl implements CommandManager {
 
     private String getUniqueCommandName(String customType, String customName) {
         final CommandType commandType = commandTypeRegistry.getCommandTypeById(customType);
-        final Set<String> commandNames = commands.keySet();
+        final Set<String> commandNames = workspaceCommands.keySet();
 
         final String newCommandName;
 
-        if (customName == null || customName.isEmpty()) {
+        if (isNullOrEmpty(customName)) {
             newCommandName = "new" + commandType.getDisplayName();
         } else {
             if (!commandNames.contains(customName)) {

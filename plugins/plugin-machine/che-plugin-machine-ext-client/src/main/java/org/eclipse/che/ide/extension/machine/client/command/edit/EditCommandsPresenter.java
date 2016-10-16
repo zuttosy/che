@@ -18,6 +18,7 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
 import org.eclipse.che.ide.api.command.CommandImpl;
 import org.eclipse.che.ide.api.command.CommandManager;
@@ -170,9 +171,9 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
     }
 
     private void createNewCommand(final String type,
-                                  final String commandLine,
-                                  final String name,
-                                  final Map<String, String> attributes) {
+                                  @Nullable final String commandLine,
+                                  @Nullable final String name,
+                                  @Nullable final Map<String, String> attributes) {
         if (!isViewModified()) {
             createCommand(type, commandLine, name, attributes);
             return;
@@ -207,14 +208,24 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
         dialog.show();
     }
 
-    private void createCommand(String type, String commandLine, String name, Map<String, String> attributes) {
-        commandManager.create(name, commandLine, type, attributes).then(new Operation<CommandImpl>() {
-            @Override
-            public void apply(CommandImpl command) throws OperationException {
-                view.selectCommand(command);
-                refreshView();
-            }
-        });
+    private void createCommand(String type, @Nullable String commandLine, @Nullable String name, @Nullable Map<String, String> attributes) {
+        if (commandLine == null && name == null && attributes == null) {
+            commandManager.create(type).then(new Operation<CommandImpl>() {
+                @Override
+                public void apply(CommandImpl command) throws OperationException {
+                    view.selectCommand(command);
+                    refreshView();
+                }
+            });
+        } else {
+            commandManager.create(name, commandLine, type, attributes).then(new Operation<CommandImpl>() {
+                @Override
+                public void apply(CommandImpl command) throws OperationException {
+                    view.selectCommand(command);
+                    refreshView();
+                }
+            });
+        }
     }
 
     @Override
@@ -374,7 +385,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
     private void refreshView() {
         reset();
 
-        List<CommandImpl> allCommands = commandManager.getCommands();
+        List<CommandImpl> allCommands = commandManager.getWorkspaceCommands();
         Map<CommandType, List<CommandImpl>> typeToCommands = new HashMap<>();
 
         for (CommandType type : commandTypeRegistry.getCommandTypes()) {

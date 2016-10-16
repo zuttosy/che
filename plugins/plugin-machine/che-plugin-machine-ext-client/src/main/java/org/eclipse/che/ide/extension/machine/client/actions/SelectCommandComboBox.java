@@ -208,7 +208,7 @@ public class SelectCommandComboBox extends AbstractPerspectiveAction implements 
      *         command that should be selected after loading all commands
      */
     private void loadCommands(@Nullable final CommandImpl commandToSelect) {
-        setCommands(commandManager.getCommands(), commandToSelect);
+        setCommands(commandManager.getWorkspaceCommands(), commandToSelect);
     }
 
     /**

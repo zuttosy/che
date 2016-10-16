@@ -13,6 +13,7 @@ package org.eclipse.che.ide.api.command;
 import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.macro.Macro;
+import org.eclipse.che.ide.api.resources.Project;
 
 import java.util.List;
 import java.util.Map;
@@ -24,8 +25,8 @@ import java.util.Map;
  */
 public interface CommandManager {
 
-    /** Returns all commands. */
-    List<CommandImpl> getCommands();
+    /** Returns workspace commands. */
+    List<CommandImpl> getWorkspaceCommands();
 
     /**
      * Creates new command of the specified type.
@@ -48,8 +49,24 @@ public interface CommandManager {
      */
     Promise<CommandImpl> update(String name, CommandImpl command);
 
-    /** Removes the command with the specified {@code name}. */
+    /** Removes the workspace command with the specified {@code name}. */
     Promise<Void> remove(String name);
+
+    /** Returns project commands. */
+    List<CommandImpl> getProjectCommands(Project project);
+
+    Promise<CommandImpl> createProjectCommand(Project project, String type);
+
+    Promise<CommandImpl> createProjectCommand(Project project,
+                                              String desirableName,
+                                              String commandLine,
+                                              String type,
+                                              Map<String, String> attributes);
+
+    Promise<CommandImpl> updateProjectCommand(Project project, String name, CommandImpl command);
+
+    /** Removes the project command with the specified {@code name}. */
+    Promise<Void> removeProjectCommand(Project project, String name);
 
     /** Returns the pages for editing command of the specified {@code type}. */
     List<CommandPage> getPages(String type);

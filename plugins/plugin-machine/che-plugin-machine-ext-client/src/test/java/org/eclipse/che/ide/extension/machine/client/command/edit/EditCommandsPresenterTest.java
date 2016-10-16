@@ -97,7 +97,7 @@ public class EditCommandsPresenterTest {
         when(command.getName()).thenReturn(COMMAND_NAME);
         List<CommandImpl> commands = new ArrayList<>(1);
         commands.add(command);
-        when(commandManager.getCommands()).thenReturn(commands);
+        when(commandManager.getWorkspaceCommands()).thenReturn(commands);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class EditCommandsPresenterTest {
 
         verify(view).setCancelButtonState(false);
         verify(view).setSaveButtonState(false);
-        verify(commandManager).getCommands();
+        verify(commandManager).getWorkspaceCommands();
         verify(view).setData(anyObject());
         verify(view).setFilterState(anyBoolean());
         verify(view).setCloseButtonInFocus();
@@ -124,7 +124,7 @@ public class EditCommandsPresenterTest {
         presenter.onEnterClicked();
 
         verify(view).close();
-        verify(commandManager, never()).getCommands();
+        verify(commandManager, never()).getWorkspaceCommands();
         verify(commandManager, never()).update(anyString(), anyObject());
         verify(commandManager, never()).remove(anyString());
     }
@@ -148,7 +148,7 @@ public class EditCommandsPresenterTest {
 
         verify(view).setCancelButtonState(false);
         verify(view).setSaveButtonState(false);
-        verify(commandManager).getCommands();
+        verify(commandManager).getWorkspaceCommands();
         verify(view).setData(anyObject());
         verify(view).setFilterState(anyBoolean());
         verify(view).setCloseButtonInFocus();
