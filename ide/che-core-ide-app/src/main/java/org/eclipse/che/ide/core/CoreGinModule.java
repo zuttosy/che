@@ -349,11 +349,11 @@ public class CoreGinModule extends AbstractGinModule {
         configureImportWizard();
         configurePlatformApiGwtClients();
         configureApiBinding();
-        configureCoreUI();
+//        configureCoreUI();
         configureEditorAPI();
         configureProjectTree();
 
-        configureJsonRpc();
+//        configureJsonRpc();
         configureWebSocket();
         configureClientServerEventService();
 
@@ -384,26 +384,26 @@ public class CoreGinModule extends AbstractGinModule {
         requestReceivers.addBinding("event:project-tree-status-changed").to(ProjectTreeStatusNotificationReceiver.class);
     }
 
-    private void configureJsonRpc() {
-        bind(JsonRpcWebSocketAgentEventListener.class).asEagerSingleton();
-
-        bind(JsonRpcInitializer.class).to(WebSocketJsonRpcInitializer.class);
-
-        bind(JsonRpcRequestTransmitter.class).to(WebSocketJsonRpcRequestTransmitter.class);
-        bind(JsonRpcResponseTransmitter.class).to(WebSocketJsonRpcResponseTransmitter.class);
-
-        bind(JsonRpcObjectValidator.class).to(BasicJsonRpcObjectValidator.class);
-
-        GinMapBinder<String, JsonRpcDispatcher> dispatchers = GinMapBinder.newMapBinder(binder(), String.class, JsonRpcDispatcher.class);
-        dispatchers.addBinding("request").to(WebSocketJsonRpcRequestDispatcher.class);
-        dispatchers.addBinding("response").to(WebSocketJsonRpcResponseDispatcher.class);
-
-        GinMapBinder<String, JsonRpcRequestReceiver> requestReceivers =
-                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
-
-        GinMapBinder<String, JsonRpcResponseReceiver> responseReceivers =
-                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcResponseReceiver.class);
-    }
+//    private void configureJsonRpc() {
+//        bind(JsonRpcWebSocketAgentEventListener.class).asEagerSingleton();
+//
+//        bind(JsonRpcInitializer.class).to(WebSocketJsonRpcInitializer.class);
+//
+//        bind(JsonRpcRequestTransmitter.class).to(WebSocketJsonRpcRequestTransmitter.class);
+//        bind(JsonRpcResponseTransmitter.class).to(WebSocketJsonRpcResponseTransmitter.class);
+//
+//        bind(JsonRpcObjectValidator.class).to(BasicJsonRpcObjectValidator.class);
+//
+//        GinMapBinder<String, JsonRpcDispatcher> dispatchers = GinMapBinder.newMapBinder(binder(), String.class, JsonRpcDispatcher.class);
+//        dispatchers.addBinding("request").to(WebSocketJsonRpcRequestDispatcher.class);
+//        dispatchers.addBinding("response").to(WebSocketJsonRpcResponseDispatcher.class);
+//
+//        GinMapBinder<String, JsonRpcRequestReceiver> requestReceivers =
+//                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcRequestReceiver.class);
+//
+//        GinMapBinder<String, JsonRpcResponseReceiver> responseReceivers =
+//                GinMapBinder.newMapBinder(binder(), String.class, JsonRpcResponseReceiver.class);
+//    }
 
     private void configureWebSocket() {
         bind(WebSocketInitializer.class).to(SessionWebSocketInitializer.class);
@@ -517,84 +517,84 @@ public class CoreGinModule extends AbstractGinModule {
     }
 
     /** Configure Core UI components, resources and views */
-    protected void configureCoreUI() {
-        GinMultibinder<PreferencePagePresenter> prefBinder = GinMultibinder.newSetBinder(binder(), PreferencePagePresenter.class);
-        prefBinder.addBinding().to(AppearancePresenter.class);
-        prefBinder.addBinding().to(ExtensionManagerPresenter.class);
-
-        GinMultibinder<Theme> themeBinder = GinMultibinder.newSetBinder(binder(), Theme.class);
-        themeBinder.addBinding().to(DarkTheme.class);
-        themeBinder.addBinding().to(LightTheme.class);
-
-        // Resources
-        bind(PartStackUIResources.class).to(Resources.class).in(Singleton.class);
-        // Views
-        bind(WorkspaceView.class).to(WorkspaceViewImpl.class).in(Singleton.class);
-        bind(WorkBenchView.class).to(PerspectiveViewImpl.class).in(Singleton.class);
-        bind(MainMenuView.class).to(MainMenuViewImpl.class).in(Singleton.class);
-        bind(StatusPanelGroupView.class).to(StatusPanelGroupViewImpl.class).in(Singleton.class);
-
-        bind(ToolbarView.class).to(ToolbarViewImpl.class);
-        bind(ToolbarPresenter.class).annotatedWith(MainToolbar.class).to(ToolbarPresenter.class).in(Singleton.class);
-
-        //configure drop down menu
-        install(new GinFactoryModuleBuilder().implement(DropDownWidget.class, DropDownWidgetImpl.class)
-                                             .build(DropDownListFactory.class));
-
-        bind(NotificationManagerView.class).to(NotificationManagerViewImpl.class).in(Singleton.class);
-
-        bind(EditorPartStackView.class);
-
-        bind(EditorContentSynchronizer.class).to(EditorContentSynchronizerImpl.class).in(Singleton.class);
-        install(new GinFactoryModuleBuilder().implement(EditorGroupSynchronization.class, EditorGroupSynchronizationImpl.class)
-                                             .build(EditorGroupSychronizationFactory.class));
-
-        bind(MessageDialogFooter.class);
-        bind(MessageDialogView.class).to(MessageDialogViewImpl.class);
-        bind(ConfirmDialogFooter.class);
-        bind(ConfirmDialogView.class).to(ConfirmDialogViewImpl.class);
-        bind(ChoiceDialogFooter.class);
-        bind(ChoiceDialogView.class).to(ChoiceDialogViewImpl.class);
-        bind(InputDialogFooter.class);
-        bind(InputDialogView.class).to(InputDialogViewImpl.class);
-        install(new GinFactoryModuleBuilder().implement(MessageDialog.class, MessageDialogPresenter.class)
-                                             .implement(ConfirmDialog.class, ConfirmDialogPresenter.class)
-                                             .implement(InputDialog.class, InputDialogPresenter.class)
-                                             .implement(ChoiceDialog.class, ChoiceDialogPresenter.class)
-                                             .build(DialogFactory.class));
-
-        install(new GinFactoryModuleBuilder().implement(SubPanelView.class, SubPanelViewImpl.class)
-                                             .build(SubPanelViewFactory.class));
-        install(new GinFactoryModuleBuilder().implement(SubPanel.class, SubPanelPresenter.class)
-                                             .build(SubPanelFactory.class));
-        install(new GinFactoryModuleBuilder().implement(Tab.class, TabWidget.class)
-                                             .build(TabItemFactory.class));
-
-        install(new GinFactoryModuleBuilder().implement(ConsoleButton.class, ConsoleButtonImpl.class)
-                                             .build(ConsoleButtonFactory.class));
-        install(new GinFactoryModuleBuilder().implement(ProjectNotificationSubscriber.class,
-                                                        ProjectNotificationSubscriberImpl.class)
-                                             .build(ImportProjectNotificationSubscriberFactory.class));
-
-        install(new GinFactoryModuleBuilder().build(FindResultNodeFactory.class));
-
-        bind(UploadFileView.class).to(UploadFileViewImpl.class);
-        bind(UploadFolderFromZipView.class).to(UploadFolderFromZipViewImpl.class);
-        bind(PreferencesView.class).to(PreferencesViewImpl.class).in(Singleton.class);
-        bind(NavigateToFileView.class).to(NavigateToFileViewImpl.class).in(Singleton.class);
-
-        bind(ExtensionManagerView.class).to(ExtensionManagerViewImpl.class).in(Singleton.class);
-        bind(AppearanceView.class).to(AppearanceViewImpl.class).in(Singleton.class);
-        bind(FindActionView.class).to(FindActionViewImpl.class).in(Singleton.class);
-
-        bind(HotKeysDialogView.class).to(HotKeysDialogViewImpl.class).in(Singleton.class);
-
-        bind(RecentFileList.class).to(RecentFileStore.class).in(Singleton.class);
-
-        install(new GinFactoryModuleBuilder().build(RecentFileActionFactory.class));
-
-        install(new GinFactoryModuleBuilder().build(CommandProducerActionFactory.class));
-    }
+//    protected void configureCoreUI() {
+//        GinMultibinder<PreferencePagePresenter> prefBinder = GinMultibinder.newSetBinder(binder(), PreferencePagePresenter.class);
+//        prefBinder.addBinding().to(AppearancePresenter.class);
+//        prefBinder.addBinding().to(ExtensionManagerPresenter.class);
+//
+//        GinMultibinder<Theme> themeBinder = GinMultibinder.newSetBinder(binder(), Theme.class);
+//        themeBinder.addBinding().to(DarkTheme.class);
+//        themeBinder.addBinding().to(LightTheme.class);
+//
+//        // Resources
+//        bind(PartStackUIResources.class).to(Resources.class).in(Singleton.class);
+//        // Views
+//        bind(WorkspaceView.class).to(WorkspaceViewImpl.class).in(Singleton.class);
+//        bind(WorkBenchView.class).to(PerspectiveViewImpl.class).in(Singleton.class);
+//        bind(MainMenuView.class).to(MainMenuViewImpl.class).in(Singleton.class);
+//        bind(StatusPanelGroupView.class).to(StatusPanelGroupViewImpl.class).in(Singleton.class);
+//
+//        bind(ToolbarView.class).to(ToolbarViewImpl.class);
+//        bind(ToolbarPresenter.class).annotatedWith(MainToolbar.class).to(ToolbarPresenter.class).in(Singleton.class);
+//
+//        //configure drop down menu
+//        install(new GinFactoryModuleBuilder().implement(DropDownWidget.class, DropDownWidgetImpl.class)
+//                                             .build(DropDownListFactory.class));
+//
+//        bind(NotificationManagerView.class).to(NotificationManagerViewImpl.class).in(Singleton.class);
+//
+//        bind(EditorPartStackView.class);
+//
+//        bind(EditorContentSynchronizer.class).to(EditorContentSynchronizerImpl.class).in(Singleton.class);
+//        install(new GinFactoryModuleBuilder().implement(EditorGroupSynchronization.class, EditorGroupSynchronizationImpl.class)
+//                                             .build(EditorGroupSychronizationFactory.class));
+//
+//        bind(MessageDialogFooter.class);
+//        bind(MessageDialogView.class).to(MessageDialogViewImpl.class);
+//        bind(ConfirmDialogFooter.class);
+//        bind(ConfirmDialogView.class).to(ConfirmDialogViewImpl.class);
+//        bind(ChoiceDialogFooter.class);
+//        bind(ChoiceDialogView.class).to(ChoiceDialogViewImpl.class);
+//        bind(InputDialogFooter.class);
+//        bind(InputDialogView.class).to(InputDialogViewImpl.class);
+//        install(new GinFactoryModuleBuilder().implement(MessageDialog.class, MessageDialogPresenter.class)
+//                                             .implement(ConfirmDialog.class, ConfirmDialogPresenter.class)
+//                                             .implement(InputDialog.class, InputDialogPresenter.class)
+//                                             .implement(ChoiceDialog.class, ChoiceDialogPresenter.class)
+//                                             .build(DialogFactory.class));
+//
+//        install(new GinFactoryModuleBuilder().implement(SubPanelView.class, SubPanelViewImpl.class)
+//                                             .build(SubPanelViewFactory.class));
+//        install(new GinFactoryModuleBuilder().implement(SubPanel.class, SubPanelPresenter.class)
+//                                             .build(SubPanelFactory.class));
+//        install(new GinFactoryModuleBuilder().implement(Tab.class, TabWidget.class)
+//                                             .build(TabItemFactory.class));
+//
+//        install(new GinFactoryModuleBuilder().implement(ConsoleButton.class, ConsoleButtonImpl.class)
+//                                             .build(ConsoleButtonFactory.class));
+//        install(new GinFactoryModuleBuilder().implement(ProjectNotificationSubscriber.class,
+//                                                        ProjectNotificationSubscriberImpl.class)
+//                                             .build(ImportProjectNotificationSubscriberFactory.class));
+//
+//        install(new GinFactoryModuleBuilder().build(FindResultNodeFactory.class));
+//
+//        bind(UploadFileView.class).to(UploadFileViewImpl.class);
+//        bind(UploadFolderFromZipView.class).to(UploadFolderFromZipViewImpl.class);
+//        bind(PreferencesView.class).to(PreferencesViewImpl.class).in(Singleton.class);
+//        bind(NavigateToFileView.class).to(NavigateToFileViewImpl.class).in(Singleton.class);
+//
+//        bind(ExtensionManagerView.class).to(ExtensionManagerViewImpl.class).in(Singleton.class);
+//        bind(AppearanceView.class).to(AppearanceViewImpl.class).in(Singleton.class);
+//        bind(FindActionView.class).to(FindActionViewImpl.class).in(Singleton.class);
+//
+//        bind(HotKeysDialogView.class).to(HotKeysDialogViewImpl.class).in(Singleton.class);
+//
+//        bind(RecentFileList.class).to(RecentFileStore.class).in(Singleton.class);
+//
+//        install(new GinFactoryModuleBuilder().build(RecentFileActionFactory.class));
+//
+//        install(new GinFactoryModuleBuilder().build(CommandProducerActionFactory.class));
+//    }
 
     /** Configures binding for Editor API */
     protected void configureEditorAPI() {
