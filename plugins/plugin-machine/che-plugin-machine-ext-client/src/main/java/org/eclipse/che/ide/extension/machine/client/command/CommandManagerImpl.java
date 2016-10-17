@@ -135,7 +135,7 @@ public class CommandManagerImpl implements CommandManager {
     public Promise<CommandImpl> create(String type) {
         CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
 
-        return create(getUniqueCommandName(type, null), commandType.getCommandLineTemplate(), type, new HashMap<>());
+        return create(getUniqueCommandName(type, null), commandType.getCommandLineTemplate(), type, new HashMap<String, String>());
     }
 
     @Override
@@ -238,7 +238,11 @@ public class CommandManagerImpl implements CommandManager {
     public Promise<CommandImpl> createProjectCommand(Project project, String type) {
         CommandType commandType = commandTypeRegistry.getCommandTypeById(type);
 
-        return createProjectCommand(project, getUniqueCommandName(type, null), commandType.getCommandLineTemplate(), type, new HashMap<>());
+        return createProjectCommand(project,
+                                    getUniqueCommandName(type, null),
+                                    commandType.getCommandLineTemplate(),
+                                    type,
+                                    new HashMap<String, String>());
     }
 
     @Override
