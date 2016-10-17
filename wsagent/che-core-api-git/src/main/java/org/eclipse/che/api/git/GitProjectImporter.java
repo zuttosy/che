@@ -140,8 +140,8 @@ public class GitProjectImporter implements ProjectImporter {
                     recursiveEnabled = true;
                 }
                 branchMerge = parameters.get("branchMerge");
-                final String user = parameters.get("userName");
-                final String pass = parameters.get("password");
+                final String user = storage.getParameters().remove("username");
+                final String pass = storage.getParameters().remove("password");
                 if (user != null && pass != null) {
                     credentialsHaveBeenSet = true;
                     setCurrentCredentials(user, pass);
@@ -277,7 +277,7 @@ public class GitProjectImporter implements ProjectImporter {
         final CheckoutRequest request = dtoFactory.createDto(CheckoutRequest.class).withName(branchName);
         final boolean branchExist = git.branchList(dtoFactory.createDto(BranchListRequest.class).withListMode(LIST_ALL))
                                        .stream()
-                                       .anyMatch(branch -> branch.getName().equals(branchName));
+                                       .anyMatch(branch -> branch.getDisplayName().equals("origin/" + branchName));
         final GitCheckoutEvent checkout = dtoFactory.createDto(GitCheckoutEvent.class)
                                                     .withWorkspaceId(WorkspaceIdProvider.getWorkspaceId())
                                                     .withProjectName(projectName);

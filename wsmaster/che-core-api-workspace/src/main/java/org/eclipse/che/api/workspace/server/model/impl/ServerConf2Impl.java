@@ -14,8 +14,8 @@ import org.eclipse.che.api.core.model.workspace.ServerConf2;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class ServerConf2Impl implements ServerConf2 {
     @Basic
     private String protocol;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private Map<String, String> properties;
 
     public ServerConf2Impl() {}
@@ -81,6 +81,9 @@ public class ServerConf2Impl implements ServerConf2 {
 
     @Override
     public Map<String, String> getProperties() {
+        if (properties == null) {
+            properties = new HashMap<>();
+        }
         return properties;
     }
 

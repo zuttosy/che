@@ -15,63 +15,61 @@ import io.typefox.lsapi.ServerCapabilities;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
+import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentIdentifierDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentPositionParamsDTO;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistCallback;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistProcessor;
 import org.eclipse.che.ide.api.editor.codeassist.CompletionProposal;
-import org.eclipse.che.ide.api.editor.text.TextPosition;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
-import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.plugin.languageserver.ide.LanguageServerResources;
+import org.eclipse.che.plugin.languageserver.ide.filters.FuzzyMatches;
+import org.eclipse.che.plugin.languageserver.ide.filters.Match;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
-import org.eclipse.che.plugin.languageserver.shared.lsapi.CompletionItemDTO;
-import org.eclipse.che.plugin.languageserver.shared.lsapi.PositionDTO;
-import org.eclipse.che.plugin.languageserver.shared.lsapi.TextDocumentIdentifierDTO;
-import org.eclipse.che.plugin.languageserver.shared.lsapi.TextDocumentPositionParamsDTO;
+import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
- * @author Anatolii Bazko
+ * Implement code assist with LS
  */
 public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
 
-    private final DtoFactory                dtoFactory;
+    private final DtoBuildHelper            dtoBuildHelper;
     private final LanguageServerResources   resources;
     private final CompletionImageProvider   imageProvider;
     private final ServerCapabilities serverCapabilities;
-    private       TextDocumentServiceClient documentServiceClient;
+    private final TextDocumentServiceClient documentServiceClient;
+    private final FuzzyMatches fuzzyMatches;
     private String lastErrorMessage;
 
     @Inject
     public LanguageServerCodeAssistProcessor(TextDocumentServiceClient documentServiceClient,
-                                             DtoFactory dtoFactory,
+                                             DtoBuildHelper dtoBuildHelper,
                                              LanguageServerResources resources,
                                              CompletionImageProvider imageProvider,
-                                             @Assisted ServerCapabilities serverCapabilities) {
+                                             @Assisted ServerCapabilities serverCapabilities,
+                                             FuzzyMatches fuzzyMatches) {
         this.documentServiceClient = documentServiceClient;
-        this.dtoFactory = dtoFactory;
+        this.dtoBuildHelper = dtoBuildHelper;
         this.resources = resources;
         this.imageProvider = imageProvider;
         this.serverCapabilities = serverCapabilities;
+        this.fuzzyMatches = fuzzyMatches;
     }
 
     @Override
     public void computeCompletionProposals(TextEditor editor, int offset, final CodeAssistCallback callback) {
-        TextDocumentPositionParamsDTO documentPosition = dtoFactory.createDto(TextDocumentPositionParamsDTO.class);
-        documentPosition.setUri(editor.getEditorInput().getFile().getPath());
-        PositionDTO position = dtoFactory.createDto(PositionDTO.class);
-        TextPosition textPos = editor.getDocument().getPositionFromIndex(offset);
-        position.setCharacter(textPos.getCharacter());
-        position.setLine(textPos.getLine());
-        documentPosition.setPosition(position);
-        final TextDocumentIdentifierDTO documentId = dtoFactory.createDto(TextDocumentIdentifierDTO.class);
-        documentId.setUri(editor.getEditorInput().getFile().getPath());
-        documentPosition.setTextDocument(documentId);
+        TextDocumentPositionParamsDTO documentPosition = dtoBuildHelper.createTDPP(editor.getDocument(), offset);
+        final TextDocumentIdentifierDTO documentId = documentPosition.getTextDocument();
+        String currentLine = editor.getDocument().getLineContent(documentPosition.getPosition().getLine());
+        final String currentIdentifier = getCurrentIdentifier(currentLine, documentPosition.getPosition().getCharacter());
         this.lastErrorMessage = null;
         documentServiceClient.completion(documentPosition).then(new Operation<List<CompletionItemDTO>>() {
 
@@ -79,12 +77,16 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
             public void apply(List<CompletionItemDTO> items) throws OperationException {
                 List<CompletionProposal> proposals = newArrayList();
                 for (CompletionItemDTO item : items) {
-                    proposals.add(new CompletionItemBasedCompletionProposal(item,
-                                                                            documentServiceClient,
-                                                                            documentId,
-                                                                            resources,
-                                                                            imageProvider.getIcon(item.getKind()),
-                                                                            serverCapabilities));
+                    List<Match> highlights = filter(currentIdentifier, item);
+                    if (highlights != null ) {
+                        proposals.add(new CompletionItemBasedCompletionProposal(item,
+                                                                                documentServiceClient,
+                                                                                documentId,
+                                                                                resources,
+                                                                                imageProvider.getIcon(item.getKind()),
+                                                                                serverCapabilities,
+                                                                                highlights));
+                    }
                 }
                 callback.proposalComputed(proposals);
             }
@@ -99,6 +101,44 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
     @Override
     public String getErrorMessage() {
         return lastErrorMessage;
+    }
+
+    private String getCurrentIdentifier(String text, int offset) {
+        int i = offset - 1;
+        while (i >= 0 && isIdentifierChar(text.charAt(i))) {
+            i--;
+        }
+        return text.substring(i + 1, offset);
+    }
+    
+    private boolean isIdentifierChar(char c) {
+        return c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c >= '\u007f' && c <= '\u00ff' ||
+            c == '$' ||
+            c == '_' ||
+            c == '-';
+    }
+    
+    private List<Match> filter(String word, CompletionItemDTO item) {
+        return filter(word, item.getLabel(), item.getFilterText());
+    }
+    
+    private List<Match> filter(String word, String label, String filterText) {
+        if (filterText == null || filterText.isEmpty()) {
+            filterText = label;
+        }
+        
+        // check if the word matches the filterText
+        if (fuzzyMatches.fuzzyMatch(word, filterText) != null) {
+            // return the highlights based on the label
+            List<Match> highlights = fuzzyMatches.fuzzyMatch(word, label);
+            // return empty list of highlights if nothing matches the label
+            return (highlights == null) ? new ArrayList<Match>() : highlights;
+        }
+        
+        return null;
     }
 
 }

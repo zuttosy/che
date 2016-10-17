@@ -16,9 +16,9 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public class SourceStorageImpl implements SourceStorage {
     @Column(columnDefinition = "TEXT")
     private String location;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private Map<String, String> parameters;
 
     public SourceStorageImpl() {}

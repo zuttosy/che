@@ -17,10 +17,10 @@ import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.machine.server.model.impl.CommandImpl;
 import org.eclipse.che.commons.annotation.Nullable;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -57,21 +57,21 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
     @Column(nullable = false)
     private String name;
 
-    @Basic
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
     private String defaultEnv;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn
     private List<CommandImpl> commands;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn
     private List<ProjectConfigImpl> projects;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn
     private Map<String, EnvironmentImpl> environments;
 
@@ -212,12 +212,6 @@ public class WorkspaceConfigImpl implements WorkspaceConfig {
                ", environments=" + environments +
                ", description='" + description + '\'' +
                '}';
-    }
-
-    @PreUpdate
-    @PrePersist
-    public void syncProjects() {
-        getProjects().forEach(ProjectConfigImpl::syncDbAttributes);
     }
 
     /**
