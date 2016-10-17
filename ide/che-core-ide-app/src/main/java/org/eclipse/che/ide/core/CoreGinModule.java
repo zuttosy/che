@@ -349,11 +349,13 @@ public class CoreGinModule extends AbstractGinModule {
         configureImportWizard();
         configurePlatformApiGwtClients();
         configureApiBinding();
+        install(new CoreUIGinModule());
 //        configureCoreUI();
         configureEditorAPI();
         configureProjectTree();
 
 //        configureJsonRpc();
+        install(new JsonRpcGinModule());
         configureWebSocket();
         configureClientServerEventService();
 
