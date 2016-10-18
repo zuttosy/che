@@ -11,6 +11,9 @@
 package org.eclipse.che.api.environment.server.compose;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import org.eclipse.che.api.environment.server.compose.rule.CommandDeserializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +29,7 @@ import java.util.Objects;
 public class ComposeServiceImpl {
     @JsonProperty("container_name")
     private String              containerName;
+    @JsonDeserialize(using = CommandDeserializer.class)
     private List<String>        command;
     private List<String>        entrypoint;
     private String              image;
