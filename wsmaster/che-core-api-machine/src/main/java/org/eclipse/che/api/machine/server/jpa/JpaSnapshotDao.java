@@ -117,6 +117,17 @@ public class JpaSnapshotDao implements SnapshotDao {
         }
     }
 
+    @Override
+    public void updateSnapshot(SnapshotImpl update) throws SnapshotException {
+        requireNonNull(update, "Required non-null snapshot");
+        requireNonNull(update.getId(), "Required non-null snapshot id");
+        try {
+            doUpdate(update);
+        } catch (RuntimeException x) {
+            throw new SnapshotException(x.getLocalizedMessage(), x);
+        }
+    }
+
     @Transactional
     protected void doSave(SnapshotImpl snapshot) {
         managerProvider.get().persist(snapshot);
@@ -131,4 +142,10 @@ public class JpaSnapshotDao implements SnapshotDao {
         }
         manager.remove(snapshot);
     }
+
+    @Transactional
+    protected void doUpdate(SnapshotImpl update) {
+        managerProvider.get().merge(update);
+    }
+
 }

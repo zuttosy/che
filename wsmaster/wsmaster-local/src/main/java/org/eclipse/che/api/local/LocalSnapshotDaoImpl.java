@@ -119,6 +119,13 @@ public class LocalSnapshotDaoImpl implements SnapshotDao {
         snapshots.remove(snapshotId);
     }
 
+    @Override
+    public synchronized void updateSnapshot(SnapshotImpl update) throws SnapshotException {
+        requireNonNull(update, "Required non-null snapshot");
+        requireNonNull(update.getId(), "Required non-null snapshot id");
+        snapshots.put(update.getId(), update);
+    }
+
     @PostConstruct
     public synchronized void loadSnapshots() {
         snapshots.putAll(snapshotStorage.loadMap(new TypeToken<Map<String, SnapshotImpl>>() {}));

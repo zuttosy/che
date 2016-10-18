@@ -86,4 +86,15 @@ public interface SnapshotDao {
      *         if other error occur
      */
     void removeSnapshot(String snapshotId) throws NotFoundException, SnapshotException;
+
+    /**
+     * Update snapshot info.
+     *
+     * @param update
+     *         updated snapshot info
+     * @throws SnapshotException
+     *         if an error occur
+     */
+    void updateSnapshot(SnapshotImpl update) throws SnapshotException;
+
 }

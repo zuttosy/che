@@ -776,16 +776,11 @@ public class WorkspaceManager {
         }
     }
 
-    private void updateWorkspaceSnapshots(String id, Workspace workspace, Workspace update) throws SnapshotException {
-        if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) {
-            for (SnapshotImpl snapshot : snapshotDao.findSnapshots(id)) {
-                try {
-                    snapshotDao.removeSnapshot(snapshot.getId());
-                    snapshot.setEnvName(update.getConfig().getDefaultEnv());
-                    snapshotDao.saveSnapshot(snapshot);
-                } catch (NotFoundException ignore) {
-                    // snapshot has been deleted or hasn't created yet, just skip it
-                }
+    private void updateWorkspaceSnapshots(String workspaceId, Workspace workspace, Workspace update) throws SnapshotException {
+        if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) { // TODO non-default env
+            for (SnapshotImpl snapshot : snapshotDao.findSnapshots(workspaceId)) {
+                snapshot.setEnvName(update.getConfig().getDefaultEnv()); // TODO non-default env
+                snapshotDao.updateSnapshot(snapshot);
             }
         }
     }
@@ -895,8 +890,9 @@ public class WorkspaceManager {
      */
     private void ensureRuntimeInfoNotChangedIfWorkspaceRunning(String id, Workspace workspace, Workspace update) throws ConflictException {
         if (runtimes.hasRuntime(id)) { // we can change any parameter in stopped workspace
-            if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) {
-                throw new ConflictException("Cannot affect name of runtime when workspace is running");
+            String activeEnv = workspace.getRuntime().getActiveEnv();
+            if (!workspace.getConfig().getEnvironments().get(activeEnv).equals(update.getConfig().getEnvironments().get(activeEnv))) {
+                throw new ConflictException("Cannot affect active environment name when workspace is running");
             }
         }
     }
