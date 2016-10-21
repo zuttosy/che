@@ -47,6 +47,7 @@ public interface PartPresenter extends Presenter {
 
     List<String> getRules();
 
+    // TODO: remove this method
     void setVisible(boolean visible);
 
     IsWidget getView();

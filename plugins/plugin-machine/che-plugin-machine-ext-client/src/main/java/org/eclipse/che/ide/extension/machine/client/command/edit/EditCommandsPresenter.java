@@ -20,6 +20,7 @@ import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.CoreLocalizationConstant;
+import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.command.CommandImpl;
 import org.eclipse.che.ide.api.command.CommandManager;
 import org.eclipse.che.ide.api.command.CommandPage;
@@ -58,6 +59,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
     private final DialogFactory               dialogFactory;
     private final MachineLocalizationConstant machineLocale;
     private final CoreLocalizationConstant    coreLocale;
+    private final AppContext                  appContext;
 
     private final Comparator<CommandImpl> commandsComparator;
 
@@ -78,13 +80,15 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
                                     CommandTypeRegistry commandTypeRegistry,
                                     DialogFactory dialogFactory,
                                     MachineLocalizationConstant machineLocale,
-                                    CoreLocalizationConstant coreLocale) {
+                                    CoreLocalizationConstant coreLocale,
+                                    AppContext appContext) {
         this.view = view;
         this.commandManager = commandManager;
         this.commandTypeRegistry = commandTypeRegistry;
         this.dialogFactory = dialogFactory;
         this.machineLocale = machineLocale;
         this.coreLocale = coreLocale;
+        this.appContext = appContext;
         this.view.setDelegate(this);
 
         commandsComparator = new Comparator<CommandImpl>() {
@@ -124,7 +128,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
     }
 
     private Promise<CommandImpl> updateCommand(final CommandImpl command) {
-        return commandManager.update(editedCommandNameInitial, command)
+        return commandManager.updateProjectCommand(appContext.getRootProject(), editedCommandNameInitial, command)
                              .then(new Operation<CommandImpl>() {
                                  @Override
                                  public void apply(CommandImpl updatedCommand) throws OperationException {
@@ -210,7 +214,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
 
     private void createCommand(String type, @Nullable String commandLine, @Nullable String name, @Nullable Map<String, String> attributes) {
         if (commandLine == null && name == null && attributes == null) {
-            commandManager.create(type).then(new Operation<CommandImpl>() {
+            commandManager.createProjectCommand(appContext.getRootProject(), type).then(new Operation<CommandImpl>() {
                 @Override
                 public void apply(CommandImpl command) throws OperationException {
                     view.selectCommand(command);
@@ -218,7 +222,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
                 }
             });
         } else {
-            commandManager.create(name, commandLine, type, attributes).then(new Operation<CommandImpl>() {
+            commandManager.createProjectCommand(appContext.getRootProject(), name, commandLine, type, attributes).then(new Operation<CommandImpl>() {
                 @Override
                 public void apply(CommandImpl command) throws OperationException {
                     view.selectCommand(command);
@@ -238,7 +242,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
         final ConfirmCallback confirmCallback = new ConfirmCallback() {
             @Override
             public void accepted() {
-                commandManager.remove(selectedCommand.getName()).then(new Operation<Void>() {
+                commandManager.removeProjectCommand(appContext.getRootProject(), selectedCommand.getName()).then(new Operation<Void>() {
                     @Override
                     public void apply(Void arg) throws OperationException {
                         view.selectNeighborCommand(selectedCommand);
@@ -385,7 +389,7 @@ public class EditCommandsPresenter implements EditCommandsView.ActionDelegate, F
     private void refreshView() {
         reset();
 
-        List<CommandImpl> allCommands = commandManager.getWorkspaceCommands();
+        List<CommandImpl> allCommands = commandManager.getProjectCommands(appContext.getRootProject());
         Map<CommandType, List<CommandImpl>> typeToCommands = new HashMap<>();
 
         for (CommandType type : commandTypeRegistry.getCommandTypes()) {

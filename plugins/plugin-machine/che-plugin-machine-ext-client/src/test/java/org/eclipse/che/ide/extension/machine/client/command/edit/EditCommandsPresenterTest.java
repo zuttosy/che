@@ -85,7 +85,7 @@ public class EditCommandsPresenterTest {
     public void setUp() {
         presenter.editedCommandNameInitial = COMMAND_NAME;
 
-        when(commandManager.update(anyString(), anyObject())).thenReturn(commandPromise);
+        when(commandManager.updateWorkspaceCommand(anyString(), anyObject())).thenReturn(commandPromise);
 
         CommandType commandType = mock(CommandType.class);
         when(commandType.getId()).thenReturn(COMMAND_TYPE);
@@ -113,8 +113,8 @@ public class EditCommandsPresenterTest {
         verify(view).setFilterState(anyBoolean());
         verify(view).setCloseButtonInFocus();
         verify(view, never()).close();
-        verify(commandManager, never()).update(anyString(), anyObject());
-        verify(commandManager, never()).remove(anyString());
+        verify(commandManager, never()).updateWorkspaceCommand(anyString(), anyObject());
+        verify(commandManager, never()).removeWorkspaceCommand(anyString());
     }
 
     @Test
@@ -125,8 +125,8 @@ public class EditCommandsPresenterTest {
 
         verify(view).close();
         verify(commandManager, never()).getWorkspaceCommands();
-        verify(commandManager, never()).update(anyString(), anyObject());
-        verify(commandManager, never()).remove(anyString());
+        verify(commandManager, never()).updateWorkspaceCommand(anyString(), anyObject());
+        verify(commandManager, never()).removeWorkspaceCommand(anyString());
     }
 
     @Test
@@ -141,7 +141,7 @@ public class EditCommandsPresenterTest {
 
         presenter.onEnterClicked();
 
-        verify(commandManager).update(anyString(), eq(command));
+        verify(commandManager).updateWorkspaceCommand(anyString(), eq(command));
 
         verify(commandPromise, times(2)).then(commandCaptor.capture());
         commandCaptor.getValue().apply(command);

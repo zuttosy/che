@@ -18,6 +18,7 @@ public class Constants {
     public static final String BLANK_ID                = "blank";
     public static final String ZIP_IMPORTER_ID         = "zip";
     public static final String VCS_PROVIDER_NAME       = "vcs.provider.name";
+
     // rels for known project links
     public static final String LINK_REL_GET_PROJECTS   = "get projects";
     public static final String LINK_REL_CREATE_PROJECT = "create project";
@@ -32,6 +33,9 @@ public class Constants {
     public static final String LINK_REL_PROJECT_TYPES = "project types";
 
     public static final String CODENVY_DIR = ".codenvy";
+
+    public static final String COMMANDS_ATTRIBUTE_NAME        = "commands";
+    public static final String COMMANDS_ATTRIBUTE_DESCRIPTION = "Commands";
 
     private Constants() {
     }
