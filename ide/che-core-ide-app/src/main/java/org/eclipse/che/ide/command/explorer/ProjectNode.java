@@ -11,22 +11,26 @@
 package org.eclipse.che.ide.command.explorer;
 
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.data.tree.AbstractTreeNode;
 import org.eclipse.che.ide.api.data.tree.Node;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tree node which represents command.
+ * Tree node which represents project.
  *
  * @author Artem Zatsarynnyi
  */
-class CommandNode extends AbstractTreeNode {
+class ProjectNode extends AbstractTreeNode {
 
-    private final String name;
+    private final String                name;
+    private final List<CommandTypeNode> commandTypes;
 
-    CommandNode(String commandName) {
-        this.name = commandName;
+    ProjectNode(String projectName, List<CommandTypeNode> commandTypes) {
+        this.name = projectName;
+        this.commandTypes = commandTypes;
     }
 
     @Override
@@ -36,11 +40,13 @@ class CommandNode extends AbstractTreeNode {
 
     @Override
     public boolean isLeaf() {
-        return true;
+        return commandTypes.isEmpty();
     }
 
     @Override
     protected Promise<List<Node>> getChildrenImpl() {
-        return null;
+        List<Node> l = new ArrayList<>();
+        l.addAll(commandTypes);
+        return Promises.resolve(l);
     }
 }

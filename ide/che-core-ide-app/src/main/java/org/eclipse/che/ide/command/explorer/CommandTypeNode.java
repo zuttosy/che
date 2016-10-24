@@ -25,17 +25,17 @@ import java.util.List;
  */
 class CommandTypeNode extends AbstractTreeNode {
 
-    private final String            typeId;
+    private final String            name;
     private final List<CommandNode> commands;
 
-    CommandTypeNode(String typeId, List<CommandNode> commands) {
-        this.typeId = typeId;
+    CommandTypeNode(String typeName, List<CommandNode> commands) {
+        this.name = typeName;
         this.commands = commands;
     }
 
     @Override
     public String getName() {
-        return typeId;
+        return name;
     }
 
     @Override

@@ -100,9 +100,9 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
     }
 
     @Override
-    public void setCommands(List<CommandImpl> workspaceCommands, Map<Project, CommandImpl> projectsCommands) {
+    public void setCommands(List<CommandImpl> workspaceCommands, Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
         renderWorkspaceCommands(workspaceCommands);
-        renderProjectCommands(projectsCommands);
+        renderProjectsCommands(projectsCommands);
     }
 
     private void renderWorkspaceCommands(List<CommandImpl> workspaceCommands) {
@@ -133,7 +133,27 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
         }
     }
 
-    private void renderProjectCommands(Map<Project, CommandImpl> projectsCommands) {
+    private void renderProjectsCommands(Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
+        projectCommandsTree.getNodeStorage().clear();
+
+        for (Map.Entry<Project, Map<CommandType, List<CommandImpl>>> entry1 : projectsCommands.entrySet()) {
+            final Project project = entry1.getKey();
+
+            List<CommandTypeNode> commandTypeNodes = new ArrayList<>();
+            for (Map.Entry<CommandType, List<CommandImpl>> entry2 : entry1.getValue().entrySet()) {
+
+                List<CommandNode> commandNodes = new ArrayList<>();
+                for (CommandImpl command : entry2.getValue()) {
+                    commandNodes.add(new CommandNode(command.getName()));
+                }
+
+                CommandType commandType = entry2.getKey();
+                commandTypeNodes.add(new CommandTypeNode(commandType.getDisplayName(), commandNodes));
+            }
+
+            ProjectNode projectNode = new ProjectNode(project.getName(), commandTypeNodes);
+            projectCommandsTree.getNodeStorage().add(projectNode);
+        }
     }
 
     interface CommandsExplorerViewImplUiBinder extends UiBinder<Widget, CommandsExplorerViewImpl> {
