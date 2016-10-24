@@ -129,7 +129,7 @@ public class ComposeFileParserTest {
 
     @Test(expectedExceptions = IllegalArgumentException.class,
           dataProvider = "inValidCommand")
-    public void composeServiceCommandShouldBeParsedFailed(String command) throws Exception {//, String errorMessage
+    public void composeServiceCommandShouldBeParsedFailed(String command) throws Exception {
         String recipe = format(RECIPE_WITHOUT_COMMAND_VALUE, command);
         try {
             composeFileParser.parse(recipe, "text/x-yaml");
@@ -142,13 +142,22 @@ public class ComposeFileParserTest {
     @DataProvider(name = "inValidCommand")
     private Object[][] inValidCommand() {
         return new Object[][] {
-                {"\n" +
-                 "   + tail\n" +
+                {"\n |" +
+                 "  - tail\n" +
                  "   - -f\n" +
+                 "   - /dev/null"},
+                {"\n |" +
+                 "   - tail\n" +
+                 "    -f\n" +
+                 "   - /dev/null"},
+                {"\n >" +
+                 "   - tail\n" +
+                 "    -f\n" +
                  "   - /dev/null"},
                 {"{service mysql start}"},
                 {"service mysql \nstart"},
-                {"test : value"}
+                {"test : value"},
+                {"[service mysql start"},
         };
     }
 
@@ -164,7 +173,7 @@ public class ComposeFileParserTest {
     }
 
     /**
-     * Valid yaml Regex by specification Yaml 1.2(for two bytes - UTF-16):
+     * Valid yaml Regex by specification Yaml 1.2 (for two bytes - UTF-16):
      * (\\x09|\\x0A|\\x0D|[\\x20-\\x7E]|\\x85|[\\xA0-\\xD7FF]|[\\xE000-\\xFFFD])+
      */
     @DataProvider(name = "inValidSymbols")
