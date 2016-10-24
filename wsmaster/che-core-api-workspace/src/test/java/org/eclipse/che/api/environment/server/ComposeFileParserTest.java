@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.environment.server;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.reader.ReaderException;
+
 import org.eclipse.che.api.environment.server.compose.ComposeEnvironmentImpl;
 import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
 import org.eclipse.che.api.environment.server.compose.ComposeServiceImpl;
@@ -44,7 +46,8 @@ public class ComposeFileParserTest {
                                                                "  image: codenvy/mysql\n" +
                                                                "  environment:\n" +
                                                                "   MYSQL_USER: petclinic\n" +
-                                                               "   MYSQL_PASSWORD: password\n" + "  mem_limit: 2147483648\n" +
+                                                               "   MYSQL_PASSWORD: password\n" +
+                                                               "  mem_limit: 2147483648\n" +
                                                                "  command: %s\n" + //<- test target
                                                                "  expose: [4403, 5502]";
 
@@ -139,9 +142,47 @@ public class ComposeFileParserTest {
     @DataProvider(name = "inValidCommand")
     private Object[][] inValidCommand() {
         return new Object[][] {
+                {"\n" +
+                 "   + tail\n" +
+                 "   - -f\n" +
+                 "   - /dev/null"},
                 {"{service mysql start}"},
                 {"service mysql \nstart"},
                 {"test : value"}
+        };
+    }
+
+    @Test(expectedExceptions = ReaderException.class, expectedExceptionsMessageRegExp = "special characters are not allowed", dataProvider = "inValidSymbols")
+    public void symbolsShouldBeInvalidForYaml(String command) throws Exception {
+        String recipe = format(RECIPE_WITHOUT_COMMAND_VALUE, command);
+        try {
+            composeFileParser.parse(recipe, "text/x-yaml");
+        } catch (Exception e) {
+            System.out.println(e.getLocalizedMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Valid yaml Regex by specification Yaml 1.2(for two bytes - UTF-16):
+     * (\\x09|\\x0A|\\x0D|[\\x20-\\x7E]|\\x85|[\\xA0-\\xD7FF]|[\\xE000-\\xFFFD])+
+     */
+    @DataProvider(name = "inValidSymbols")
+    private Object[][] inValidSymbols() {
+        return new Object[][] {
+            {"service mysql start\uFFFE"},
+            {"service mysql start\uDFFF"},
+            {"service mysql start\uD800"},
+            {"service mysql start\u009F"},
+            {"service mysql start\u0086"},
+            {"service mysql start\u0084"},
+            {"service mysql start\u0084"},
+            {"service mysql start\u007F"},
+            {"service mysql start\u001F"},
+            {"service mysql start\u000E"},
+            {"service mysql start\u000C"},
+            {"service mysql start\u000B"},
+            {"service mysql start\u0008"},
         };
     }
 }

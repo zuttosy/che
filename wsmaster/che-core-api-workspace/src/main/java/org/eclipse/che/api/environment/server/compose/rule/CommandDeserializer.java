@@ -64,7 +64,7 @@ import static java.util.Arrays.asList;
  */
 public class CommandDeserializer extends JsonDeserializer<List<String>> {
 
-    private static final String SPLIT_COMMAND_REGEX = "[ ]+";
+    private static final String SPLIT_COMMAND_REGEX = "[ \n\r]+";
 
     /**
      * Parse command field from the compose yaml file to list command words.
@@ -79,20 +79,17 @@ public class CommandDeserializer extends JsonDeserializer<List<String>> {
      * @throws JsonProcessingException
      */
     @Override
-    public List<String> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public List<String> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
         TreeNode tree = jsonParser.readValueAsTree();
-        List<String> commands;
 
         if (tree.isArray()) {
-            commands = toCommand((ArrayNode)tree);
-        } else if (tree instanceof TextNode) {
-            TextNode node = (TextNode)tree;
-            commands = asList(node.asText().trim().split(SPLIT_COMMAND_REGEX));
-        } else {
-            throw new IOException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
+            return toCommand((ArrayNode)tree);
         }
-
-        return commands;
+        if (tree instanceof TextNode) {
+            TextNode textNode = (TextNode)tree;
+            return asList(textNode.asText().trim().split(SPLIT_COMMAND_REGEX));
+        }
+        throw new IllegalStateException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
     }
 
     private List<String> toCommand(ArrayNode arrayCommandNode) {
