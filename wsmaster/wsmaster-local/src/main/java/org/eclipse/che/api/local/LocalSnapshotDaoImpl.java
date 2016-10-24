@@ -127,10 +127,10 @@ public class LocalSnapshotDaoImpl implements SnapshotDao {
     }
 
     @Override
-    public synchronized void updateSnapshot(SnapshotImpl update) throws SnapshotException {
+    public synchronized SnapshotImpl updateSnapshot(SnapshotImpl update) throws SnapshotException {
         requireNonNull(update, "Required non-null snapshot");
         requireNonNull(update.getId(), "Required non-null snapshot id");
-        snapshots.put(update.getId(), update);
+        return snapshots.put(update.getId(), update);
     }
 
     @PostConstruct

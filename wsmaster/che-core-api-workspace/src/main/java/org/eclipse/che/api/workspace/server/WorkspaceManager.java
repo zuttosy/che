@@ -814,7 +814,6 @@ public class WorkspaceManager {
         }
     }
 
-
     private void updateWorkspaceSnapshots(String workspaceId, Workspace workspace, Workspace update) throws SnapshotException {
         if (!workspace.getConfig().getDefaultEnv().equals(update.getConfig().getDefaultEnv())) { // TODO non-default env
             for (SnapshotImpl snapshot : snapshotDao.findSnapshots(workspaceId)) {
@@ -915,16 +914,6 @@ public class WorkspaceManager {
         return workspaceDao.get(wsName, namespace);
     }
 
-    /** Returns true if workspace exists and false otherwise. */
-    private boolean exists(String workspaceId) throws ServerException {
-        try {
-            workspaceDao.get(workspaceId);
-        } catch (NotFoundException x) {
-            return false;
-        }
-        return true;
-    }
-
     /**
      * Checks whether possible to update workspace parameters.
      * If no, ConflictException will be thrown.
@@ -938,9 +927,11 @@ public class WorkspaceManager {
      * @throws ConflictException
      *         if some updates cannot be applied now
      */
-    private void ensureRuntimeInfoNotChangedIfWorkspaceRunning(String id, Workspace workspace, Workspace update) throws ConflictException {
+    private void ensureRuntimeInfoNotChangedIfWorkspaceRunning(String id, Workspace workspace, Workspace update) throws ConflictException,
+                                                                                                                        NotFoundException,
+                                                                                                                        ServerException {
         if (runtimes.hasRuntime(id)) { // we can change any parameter in stopped workspace
-            String activeEnv = workspace.getRuntime().getActiveEnv();
+            String activeEnv = runtimes.get(id).getRuntime().getActiveEnv();
             if (!workspace.getConfig().getEnvironments().get(activeEnv).equals(update.getConfig().getEnvironments().get(activeEnv))) {
                 throw new ConflictException("Cannot affect active environment name when workspace is running");
             }

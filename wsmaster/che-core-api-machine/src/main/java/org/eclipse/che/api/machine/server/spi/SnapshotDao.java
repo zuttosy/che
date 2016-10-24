@@ -93,11 +93,11 @@ public interface SnapshotDao {
      *
      * @param update
      *         updated snapshot info
+     * @return snapshot info before update
      * @throws SnapshotException
      *         if an error occur
      */
-    void updateSnapshot(SnapshotImpl update) throws SnapshotException;
-
+    SnapshotImpl updateSnapshot(SnapshotImpl update) throws SnapshotException;
 
     /**
      * Replaces all the existing snapshots related to the given workspace
