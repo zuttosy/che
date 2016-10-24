@@ -8,13 +8,10 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server;
+package org.eclipse.che.api.environment.server.compose;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.reader.ReaderException;
 
-import org.eclipse.che.api.environment.server.compose.ComposeEnvironmentImpl;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
-import org.eclipse.che.api.environment.server.compose.ComposeServiceImpl;
 import org.mockito.InjectMocks;
 import org.mockito.testng.MockitoTestNGListener;
 import org.testng.annotations.DataProvider;
@@ -31,12 +28,12 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Test for {@link ComposeFileParser}.
+ * Test deserialization field {@link ComposeServiceImpl#command}.
  *
  * @author Alexander Andrienko
  */
 @Listeners(MockitoTestNGListener.class)
-public class ComposeFileParserTest {
+public class ComposeServiceCommandContextTest {
 
     @InjectMocks
     private ComposeFileParser composeFileParser;
