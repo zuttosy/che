@@ -15,8 +15,10 @@ import com.google.inject.ImplementedBy;
 import org.eclipse.che.ide.api.command.CommandImpl;
 import org.eclipse.che.ide.api.mvp.View;
 import org.eclipse.che.ide.api.parts.base.BaseActionDelegate;
+import org.eclipse.che.ide.api.resources.Project;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * View for {@link CommandsExplorerPresenter}.
@@ -26,7 +28,7 @@ import java.util.List;
 @ImplementedBy(CommandsExplorerViewImpl.class)
 public interface CommandsExplorerView extends View<CommandsExplorerView.ActionDelegate> {
 
-    void setCommands(List<CommandImpl> workspaceCommands, List<CommandImpl> projectsCommands);
+    void setCommands(List<CommandImpl> workspaceCommands, Map<Project, CommandImpl> projectsCommands);
 
     interface ActionDelegate extends BaseActionDelegate {
 

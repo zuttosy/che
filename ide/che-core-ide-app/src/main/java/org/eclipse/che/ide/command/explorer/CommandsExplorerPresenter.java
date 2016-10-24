@@ -39,7 +39,7 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
     private final CommandsExplorerView view;
     private final WorkspaceAgent       workspaceAgent;
     private final CommandManager       commandManager;
-    private final AppContext appContext;
+    private final AppContext           appContext;
 
     @Inject
     public CommandsExplorerPresenter(CommandsExplorerView view,

@@ -17,15 +17,15 @@ import org.eclipse.che.ide.api.data.tree.Node;
 import java.util.List;
 
 /**
- * //
+ * Tree node which represents command.
  *
  * @author Artem Zatsarynnyi
  */
-public class CommandNode extends AbstractTreeNode {
+class CommandNode extends AbstractTreeNode {
 
     private final String commandName;
 
-    public CommandNode(String commandName) {
+    CommandNode(String commandName) {
         this.commandName = commandName;
     }
 

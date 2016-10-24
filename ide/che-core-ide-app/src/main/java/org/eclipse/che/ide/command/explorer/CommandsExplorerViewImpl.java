@@ -20,7 +20,10 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 
 import org.eclipse.che.ide.api.command.CommandImpl;
+import org.eclipse.che.ide.api.command.CommandType;
+import org.eclipse.che.ide.api.command.CommandTypeRegistry;
 import org.eclipse.che.ide.api.parts.base.BaseView;
+import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ui.radiobuttongroup.RadioButtonGroup;
 import org.eclipse.che.ide.ui.smartTree.NodeLoader;
 import org.eclipse.che.ide.ui.smartTree.NodeStorage;
@@ -40,6 +43,8 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
     private static final CommandsExplorerViewImplUiBinder UI_BINDER = GWT.create(CommandsExplorerViewImplUiBinder.class);
 
+    private final CommandTypeRegistry commandTypeRegistry;
+
     @UiField(provided = true)
     Tree workspaceCommandsTree;
 
@@ -55,8 +60,11 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
     private ActionDelegate delegate;
 
     @Inject
-    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources) {
+    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources,
+                                    CommandTypeRegistry commandTypeRegistry) {
         super(coreResources);
+
+        this.commandTypeRegistry = commandTypeRegistry;
 
         setTitle("Commands Explorer");
 
@@ -92,31 +100,40 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
     }
 
     @Override
-    public void setCommands(List<CommandImpl> workspaceCommands, List<CommandImpl> projectsCommands) {
+    public void setCommands(List<CommandImpl> workspaceCommands, Map<Project, CommandImpl> projectsCommands) {
         renderWorkspaceCommands(workspaceCommands);
+        renderProjectCommands(projectsCommands);
     }
 
     private void renderWorkspaceCommands(List<CommandImpl> workspaceCommands) {
-        Map<String, List<CommandImpl>> commandsByType = new HashMap<>();
+        workspaceCommandsTree.getNodeStorage().clear();
 
+        // group commands by type
+        Map<CommandType, List<CommandImpl>> commandsByType = new HashMap<>();
         for (CommandImpl command : workspaceCommands) {
-            List<CommandImpl> commands = commandsByType.get(command.getType());
+            final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
+
+            List<CommandImpl> commands = commandsByType.get(commandType);
             if (commands == null) {
                 commands = new ArrayList<>();
-                commandsByType.put(command.getType(), commands);
+                commandsByType.put(commandType, commands);
             }
-            commandsByType.put(command.getType(), commands);
+            commands.add(command);
         }
 
-        for (Map.Entry<String, List<CommandImpl>> entry : commandsByType.entrySet()) {
-            List<CommandNode> commands = new ArrayList<>(entry.getValue().size());
+        // render tree
+        for (Map.Entry<CommandType, List<CommandImpl>> entry : commandsByType.entrySet()) {
+            List<CommandNode> commandNodes = new ArrayList<>(entry.getValue().size());
             for (CommandImpl command : entry.getValue()) {
-                commands.add(new CommandNode(command.getName()));
+                commandNodes.add(new CommandNode(command.getName()));
             }
 
-            CommandTypeNode commandTypeNode = new CommandTypeNode(entry.getKey(), commands);
+            CommandTypeNode commandTypeNode = new CommandTypeNode(entry.getKey().getDisplayName(), commandNodes);
             workspaceCommandsTree.getNodeStorage().add(commandTypeNode);
         }
+    }
+
+    private void renderProjectCommands(Map<Project, CommandImpl> projectsCommands) {
     }
 
     interface CommandsExplorerViewImplUiBinder extends UiBinder<Widget, CommandsExplorerViewImpl> {

@@ -19,16 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * //
+ * Tree node which represents command type.
  *
  * @author Artem Zatsarynnyi
  */
-public class CommandTypeNode extends AbstractTreeNode {
+class CommandTypeNode extends AbstractTreeNode {
 
     private final String            typeId;
     private final List<CommandNode> commands;
 
-    public CommandTypeNode(String typeId, List<CommandNode> commands) {
+    CommandTypeNode(String typeId, List<CommandNode> commands) {
         this.typeId = typeId;
         this.commands = commands;
     }
@@ -40,7 +40,7 @@ public class CommandTypeNode extends AbstractTreeNode {
 
     @Override
     public boolean isLeaf() {
-        return !commands.isEmpty();
+        return commands.isEmpty();
     }
 
     @Override
