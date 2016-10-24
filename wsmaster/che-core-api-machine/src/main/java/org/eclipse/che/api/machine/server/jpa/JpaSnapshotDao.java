@@ -23,6 +23,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import java.util.Collection;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -118,6 +119,20 @@ public class JpaSnapshotDao implements SnapshotDao {
     }
 
     @Override
+    public List<SnapshotImpl> replaceSnapshots(String workspaceId,
+                                               String envName,
+                                               Collection<? extends SnapshotImpl> newSnapshots) throws SnapshotException {
+        requireNonNull(workspaceId, "Required non-null workspace id");
+        requireNonNull(envName, "Required non-null environment name");
+        requireNonNull(newSnapshots, "Required non-null new snapshots");
+        try {
+            return doReplaceSnapshots(workspaceId, envName, newSnapshots);
+        } catch (RuntimeException x) {
+            throw new SnapshotException(x.getLocalizedMessage(), x);
+        }
+    }
+
+    @Override
     public void updateSnapshot(SnapshotImpl update) throws SnapshotException {
         requireNonNull(update, "Required non-null snapshot");
         requireNonNull(update.getId(), "Required non-null snapshot id");
@@ -141,6 +156,21 @@ public class JpaSnapshotDao implements SnapshotDao {
             throw new NotFoundException(format("Snapshot with id '%s' doesn't exist", snapshotId));
         }
         manager.remove(snapshot);
+    }
+
+    @Transactional
+    protected List<SnapshotImpl> doReplaceSnapshots(String workspaceId,
+                                                    String envName,
+                                                    Collection<? extends SnapshotImpl> newSnapshots) {
+        final EntityManager manager = managerProvider.get();
+        final List<SnapshotImpl> existing = manager.createNamedQuery("Snapshot.findByWorkspaceAndEnvironment", SnapshotImpl.class)
+                                                   .setParameter("workspaceId", workspaceId)
+                                                   .setParameter("envName", envName)
+                                                   .getResultList();
+        existing.forEach(manager::remove);
+        manager.flush();
+        newSnapshots.forEach(manager::persist);
+        return existing;
     }
 
     @Transactional
