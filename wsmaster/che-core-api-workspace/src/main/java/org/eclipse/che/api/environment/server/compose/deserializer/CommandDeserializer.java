@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server.compose.rule;
+package org.eclipse.che.api.environment.server.compose.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -89,7 +89,7 @@ public class CommandDeserializer extends JsonDeserializer<List<String>> {
             TextNode textNode = (TextNode)tree;
             return asList(textNode.asText().trim().split(SPLIT_COMMAND_REGEX));
         }
-        throw new IllegalStateException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
+        throw new RuntimeException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
     }
 
     private List<String> toCommand(ArrayNode arrayCommandNode) {

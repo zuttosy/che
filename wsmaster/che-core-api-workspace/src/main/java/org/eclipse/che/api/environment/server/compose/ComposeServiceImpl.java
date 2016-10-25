@@ -13,7 +13,7 @@ package org.eclipse.che.api.environment.server.compose;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import org.eclipse.che.api.environment.server.compose.rule.CommandDeserializer;
+import org.eclipse.che.api.environment.server.compose.deserializer.CommandDeserializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
