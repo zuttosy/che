@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.eclipse.che.ide.command.explorer;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.SpanElement;
 
+import org.eclipse.che.ide.Resources;
 import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.TreeStyles;
@@ -24,14 +27,24 @@ import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer
  */
 class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
 
-    CommandsTreeRenderer(TreeStyles treeStyles) {
+    private final Resources coreResources;
+
+    CommandsTreeRenderer(TreeStyles treeStyles, Resources coreResources) {
         super(treeStyles);
+        this.coreResources = coreResources;
     }
 
     @Override
     public Element render(Node node, String domID, Tree.Joint joint, int depth) {
         Element element = super.render(node, domID, joint, depth);
 
+        final SpanElement removeCommandButton = Document.get().createSpanElement();
+        removeCommandButton.appendChild(coreResources.removeCommandButton().getSvg().getElement());
+        final SpanElement buttonsPanel = Document.get().createSpanElement();
+        buttonsPanel.appendChild(removeCommandButton);
+
+
+        element.getFirstChildElement().appendChild(buttonsPanel);
         return element;
     }
 }

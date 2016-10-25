@@ -69,7 +69,7 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
         workspaceCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
         workspaceCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
-        workspaceCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(workspaceCommandsTree.getTreeStyles()));
+        workspaceCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(workspaceCommandsTree.getTreeStyles(), coreResources));
         workspaceCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
@@ -82,7 +82,7 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
         projectCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
         projectCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
-        projectCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(projectCommandsTree.getTreeStyles()));
+        projectCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(projectCommandsTree.getTreeStyles(), coreResources));
         projectCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
