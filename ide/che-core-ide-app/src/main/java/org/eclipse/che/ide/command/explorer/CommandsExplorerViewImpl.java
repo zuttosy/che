@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.eclipse.che.ide.ui.smartTree.SelectionModel.Mode.SINGLE;
+
 /**
  * Implementation of {@link CommandsExplorerView}.
  *
@@ -66,6 +68,8 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
         setTitle("Commands Explorer");
 
         workspaceCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
+        workspaceCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
+        workspaceCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(workspaceCommandsTree.getTreeStyles()));
         workspaceCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
@@ -77,6 +81,8 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
         });
 
         projectCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
+        projectCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
+        projectCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(projectCommandsTree.getTreeStyles()));
         projectCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
