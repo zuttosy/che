@@ -35,11 +35,7 @@
                     <che:radiobuttongroup.RadioButtonGroup ui:field="pagesSwitcher"/>
                 </g:north>
                 <g:center>
-                    <g:DeckPanel ui:field="pagesPanel">
-                        <g:Label text="info panel"/>
-                        <g:Label text="arguments panel"/>
-                        <g:Label text="preview URL panel"/>
-                    </g:DeckPanel>
+                    <g:DeckPanel ui:field="pagesPanel"/>
                 </g:center>
             </g:DockLayoutPanel>
         </g:center>

@@ -13,15 +13,18 @@ package org.eclipse.che.ide.command.explorer;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.DeckPanel;
+import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 
 import org.eclipse.che.ide.api.command.CommandImpl;
 import org.eclipse.che.ide.api.command.CommandType;
-import org.eclipse.che.ide.api.command.CommandTypeRegistry;
+import org.eclipse.che.ide.api.data.tree.Node;
 import org.eclipse.che.ide.api.parts.base.BaseView;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.ui.radiobuttongroup.RadioButtonGroup;
@@ -30,7 +33,6 @@ import org.eclipse.che.ide.ui.smartTree.NodeStorage;
 import org.eclipse.che.ide.ui.smartTree.Tree;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,8 +44,6 @@ import java.util.Map;
 public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.ActionDelegate> implements CommandsExplorerView {
 
     private static final CommandsExplorerViewImplUiBinder UI_BINDER = GWT.create(CommandsExplorerViewImplUiBinder.class);
-
-    private final CommandTypeRegistry commandTypeRegistry;
 
     @UiField(provided = true)
     Tree workspaceCommandsTree;
@@ -57,75 +57,74 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
     @UiField
     DeckPanel pagesPanel;
 
-    private ActionDelegate delegate;
+    private int pageCounter;
 
     @Inject
-    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources,
-                                    CommandTypeRegistry commandTypeRegistry) {
+    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources) {
         super(coreResources);
-
-        this.commandTypeRegistry = commandTypeRegistry;
 
         setTitle("Commands Explorer");
 
         workspaceCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
+        workspaceCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
+            @Override
+            public void onSelection(SelectionEvent<Node> event) {
+                Node selectedNode = event.getSelectedItem();
+                if (selectedNode instanceof CommandNode) {
+                    delegate.onCommandSelected(((CommandNode)selectedNode).getCommand());
+                }
+            }
+        });
+
         projectCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
+        projectCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
+            @Override
+            public void onSelection(SelectionEvent<Node> event) {
+                Node selectedNode = event.getSelectedItem();
+                if (selectedNode instanceof CommandNode) {
+                    delegate.onCommandSelected(((CommandNode)selectedNode).getCommand());
+                }
+            }
+        });
 
         setContentWidget(UI_BINDER.createAndBindUi(this));
-
-        composePagesSwitcher();
-        pagesSwitcher.selectButton(0);
-        pagesPanel.showWidget(0);
-    }
-
-    private void composePagesSwitcher() {
-        pagesSwitcher.addButton("Info", "Base command info", null, new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                pagesPanel.showWidget(0);
-            }
-        });
-        pagesSwitcher.addButton("Arguments", "Command arguments", null, new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                pagesPanel.showWidget(1);
-            }
-        });
-        pagesSwitcher.addButton("Preview URL", "Command preview URL", null, new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                pagesPanel.showWidget(2);
-            }
-        });
     }
 
     @Override
-    public void setCommands(List<CommandImpl> workspaceCommands, Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
+    public void addPage(IsWidget page, String title, String tooltip) {
+        final int pageIndex = pageCounter;
+
+        pagesSwitcher.addButton(title, tooltip, null, new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                pagesPanel.showWidget(pageIndex);
+            }
+        });
+
+        pagesPanel.add(page);
+
+        if (pageCounter == 0) {
+            pagesSwitcher.selectButton(0);
+            pagesPanel.showWidget(0);
+        }
+
+        pageCounter++;
+    }
+
+    @Override
+    public void setCommands(Map<CommandType, List<CommandImpl>> workspaceCommands,
+                            Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
         renderWorkspaceCommands(workspaceCommands);
         renderProjectsCommands(projectsCommands);
     }
 
-    private void renderWorkspaceCommands(List<CommandImpl> workspaceCommands) {
+    private void renderWorkspaceCommands(Map<CommandType, List<CommandImpl>> workspaceCommands) {
         workspaceCommandsTree.getNodeStorage().clear();
 
-        // group commands by type
-        Map<CommandType, List<CommandImpl>> commandsByType = new HashMap<>();
-        for (CommandImpl command : workspaceCommands) {
-            final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
-
-            List<CommandImpl> commands = commandsByType.get(commandType);
-            if (commands == null) {
-                commands = new ArrayList<>();
-                commandsByType.put(commandType, commands);
-            }
-            commands.add(command);
-        }
-
-        // render tree
-        for (Map.Entry<CommandType, List<CommandImpl>> entry : commandsByType.entrySet()) {
+        for (Map.Entry<CommandType, List<CommandImpl>> entry : workspaceCommands.entrySet()) {
             List<CommandNode> commandNodes = new ArrayList<>(entry.getValue().size());
             for (CommandImpl command : entry.getValue()) {
-                commandNodes.add(new CommandNode(command.getName()));
+                commandNodes.add(new CommandNode(command));
             }
 
             CommandTypeNode commandTypeNode = new CommandTypeNode(entry.getKey().getDisplayName(), commandNodes);
@@ -144,7 +143,7 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
                 List<CommandNode> commandNodes = new ArrayList<>();
                 for (CommandImpl command : entry2.getValue()) {
-                    commandNodes.add(new CommandNode(command.getName()));
+                    commandNodes.add(new CommandNode(command));
                 }
 
                 CommandType commandType = entry2.getKey();

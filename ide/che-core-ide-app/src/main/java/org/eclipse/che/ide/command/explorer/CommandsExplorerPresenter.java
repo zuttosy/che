@@ -22,10 +22,16 @@ import org.eclipse.che.ide.api.command.CommandImpl;
 import org.eclipse.che.ide.api.command.CommandManager;
 import org.eclipse.che.ide.api.command.CommandType;
 import org.eclipse.che.ide.api.command.CommandTypeRegistry;
+import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
+import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.api.resources.Project;
 import org.eclipse.che.ide.api.workspace.event.WorkspaceStartedEvent;
+import org.eclipse.che.ide.command.explorer.page.ArgumentsPage;
+import org.eclipse.che.ide.command.explorer.page.CommandsExplorerPage;
+import org.eclipse.che.ide.command.explorer.page.InfoPage;
+import org.eclipse.che.ide.command.explorer.page.PreviewUrlPage;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 import java.util.ArrayList;
@@ -42,7 +48,7 @@ import static org.eclipse.che.ide.api.parts.PartStackType.NAVIGATION;
  */
 @Singleton
 public class CommandsExplorerPresenter extends BasePresenter implements CommandsExplorerView.ActionDelegate,
-                                                                        WorkspaceStartedEvent.Handler {
+                                                                        WsAgentStateHandler {
 
     private final CommandsExplorerView view;
     private final WorkspaceAgent       workspaceAgent;
@@ -50,13 +56,18 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
     private final AppContext           appContext;
     private final CommandTypeRegistry  commandTypeRegistry;
 
+    private final List<CommandsExplorerPage> pages;
+
     @Inject
     public CommandsExplorerPresenter(CommandsExplorerView view,
                                      WorkspaceAgent workspaceAgent,
                                      EventBus eventBus,
                                      CommandManager commandManager,
                                      AppContext appContext,
-                                     CommandTypeRegistry commandTypeRegistry) {
+                                     CommandTypeRegistry commandTypeRegistry,
+                                     InfoPage infoPage,
+                                     ArgumentsPage argumentsPage,
+                                     PreviewUrlPage previewUrlPage) {
         this.view = view;
         this.workspaceAgent = workspaceAgent;
         this.commandManager = commandManager;
@@ -65,12 +76,32 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
 
         view.setDelegate(this);
 
-        eventBus.addHandler(WorkspaceStartedEvent.TYPE, this);
+        eventBus.addHandler(WsAgentStateEvent.TYPE, this);
+
+        pages = new ArrayList<>();
+        pages.add(infoPage);
+        pages.add(argumentsPage);
+        pages.add(previewUrlPage);
     }
 
     public void open() {
         workspaceAgent.openPart(this, NAVIGATION);
 
+        // group of workspace commands in map
+        Map<CommandType, List<CommandImpl>> workspaceCommands = new HashMap<>();
+        for (CommandImpl command : commandManager.getWorkspaceCommands()) {
+            final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
+
+            List<CommandImpl> commands = workspaceCommands.get(commandType);
+            if (commands == null) {
+                commands = new ArrayList<>();
+                workspaceCommands.put(commandType, commands);
+            }
+
+            commands.add(command);
+        }
+
+        // group of project commands in map
         Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands = new HashMap<>();
 
         for (Project project : appContext.getProjects()) {
@@ -93,7 +124,7 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
             }
         }
 
-        view.setCommands(commandManager.getWorkspaceCommands(), projectsCommands);
+        view.setCommands(workspaceCommands, projectsCommands);
     }
 
     @Override
@@ -103,6 +134,10 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
 
     @Override
     public void go(AcceptsOneWidget container) {
+        for (CommandsExplorerPage page : pages) {
+            view.addPage(page.getView(), page.getTitle(), page.getTooltip());
+        }
+
         container.setWidget(getView());
     }
 
@@ -133,12 +168,10 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
     }
 
     @Override
-    public void onWorkspaceStarted(WorkspaceStartedEvent event) {
-        workspaceAgent.openPart(this, NAVIGATION);
-    }
-
-    @Override
     public void onCommandSelected(CommandImpl command) {
+        for (CommandsExplorerPage page : pages) {
+            page.resetFrom(command);
+        }
     }
 
     @Override
@@ -147,5 +180,14 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
 
     @Override
     public void onRemoveClicked() {
+    }
+
+    @Override
+    public void onWsAgentStarted(WsAgentStateEvent event) {
+        open();
+    }
+
+    @Override
+    public void onWsAgentStopped(WsAgentStateEvent event) {
     }
 }

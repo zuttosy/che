@@ -15,9 +15,9 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.action.AbstractPerspectiveAction;
 import org.eclipse.che.ide.api.action.ActionEvent;
+import org.eclipse.che.ide.command.explorer.CommandsExplorerPresenter;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.MachineResources;
-import org.eclipse.che.ide.command.explorer.CommandsExplorerPresenter;
 import org.eclipse.che.ide.extension.machine.client.command.edit.EditCommandsPresenter;
 
 import javax.validation.constraints.NotNull;
@@ -57,6 +57,6 @@ public class EditCommandsAction extends AbstractPerspectiveAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        commandsExplorerPresenter.open();
+        editCommandsPresenter.show();
     }
 }
