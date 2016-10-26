@@ -74,6 +74,7 @@ public class ComposeServiceCommandContextTest {
         return new Object[][] {
                 //allow command in one line
                 {"service mysql start", asList("service", "mysql", "start"), 3},
+                {"service mysql start && tail -f /dev/null", asList("service", "mysql", "start", "&&", "tail", "-f", "/dev/null"), 7},
                 {"service mysql              start", asList("service", "mysql", "start"), 3},
                 {"service mysql start         ", asList("service", "mysql", "start"), 3},
                 {"service mysql start         ", asList("service", "mysql", "start"), 3},
@@ -110,11 +111,23 @@ public class ComposeServiceCommandContextTest {
                 //allow list command words
                     //first form
                 {"[service, mysql, start]", asList("service", "mysql", "start"), 3},
+                {"[service, mysql, start, '&&', tail, -f, /dev/null]",
+                 asList("service", "mysql", "start", "&&", "tail", "-f", "/dev/null"), 7},
                     //second form
                 {"\n" +
                  "   - tail\n" +
                  "   - -f\n" +
                  "   - /dev/null", asList("tail", "-f", "/dev/null"), 3},
+                {"\n" +
+                 "   - service\n" +
+                 "   - mysql\n" +
+                 "   - start\n" +
+                 "   - '&&'\n" +
+                 "   - tail\n" +
+                 "   - -f\n" +
+                 "   - /dev/null\n",
+                 asList("service", "mysql", "start", "&&", "tail", "-f", "/dev/null"), 7},
+
 
                 //Some special symbol should be accessible in case line was wrapped by quotes
                 {"\"echo ${PWD}\"", asList("echo", "${PWD}"), 2},
