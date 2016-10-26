@@ -152,6 +152,8 @@ public class ComposeServiceCommandContextTest {
                  "    -f\n" +
                  "   - /dev/null"},
                 {"{service mysql start}"},
+                {"[service, mysql, {start : test}]"},
+                {"[service, mysql, [start : test]]"},
                 {"service mysql \nstart"},
                 {"test : value"},
                 {"[service mysql start"},

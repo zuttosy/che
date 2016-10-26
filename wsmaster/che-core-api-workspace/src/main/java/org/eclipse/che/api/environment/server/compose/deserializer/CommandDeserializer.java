@@ -84,22 +84,24 @@ public class CommandDeserializer extends JsonDeserializer<List<String>> {
         TreeNode tree = jsonParser.readValueAsTree();
 
         if (tree.isArray()) {
-            return toCommand((ArrayNode)tree);
+            return toCommand((ArrayNode)tree, ctxt);
         }
         if (tree instanceof TextNode) {
             TextNode textNode = (TextNode)tree;
             return asList(textNode.asText().trim().split(SPLIT_COMMAND_REGEX));
         }
-        throw new JsonMappingException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
+        throw ctxt.mappingException((format("Field '%s' must be simple text or string array.", jsonParser.getCurrentName())));
     }
 
-    private List<String> toCommand(ArrayNode arrayCommandNode) {
+    private List<String> toCommand(ArrayNode arrayCommandNode, DeserializationContext ctxt) throws JsonMappingException {
         List<String> commands = new ArrayList<>();
 
         for (TreeNode treeNode : arrayCommandNode) {
             if (treeNode instanceof TextNode) {
                 TextNode textNode = (TextNode)treeNode;
                 commands.add(textNode.asText());
+            } else {
+                throw ctxt.mappingException("Array 'command' contains not string element.");
             }
         }
 
