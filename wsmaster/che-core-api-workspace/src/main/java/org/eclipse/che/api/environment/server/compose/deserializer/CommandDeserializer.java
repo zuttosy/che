@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -79,7 +80,7 @@ public class CommandDeserializer extends JsonDeserializer<List<String>> {
      * @throws JsonProcessingException
      */
     @Override
-    public List<String> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException {
+    public List<String> deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         TreeNode tree = jsonParser.readValueAsTree();
 
         if (tree.isArray()) {
@@ -89,7 +90,7 @@ public class CommandDeserializer extends JsonDeserializer<List<String>> {
             TextNode textNode = (TextNode)tree;
             return asList(textNode.asText().trim().split(SPLIT_COMMAND_REGEX));
         }
-        throw new RuntimeException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
+        throw new JsonMappingException(format("Field '%s' should be simple text or string array.", jsonParser.getCurrentName()));
     }
 
     private List<String> toCommand(ArrayNode arrayCommandNode) {
