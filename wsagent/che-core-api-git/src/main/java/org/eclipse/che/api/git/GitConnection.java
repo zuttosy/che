@@ -31,12 +31,24 @@ import org.eclipse.che.api.git.params.ResetParams;
 import org.eclipse.che.api.git.params.RmParams;
 import org.eclipse.che.api.git.params.TagCreateParams;
 import org.eclipse.che.api.git.shared.Branch;
+import org.eclipse.che.api.git.shared.BranchCreateRequest;
+import org.eclipse.che.api.git.shared.BranchDeleteRequest;
+import org.eclipse.che.api.git.shared.BranchListRequest;
+import org.eclipse.che.api.git.shared.CheckoutRequest;
+import org.eclipse.che.api.git.shared.CloneRequest;
+import org.eclipse.che.api.git.shared.CommitRequest;
+import org.eclipse.che.api.git.shared.DiffRequest;
+import org.eclipse.che.api.git.shared.FetchRequest;
 import org.eclipse.che.api.git.shared.GitUser;
 import org.eclipse.che.api.git.shared.MergeResult;
 import org.eclipse.che.api.git.shared.PullResponse;
 import org.eclipse.che.api.git.shared.PushResponse;
+import org.eclipse.che.api.git.shared.RebaseRequest;
+import org.eclipse.che.api.git.shared.RebaseResponse;
 import org.eclipse.che.api.git.shared.Remote;
 import org.eclipse.che.api.git.shared.RemoteReference;
+import org.eclipse.che.api.git.shared.RemoteUpdateRequest;
+import org.eclipse.che.api.git.shared.ResetRequest;
 import org.eclipse.che.api.git.shared.RebaseResponse;
 import org.eclipse.che.api.git.shared.Revision;
 import org.eclipse.che.api.git.shared.ShowFileContentResponse;
@@ -451,4 +463,13 @@ public interface GitConnection extends Closeable {
 
     /** Set publisher for git output, e.g. for sending git command output to the client side. */
     void setOutputLineConsumerFactory(LineConsumerFactory outputPublisherFactory);
+
+    /**
+     * Get the current branch on the current directory
+     *
+     * @return the name of the branch
+     * @throws GitException
+     *         if any exception occurs
+     */
+    String getCurrentBranch() throws GitException;
 }

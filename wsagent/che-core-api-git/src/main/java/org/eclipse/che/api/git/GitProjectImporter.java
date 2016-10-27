@@ -43,6 +43,8 @@ import java.util.Optional;
 
 import static org.eclipse.che.api.core.ErrorCodes.FAILED_CHECKOUT;
 import static org.eclipse.che.api.core.ErrorCodes.FAILED_CHECKOUT_WITH_START_POINT;
+import static org.eclipse.che.api.git.GitBasicAuthenticationCredentialsProvider.clearCredentials;
+import static org.eclipse.che.api.git.GitBasicAuthenticationCredentialsProvider.setCurrentCredentials;
 import static org.eclipse.che.api.git.shared.BranchListMode.LIST_ALL;
 import static org.eclipse.che.api.git.shared.BranchListMode.LIST_REMOTE;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
@@ -103,6 +105,7 @@ public class GitProjectImporter implements ProjectImporter {
                                                                           IOException,
                                                                           ServerException {
         GitConnection git = null;
+        boolean credentialsHaveBeenSet = false;
         try {
             // For factory: checkout particular commit after clone
             String commitId = null;
@@ -135,6 +138,12 @@ public class GitProjectImporter implements ProjectImporter {
                     recursiveEnabled = true;
                 }
                 branchMerge = parameters.get("branchMerge");
+                final String user = storage.getParameters().remove("username");
+                final String pass = storage.getParameters().remove("password");
+                if (user != null && pass != null) {
+                    credentialsHaveBeenSet = true;
+                    setCurrentCredentials(user, pass);
+                }
             }
             // Get path to local file. Git works with local filesystem only.
             final String localPath = baseFolder.getVirtualFile().toIoFile().getAbsolutePath();
@@ -184,9 +193,9 @@ public class GitProjectImporter implements ProjectImporter {
                 if (branchMerge != null) {
                     git.getConfig().set("branch." + (branch == null ? "master" : branch) + ".merge", branchMerge);
                 }
-                if (!keepVcs) {
-                    cleanGit(git.getWorkingDir());
-                }
+            }
+            if (!keepVcs) {
+                cleanGit(git.getWorkingDir());
             }
         } catch (URISyntaxException e) {
             throw new ServerException(
@@ -196,6 +205,9 @@ public class GitProjectImporter implements ProjectImporter {
         } finally {
             if (git != null) {
                 git.close();
+            }
+            if (credentialsHaveBeenSet) {
+                clearCredentials();
             }
         }
     }
@@ -255,8 +267,8 @@ public class GitProjectImporter implements ProjectImporter {
         final CheckoutParams params = CheckoutParams.create(branchName);
         final boolean branchExist = git.branchList(LIST_ALL)
                                        .stream()
-                                       .anyMatch(branch -> branch.getName().equals(branchName));
-        final GitCheckoutEvent checkout = newDto(GitCheckoutEvent.class).withWorkspaceId(System.getenv("CHE_WORKSPACE_ID"))
+                                       .anyMatch(branch -> branch.getDisplayName().equals("origin/" + branchName));
+        final GitCheckoutEvent checkout = newDto(GitCheckoutEvent.class).withWorkspaceId(WorkspaceIdProvider.getWorkspaceId())
                                                                         .withProjectName(projectName);
         if (startPoint != null) {
             if (branchExist) {
