@@ -56,8 +56,9 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
 @Singleton
 public class GitProjectImporter implements ProjectImporter {
 
-    private final GitConnectionFactory gitConnectionFactory;
     private static final Logger LOG = LoggerFactory.getLogger(GitProjectImporter.class);
+
+    private final GitConnectionFactory gitConnectionFactory;
     private final EventService         eventService;
 
     @Inject

@@ -21,7 +21,7 @@ import java.util.List;
  * @author andrew00x
  */
 @DTO
-public interface PushRequest extends GitRequest {
+public interface PushRequest {
     /** @return list of refspec to push */
     List<String> getRefSpec();
     

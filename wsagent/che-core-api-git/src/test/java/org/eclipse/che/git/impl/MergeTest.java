@@ -107,10 +107,10 @@ public class MergeTest {
         assertEquals(mergeResult.getMergeStatus(), MergeResult.MergeStatus.CONFLICTING);
 
         String expContent = "<<<<<<< HEAD\n" //
-                + "bbb\n" //
-                + "=======\n" //
-                + "aaa\n" //
-                + ">>>>>>> MergeTestBranch\n";
+                            + "bbb\n" //
+                            + "=======\n" //
+                            + "aaa\n" //
+                            + ">>>>>>> MergeTestBranch\n";
         String actual = Files.toString(new File(connection.getWorkingDir(), "t-merge-conflict"), Charsets.UTF_8);
         assertEquals(actual, expContent);
     }
@@ -123,7 +123,7 @@ public class MergeTest {
 //
 //        connection.checkout(newDto(CheckoutRequest.class).withName(branchName).withCreateNew(true));
 //        addFile(connection, "t-merge-failed", "aaa\n");
-//        connection.add(AddParams.create(new ArrayList<>(Arrays.asList("."))));
+//        connection.add(newDto(AddRequest.class).withFilepattern(new ArrayList<>(Arrays.asList("."))));
 //        connection.commit(newDto(CommitRequest.class).withMessage("add file in new branch"));
 //
 //        connection.checkout(newDto(CheckoutRequest.class).withName("master"));

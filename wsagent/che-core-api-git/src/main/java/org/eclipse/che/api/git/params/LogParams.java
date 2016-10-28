@@ -10,10 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.git.params;
 
-import java.util.Collections;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
 
 /**
  * Arguments holder for {@link org.eclipse.che.api.git.GitConnection#log(LogParams)}.
@@ -30,11 +27,12 @@ public class LogParams {
     private int          maxCount;
 
     private LogParams() {
-        fileFilter = emptyList();
+        skip = -1;
+        maxCount = -1;
     }
 
     /**
-     * Create new {@link LogParams} instance with empty parameters
+     * Create new {@link LogParams} instance with default parameters.
      */
     public static LogParams create() {
         return new LogParams();

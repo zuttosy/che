@@ -195,7 +195,6 @@ class JGitConnection implements GitConnection {
     private static final String REBASE_OPERATION_SKIP     = "SKIP";
     private static final String REBASE_OPERATION_CONTINUE = "CONTINUE";
     private static final String REBASE_OPERATION_ABORT    = "ABORT";
-    private static final String ADD_ALL_OPTION            = "all";
 
     // Push Response Constants
     private static final String BRANCH_REFSPEC_SEPERATOR = " -> ";
@@ -267,21 +266,7 @@ class JGitConnection implements GitConnection {
 
     @Override
     public void add(AddParams params) throws GitException {
-        add(params, params.isUpdate());
-
-        // "all" option, when update is false, should run git add with both update true and update false
-        if ((!params.isUpdate()) && params.getAttributes().containsKey(ADD_ALL_OPTION)) {
-            add(params, true);
-        }
-    }
-
-    /*
-     * Perform the "add" according to the add request. isUpdate is always used
-     * as the value for the "update" parameter instead of the value in the
-     * AddRequest.
-     */
-    private void add(AddParams params , boolean isUpdate) throws GitException {
-        AddCommand addCommand = getGit().add().setUpdate(isUpdate);
+        AddCommand addCommand = getGit().add().setUpdate(params.isUpdate());
 
         List<String> filePatterns = params.getFilePattern();
         if (filePatterns.isEmpty()) {
@@ -728,16 +713,17 @@ class JGitConnection implements GitConnection {
     @Override
     public LogPage log(LogParams params) throws GitException {
         LogCommand logCommand = getGit().log();
-        String filePath = null;
         try {
             setRevisionRange(logCommand, params);
-            setPaging(logCommand, params);
-            if (params != null) {
-                params.getFileFilter().forEach(logCommand::addPath);
-                filePath = params.getFilePath();
-                if (!isNullOrEmpty(filePath)) {
-                    logCommand.addPath(filePath);
-                }
+            logCommand.setSkip(params.getSkip());
+            logCommand.setMaxCount(params.getMaxCount());
+            List<String> fileFilter = params.getFileFilter();
+            if (fileFilter != null) {
+                fileFilter.forEach(logCommand::addPath);
+            }
+            String filePath = params.getFilePath();
+            if (!isNullOrEmpty(filePath)) {
+                logCommand.addPath(filePath);
             }
             Iterator<RevCommit> revIterator = logCommand.call().iterator();
             List<Revision> commits = new ArrayList<>();
@@ -848,27 +834,14 @@ class JGitConnection implements GitConnection {
     }
 
 
-    private void setRevisionRange(LogCommand logCommand, LogParams logRequest) throws IOException {
-        if (logRequest != null && logCommand != null) {
-            String revisionRangeSince = logRequest.getRevisionRangeSince();
-            String revisionRangeUntil = logRequest.getRevisionRangeUntil();
+    private void setRevisionRange(LogCommand logCommand, LogParams params) throws IOException {
+        if (params != null && logCommand != null) {
+            String revisionRangeSince = params.getRevisionRangeSince();
+            String revisionRangeUntil = params.getRevisionRangeUntil();
             if (revisionRangeSince != null && revisionRangeUntil != null) {
                 ObjectId since = repository.resolve(revisionRangeSince);
                 ObjectId until = repository.resolve(revisionRangeUntil);
                 logCommand.addRange(since, until);
-            }
-        }
-    }
-
-    private void setPaging(LogCommand logCommand, LogParams logRequest) {
-        if (logCommand != null && logRequest != null) {
-            Integer skip = logRequest.getSkip();
-            if (skip != null && skip.intValue() >= 0) {
-                logCommand.setSkip(skip.intValue());
-            }
-            Integer maxCount = logRequest.getMaxCount();
-            if (maxCount != null && maxCount.intValue() >= 0) {
-                logCommand.setMaxCount(maxCount.intValue());
             }
         }
     }

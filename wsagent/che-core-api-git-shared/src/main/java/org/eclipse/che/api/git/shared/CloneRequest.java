@@ -20,7 +20,7 @@ import java.util.List;
  * @author andrew00x
  */
 @DTO
-public interface CloneRequest extends GitRequest {
+public interface CloneRequest {
     /** @return URI of repository to be cloned */
     String getRemoteUri();
 

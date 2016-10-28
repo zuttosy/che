@@ -18,7 +18,7 @@ import org.eclipse.che.dto.shared.DTO;
  * @author andrew00x
  */
 @DTO
-public interface PullRequest extends GitRequest {
+public interface PullRequest {
     /** @return refspec to fetch */
     String getRefSpec();
     

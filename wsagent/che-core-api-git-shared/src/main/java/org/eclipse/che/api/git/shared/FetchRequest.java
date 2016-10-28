@@ -20,7 +20,7 @@ import java.util.List;
  * @author andrew00x
  */
 @DTO
-public interface FetchRequest extends GitRequest {
+public interface FetchRequest {
     /** @return list of refspec to fetch */
     List<String> getRefSpec();
     

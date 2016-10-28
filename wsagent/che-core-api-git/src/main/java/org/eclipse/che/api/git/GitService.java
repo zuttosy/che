@@ -107,7 +107,6 @@ public class GitService {
     public void add(AddRequest request) throws ApiException {
         try (GitConnection gitConnection = getGitConnection()) {
             AddParams params = AddParams.create(request.getFilePattern())
-                                        .withAttributes(request.getAttributes())
                                         .withUpdate(request.isUpdate());
             gitConnection.add(params);
         }

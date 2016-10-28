@@ -33,7 +33,7 @@ public class PushParams {
     }
 
     /**
-     * Create new {@link PushParams} instance
+     * Create new {@link PushParams} instance.
      *
      * @param remote
      *         remote name to push in
@@ -91,28 +91,18 @@ public class PushParams {
         return username;
     }
 
-    /** Set user name for authentication. */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /** @return {@link PushParams} with specified user name for authentication */
+    /** Returns {@link PushParams} with specified user name for authentication. */
     public PushParams withUsername(String username) {
         this.username = username;
         return this;
     }
 
-    /** @return password for authentication */
+    /** Returns password for authentication. */
     public String getPassword() {
         return password;
     }
 
-    /** Set password for authentication. */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    /** @return {@link PushParams} with specified password for authentication */
+    /** Returns {@link PushParams} with specified password for authentication. */
     public PushParams withPassword(String password) {
         this.password = password;
         return this;

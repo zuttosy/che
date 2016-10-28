@@ -22,7 +22,7 @@ import java.util.List;
  * @author andrew00x
  */
 @DTO
-public interface AddRequest extends GitRequest {
+public interface AddRequest {
     /** Default file pattern that will be used if {@link #filepattern} is not set. All content of working tree will be added in index. */
     List<String> DEFAULT_PATTERN = new ArrayList<String>(Arrays.asList("."));
 

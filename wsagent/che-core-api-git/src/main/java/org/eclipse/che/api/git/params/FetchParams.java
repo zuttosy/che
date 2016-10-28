@@ -33,7 +33,7 @@ public class FetchParams {
     }
 
     /**
-     * Create new {@link FetchParams} instance
+     * Create new {@link FetchParams} instance.
      *
      * @param remote
      *         remote name to fetch
@@ -86,33 +86,23 @@ public class FetchParams {
         return this;
     }
 
-    /** Returns user name for authentication */
+    /** Returns user name for authentication. */
     public String getUsername() {
         return username;
     }
 
-    /** Set user name for authentication. */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /** @return {@link FetchParams} with specified user name for authentication */
+    /** Returns {@link FetchParams} with specified user name for authentication. */
     public FetchParams withUsername(String username) {
         this.username = username;
         return this;
     }
 
-    /** @return password for authentication */
+    /** Returns password for authentication. */
     public String getPassword() {
         return password;
     }
 
-    /** Set password for authentication. */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    /** @return {@link FetchParams} with specified password for authentication */
+    /** Returns {@link FetchParams} with specified password for authentication. */
     public FetchParams withPassword(String password) {
         this.password = password;
         return this;

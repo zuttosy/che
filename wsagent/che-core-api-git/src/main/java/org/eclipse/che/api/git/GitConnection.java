@@ -133,7 +133,7 @@ public interface GitConnection extends Closeable {
     List<Branch> branchList(BranchListMode listMode) throws GitException;
 
     /**
-     * Show information about files in the index and the working tree
+     * Show information about files in the index and the working tree.
      *
      * @param params
      *         list files params
@@ -278,7 +278,7 @@ public interface GitConnection extends Closeable {
     MergeResult merge(String commit) throws GitException;
 
     /**
-     * Rebase on a branch
+     * Rebase on a branch.
      *
      * @param operation
      *         rebase operation to use
@@ -293,9 +293,9 @@ public interface GitConnection extends Closeable {
      * Move or rename file or directory.
      *
      * @param source
-     *         file that will be moved to target
+     *         file that will be moved or renamed
      * @param target
-     *         file where source will be moved
+     *         new name or destination directory
      * @throws GitException
      *         if any error occurs
      */
@@ -424,7 +424,7 @@ public interface GitConnection extends Closeable {
     void tagDelete(String name) throws GitException;
 
     /**
-     * Get list of available tags.
+     * Returns list of available tags.
      *
      * @param pattern
      *         tag's names pattern
