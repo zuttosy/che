@@ -57,15 +57,7 @@ import org.eclipse.che.api.git.params.RmParams;
 import org.eclipse.che.api.git.params.TagCreateParams;
 import org.eclipse.che.api.git.shared.AddRequest;
 import org.eclipse.che.api.git.shared.Branch;
-import org.eclipse.che.api.git.shared.BranchCreateRequest;
-import org.eclipse.che.api.git.shared.BranchDeleteRequest;
-import org.eclipse.che.api.git.shared.BranchListRequest;
-import org.eclipse.che.api.git.shared.CheckoutRequest;
-import org.eclipse.che.api.git.shared.CloneRequest;
-import org.eclipse.che.api.git.shared.CommitRequest;
 import org.eclipse.che.api.git.shared.DiffCommitFile;
-import org.eclipse.che.api.git.shared.DiffRequest;
-import org.eclipse.che.api.git.shared.FetchRequest;
 import org.eclipse.che.api.git.shared.GitUser;
 import org.eclipse.che.api.git.shared.MergeResult;
 import org.eclipse.che.api.git.shared.ProviderInfo;
@@ -80,13 +72,9 @@ import org.eclipse.che.api.git.shared.ShowFileContentResponse;
 import org.eclipse.che.api.git.shared.Status;
 import org.eclipse.che.api.git.shared.StatusFormat;
 import org.eclipse.che.api.git.shared.Tag;
-import org.eclipse.che.api.git.shared.TagCreateRequest;
-import org.eclipse.che.api.git.shared.TagDeleteRequest;
-import org.eclipse.che.api.git.shared.TagListRequest;
-import org.eclipse.che.api.git.shared.GitRequest;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.plugin.ssh.key.script.SshKeyProvider;
 import org.eclipse.che.commons.proxy.ProxyAuthenticator;
-import org.eclipse.che.dto.server.DtoFactory;
 import org.eclipse.jgit.api.AddCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
@@ -523,7 +511,7 @@ class JGitConnection implements GitConnection {
                 }
             });
 
-            executeRemoteCommand(remoteUri, cloneCommand , request);
+            executeRemoteCommand(remoteUri, cloneCommand , params.getUsername(), params.getPassword());
 
             StoredConfig repositoryConfig = getRepository().getConfig();
             GitUser gitUser = getUser();
@@ -702,7 +690,7 @@ class JGitConnection implements GitConnection {
             }
             fetchCommand.setRemoveDeletedRefs(params.isRemoveDeletedRefs());
 
-            executeRemoteCommand(remoteUri, fetchCommand);
+            executeRemoteCommand(remoteUri, fetchCommand, params.getUsername(), params.getPassword());
         } catch (GitException | GitAPIException exception) {
             String errorMessage;
             if (exception.getMessage().contains("Invalid remote: ")) {
@@ -736,7 +724,7 @@ class JGitConnection implements GitConnection {
         }
     }
 
-    /** @see org.eclipse.che.api.git.GitConnection#log(org.eclipse.che.api.git.shared.LogRequest) */
+    /** @see org.eclipse.che.api.git.GitConnection#log(LogParams) */
     @Override
     public LogPage log(LogParams params) throws GitException {
         LogCommand logCommand = getGit().log();
@@ -744,9 +732,9 @@ class JGitConnection implements GitConnection {
         try {
             setRevisionRange(logCommand, params);
             setPaging(logCommand, params);
-            if (logRequest != null) {
-                logRequest.getFileFilter().forEach(logCommand::addPath);
-                filePath = logRequest.getFilePath();
+            if (params != null) {
+                params.getFileFilter().forEach(logCommand::addPath);
+                filePath = params.getFilePath();
                 if (!isNullOrEmpty(filePath)) {
                     logCommand.addPath(filePath);
                 }
@@ -860,7 +848,7 @@ class JGitConnection implements GitConnection {
     }
 
 
-    private void setRevisionRange(LogCommand logCommand, LogRequest logRequest) throws IOException {
+    private void setRevisionRange(LogCommand logCommand, LogParams logRequest) throws IOException {
         if (logRequest != null && logCommand != null) {
             String revisionRangeSince = logRequest.getRevisionRangeSince();
             String revisionRangeUntil = logRequest.getRevisionRangeUntil();
@@ -872,7 +860,7 @@ class JGitConnection implements GitConnection {
         }
     }
 
-    private void setPaging(LogCommand logCommand, LogRequest logRequest) {
+    private void setPaging(LogCommand logCommand, LogParams logRequest) {
         if (logCommand != null && logRequest != null) {
             Integer skip = logRequest.getSkip();
             if (skip != null && skip.intValue() >= 0) {
@@ -1120,7 +1108,10 @@ class JGitConnection implements GitConnection {
                 fetchCommand.setTimeout(timeout);
             }
 
-            FetchResult fetchResult = (FetchResult)executeRemoteCommand(remoteUri, fetchCommand, request);
+            FetchResult fetchResult = (FetchResult)executeRemoteCommand(remoteUri,
+                                                                        fetchCommand,
+                                                                        params.getUsername(),
+                                                                        params.getPassword());
 
             Ref remoteBranchRef = fetchResult.getAdvertisedRef(remoteBranch);
             if (remoteBranchRef == null) {
@@ -1188,7 +1179,10 @@ class JGitConnection implements GitConnection {
         }
         try {
             @SuppressWarnings("unchecked")
-            Iterable<PushResult> pushResults = (Iterable<PushResult>)executeRemoteCommand(remoteUri, pushCommand, request);
+            Iterable<PushResult> pushResults = (Iterable<PushResult>)executeRemoteCommand(remoteUri,
+                                                                                          pushCommand,
+                                                                                          params.getUsername(),
+                                                                                          params.getPassword());
             PushResult pushResult = pushResults.iterator().next();
             String commandOutput = pushResult.getMessages().isEmpty() ? "Successfully pushed to " + remoteUri : pushResult.getMessages();
             Collection<RemoteRefUpdate> refUpdates = pushResult.getRemoteUpdates();
@@ -1693,7 +1687,7 @@ class JGitConnection implements GitConnection {
      * @throws UnauthorizedException
      */
     @VisibleForTesting
-    Object executeRemoteCommand(String remoteUrl, TransportCommand command, GitRequest request)
+    Object executeRemoteCommand(String remoteUrl, TransportCommand command, @Nullable String username, @Nullable String password)
             throws GitException, GitAPIException, UnauthorizedException {
         File keyDirectory = null;
         UserCredential credentials = null;
@@ -1726,19 +1720,17 @@ class JGitConnection implements GitConnection {
                 });
             } else {
                 if (remoteUrl != null && GIT_URL_WITH_CREDENTIALS_PATTERN.matcher(remoteUrl).matches()) {
-                    String username = remoteUrl.substring(remoteUrl.indexOf("://") + 3, remoteUrl.lastIndexOf(":"));
-                    String password = remoteUrl.substring(remoteUrl.lastIndexOf(":") + 1, remoteUrl.indexOf("@"));
+                    username = remoteUrl.substring(remoteUrl.indexOf("://") + 3, remoteUrl.lastIndexOf(":"));
+                    password = remoteUrl.substring(remoteUrl.lastIndexOf(":") + 1, remoteUrl.indexOf("@"));
                     command.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
                 } else {
-                    String gitUser = request.getAttributes().get("username");
-                    String gitPassword = request.getAttributes().get("password");
-                    if (gitUser != null && gitPassword != null) {
-                        command.setCredentialsProvider(new UsernamePasswordCredentialsProvider(gitUser, gitPassword));
+                    if (username != null && password != null) {
+                        command.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
                     } else {
                         credentials = credentialsLoader.getUserCredential(remoteUrl);
                         if (credentials != null) {
-                            command.setCredentialsProvider(
-                                    new UsernamePasswordCredentialsProvider(credentials.getUserName(), credentials.getPassword()));
+                            command.setCredentialsProvider(new UsernamePasswordCredentialsProvider(credentials.getUserName(),
+                                                                                                   credentials.getPassword()));
                         }
                     }
                 }

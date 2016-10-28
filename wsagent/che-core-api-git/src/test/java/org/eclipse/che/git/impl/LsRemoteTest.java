@@ -46,6 +46,7 @@ public class LsRemoteTest {
     @AfterMethod
     public void cleanUp() {
         cleanupTestRepo(repository);
+
     }
 
     @Test(dataProvider = "GitConnectionFactory", dataProviderClass = org.eclipse.che.git.impl.GitConnectionFactoryProvider.class)
@@ -53,6 +54,7 @@ public class LsRemoteTest {
             throws GitException, IOException, UnauthorizedException {
 
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
+        connection.close();
 
         //when
         Set<RemoteReference> remoteReferenceSet = new HashSet<>(connection.lsRemote("https://github.com/codenvy/everrest.git"));

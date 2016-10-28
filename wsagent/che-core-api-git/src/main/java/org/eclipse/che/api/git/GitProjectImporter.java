@@ -13,6 +13,7 @@ package org.eclipse.che.api.git;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.eclipse.che.WorkspaceIdProvider;
 import org.eclipse.che.api.core.ConflictException;
 import org.eclipse.che.api.core.ForbiddenException;
 import org.eclipse.che.api.core.ServerException;

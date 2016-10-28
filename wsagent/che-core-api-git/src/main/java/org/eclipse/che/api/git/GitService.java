@@ -177,7 +177,9 @@ public class GitService {
                                         .withWorkingDir(getAbsoluteProjectPath(request.getWorkingDir()))
                                         .withBranchesToFetch(request.getBranchesToFetch())
                                         .withRemoteName(request.getRemoteName())
-                                        .withTimeout(request.getTimeout());
+                                        .withTimeout(request.getTimeout())
+                                        .withUsername(request.getUsername())
+                                        .withPassword(request.getPassword());
 
         LOG.info("Repository clone from '" + request.getRemoteUri() + "' to '" + request.getWorkingDir() + "' started");
         GitConnection gitConnection = getGitConnection();
@@ -248,7 +250,9 @@ public class GitService {
             FetchParams params = FetchParams.create(request.getRemote())
                                             .withRefSpec(request.getRefSpec())
                                             .withTimeout(request.getTimeout())
-                                            .withRemoveDeletedRefs(request.isRemoveDeletedRefs());
+                                            .withRemoveDeletedRefs(request.isRemoveDeletedRefs())
+                                            .withUsername(request.getUsername())
+                                            .withPassword(request.getPassword());
             gitConnection.fetch(params);
         }
     }
@@ -334,7 +338,9 @@ public class GitService {
         try (GitConnection gitConnection = getGitConnection()) {
             PullParams params = PullParams.create(request.getRemote())
                                           .withRefSpec(request.getRefSpec())
-                                          .withTimeout(request.getTimeout());
+                                          .withTimeout(request.getTimeout())
+                                          .withUsername(request.getUsername())
+                                          .withPassword(request.getPassword());
             return gitConnection.pull(params);
         }
     }
@@ -347,7 +353,9 @@ public class GitService {
             PushParams params = PushParams.create(request.getRemote())
                                           .withRefSpec(request.getRefSpec())
                                           .withForce(request.isForce())
-                                          .withTimeout(request.getTimeout());
+                                          .withTimeout(request.getTimeout())
+                                          .withUsername(request.getUsername())
+                                          .withPassword(request.getPassword());
             return gitConnection.push(params);
         }
     }

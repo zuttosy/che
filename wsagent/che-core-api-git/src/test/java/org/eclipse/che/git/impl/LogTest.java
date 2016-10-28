@@ -125,28 +125,28 @@ public class LogTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "1.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 1.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 1.txt file"));
 
         addFile(connection, "2.txt", "newChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 2.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 2.txt file"));
 
         addFile(connection, "3.txt", "otherChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 3.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 3.txt file"));
 
         addFile(connection, "4.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 4.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 4.txt file"));
 
         //when
         List<Revision> allCommits =
-            connection.log(newDto(LogRequest.class)).getCommits();
+            connection.log(LogParams.create()).getCommits();
         List<Revision> firstBucketOfCommits =
-            connection.log(newDto(LogRequest.class).withSkip(1)).getCommits();
+            connection.log(LogParams.create().withSkip(1)).getCommits();
         List<Revision> secondBucketOfCommits =
-            connection.log(newDto(LogRequest.class).withSkip(3)).getCommits();
+            connection.log(LogParams.create().withSkip(3)).getCommits();
 
         //then
         assertEquals(4, allCommits.size());
@@ -184,28 +184,28 @@ public class LogTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "1.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 1.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 1.txt file"));
 
         addFile(connection, "2.txt", "newChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 2.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 2.txt file"));
 
         addFile(connection, "3.txt", "otherChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 3.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 3.txt file"));
 
         addFile(connection, "4.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 4.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 4.txt file"));
 
         //when
         List<Revision> allCommits =
-            connection.log(newDto(LogRequest.class)).getCommits();
+            connection.log(LogParams.create()).getCommits();
         List<Revision> firstBucketOfCommits =
-            connection.log(newDto(LogRequest.class).withMaxCount(4)).getCommits();
+            connection.log(LogParams.create().withMaxCount(4)).getCommits();
         List<Revision> secondBucketOfCommits =
-            connection.log(newDto(LogRequest.class).withMaxCount(2)).getCommits();
+            connection.log(LogParams.create().withMaxCount(2)).getCommits();
 
         //then
         assertEquals(4, allCommits.size());
@@ -226,28 +226,28 @@ public class LogTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "1.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 1.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 1.txt file"));
 
         addFile(connection, "2.txt", "newChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 2.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 2.txt file"));
 
         addFile(connection, "3.txt", "otherChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 3.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 3.txt file"));
 
         addFile(connection, "4.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        connection.commit(newDto(CommitRequest.class).withMessage("add 4.txt file"));
+        connection.add(AddParams.create());
+        connection.commit(CommitParams.create("add 4.txt file"));
 
         //when
         List<Revision> allCommits =
-            connection.log(newDto(LogRequest.class)).getCommits();
+            connection.log(LogParams.create()).getCommits();
         List<Revision> firstBacketOfCommits =
-            connection.log(newDto(LogRequest.class).withSkip(1).withMaxCount(2)).getCommits();
+            connection.log(LogParams.create().withSkip(1).withMaxCount(2)).getCommits();
         List<Revision> secondBacketOfCommits =
-            connection.log(newDto(LogRequest.class).withSkip(2).withMaxCount(2)).getCommits();
+            connection.log(LogParams.create().withSkip(2).withMaxCount(2)).getCommits();
 
         //then
         assertEquals(4, allCommits.size());
@@ -285,28 +285,28 @@ public class LogTest {
         //given
         GitConnection connection = connectToInitializedGitRepository(connectionFactory, repository);
         addFile(connection, "1.txt", "someChanges");
-        connection.add(newDto(AddRequest.class));
-        String firstCommitId = connection.commit(newDto(CommitRequest.class).withMessage("add 1.txt file")).getId();
+        connection.add(AddParams.create());
+        String firstCommitId = connection.commit(CommitParams.create("add 1.txt file")).getId();
 
         addFile(connection, "2.txt", "secondChanges");
-        connection.add(newDto(AddRequest.class));
-        String secondCommitId = connection.commit(newDto(CommitRequest.class).withMessage("add 2.txt file")).getId();
+        connection.add(AddParams.create());
+        String secondCommitId = connection.commit(CommitParams.create("add 2.txt file")).getId();
 
         addFile(connection, "3.txt", "thirdChanges");
-        connection.add(newDto(AddRequest.class));
-        String thirdCommitId = connection.commit(newDto(CommitRequest.class).withMessage("add 3.txt file")).getId();
+        connection.add(AddParams.create());
+        String thirdCommitId = connection.commit(CommitParams.create("add 3.txt file")).getId();
 
         addFile(connection, "4.txt", "fourthChanges");
-        connection.add(newDto(AddRequest.class));
-        String fourthCommitId = connection.commit(newDto(CommitRequest.class).withMessage("add 4.txt file")).getId();
+        connection.add(AddParams.create());
+        String fourthCommitId = connection.commit(CommitParams.create("add 4.txt file")).getId();
 
         //when
         List<Revision> allCommits =
-            connection.log(newDto(LogRequest.class)).getCommits();
+            connection.log(LogParams.create()).getCommits();
         List<Revision> secondAndThirdAndFourthCommits =
-            connection.log(newDto(LogRequest.class).withRevisionRangeSince(firstCommitId).withRevisionRangeUntil(fourthCommitId)).getCommits();
+            connection.log(LogParams.create().withRevisionRangeSince(firstCommitId).withRevisionRangeUntil(fourthCommitId)).getCommits();
         List<Revision> thirdAndFourthCommits =
-            connection.log(newDto(LogRequest.class).withRevisionRangeSince(secondCommitId).withRevisionRangeUntil(fourthCommitId)).getCommits();
+            connection.log(LogParams.create().withRevisionRangeSince(secondCommitId).withRevisionRangeUntil(fourthCommitId)).getCommits();
 
         //then
         assertEquals(4, allCommits.size());

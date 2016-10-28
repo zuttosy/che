@@ -26,6 +26,8 @@ public class CloneParams {
     private String       remoteUrl;
     private String       workingDir;
     private String       remoteName;
+    private String       username;
+    private String       password;
     private int          timeout;
     private boolean      recursive;
 
@@ -115,6 +117,38 @@ public class CloneParams {
     /** @see CloneRequest#isRecursive() */
     public CloneParams withRecursive(boolean recursive) {
         this.recursive = recursive;
+        return this;
+    }
+
+    /** Returns user name for authentication */
+    public String getUsername() {
+        return username;
+    }
+
+    /** Set user name for authentication. */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    /** @return {@link CloneParams} with specified user name for authentication */
+    public CloneParams withUsername(String username) {
+        this.username = username;
+        return this;
+    }
+
+    /** @return password for authentication */
+    public String getPassword() {
+        return password;
+    }
+
+    /** Set password for authentication. */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /** @return {@link CloneParams} with specified password for authentication */
+    public CloneParams withPassword(String password) {
+        this.password = password;
         return this;
     }
 }

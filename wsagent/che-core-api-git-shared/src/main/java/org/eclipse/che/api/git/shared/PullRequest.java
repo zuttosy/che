@@ -39,4 +39,22 @@ public interface PullRequest extends GitRequest {
     void setTimeout(int timeout);
     
     PullRequest withTimeout(int timeout);
+
+    /** Returns user name for authentication */
+    String getUsername();
+
+    /** Set user name for authentication. */
+    void setUsername(String username);
+
+    /** @return {@link PullRequest} with specified user name for authentication */
+    PullRequest withUsername(String username);
+
+    /** @return password for authentication */
+    String getPassword();
+
+    /** Set password for authentication. */
+    void setPassword(String password);
+
+    /** @return {@link PullRequest} with specified password for authentication */
+    PullRequest withPassword(String password);
 }

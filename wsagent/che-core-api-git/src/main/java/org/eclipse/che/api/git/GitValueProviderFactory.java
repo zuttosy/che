@@ -14,8 +14,6 @@ import com.google.inject.Inject;
 
 import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.git.shared.Remote;
-import org.eclipse.che.api.git.shared.RemoteListRequest;
-import org.eclipse.che.api.git.shared.StatusFormat;
 import org.eclipse.che.api.project.server.FolderEntry;
 import org.eclipse.che.api.project.server.type.ReadonlyValueProvider;
 import org.eclipse.che.api.project.server.type.ValueProvider;

@@ -41,6 +41,11 @@ public class AddParams {
         return new AddParams().withFilePattern(filePattern);
     }
 
+    /** Create new {@link AddParams} instance */
+    public static AddParams create() {
+        return new AddParams();
+    }
+
     /** @see AddRequest#getFilePattern() */
     public List<String> getFilePattern() {
         return filePattern == null ? new ArrayList<>() : filePattern;
