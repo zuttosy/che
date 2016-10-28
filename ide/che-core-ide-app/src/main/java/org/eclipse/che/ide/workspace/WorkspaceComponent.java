@@ -171,7 +171,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                                       final boolean checkForShapshots, final boolean restoreFromSnapshot) {
         this.callback = callback;
         if (messageBus != null) {
-            messageBus.cancelReconnection();
+            messageBus.cancelReconnection();workspace.getConfig().gegetEnvironments().get("").
         }
         messageBus = messageBusProvider.createMessageBus(workspace.getId());
 
