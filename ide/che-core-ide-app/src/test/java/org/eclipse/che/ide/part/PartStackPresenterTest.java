@@ -41,7 +41,6 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyDouble;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -54,8 +53,9 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class PartStackPresenterTest {
 
-    private static final String SOME_TEXT = "someText";
-    private static final double PART_SIZE = 170;
+    private static final String SOME_TEXT           = "someText";
+    private static final double PART_STACK_SIZE     = 170;
+    private static final int    PART_STACK_MIN_SIZE = 110;
 
     //constructor mocks
     @Mock
@@ -263,28 +263,49 @@ public class PartStackPresenterTest {
     }
 
     @Test
-    public void shouldSetCurrentSizeForPart() {
+    public void shouldSetPartStackSize() {
         reset(workBenchPartController);
+        presenter.partStackSize = PART_STACK_SIZE;
         presenter.addPart(partPresenter);
-        when(workBenchPartController.getSize()).thenReturn(0d);
+        when(workBenchPartController.isHidden()).thenReturn(true);
+        when(workBenchPartController.getMinSize()).thenReturn(PART_STACK_MIN_SIZE);
 
         presenter.onTabClicked(partButton);
 
-        verify(workBenchPartController).setSize(eq(presenter.currentSize));
+        verify(workBenchPartController).setSize(presenter.partStackSize);
         verify(workBenchPartController).setHidden(false);
 
         verify(view).selectTab(partPresenter);
     }
 
     @Test
-    public void shouldSetInitialSizeForPart() {
+    public void shouldSetCurrentSize() {
         reset(workBenchPartController);
         presenter.addPart(partPresenter);
-        when(workBenchPartController.getSize()).thenReturn(PART_SIZE);
+        when(workBenchPartController.isHidden()).thenReturn(false);
+        when(workBenchPartController.getSize()).thenReturn(PART_STACK_SIZE);
 
         presenter.onTabClicked(partButton);
 
-        verify(workBenchPartController).setSize(eq(PART_SIZE));
+        verify(workBenchPartController).setSize(PART_STACK_SIZE);
+        verify(workBenchPartController).setHidden(false);
+
+        verify(view).selectTab(partPresenter);
+    }
+
+    @Test
+    public void shouldSetDefaultSize() {
+        double defaultSize = 150d;
+        reset(workBenchPartController);
+        presenter.partStackSize = PART_STACK_MIN_SIZE - 10;
+        presenter.addPart(partPresenter);
+        when(workBenchPartController.isHidden()).thenReturn(true);
+        when(workBenchPartController.getMinSize()).thenReturn(PART_STACK_MIN_SIZE);
+        when(workBenchPartController.getDefaultSize()).thenReturn(defaultSize);
+
+        presenter.onTabClicked(partButton);
+
+        verify(workBenchPartController).setSize(defaultSize);
         verify(workBenchPartController).setHidden(false);
 
         verify(view).selectTab(partPresenter);
