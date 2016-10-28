@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.git.params;
 
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -29,6 +30,7 @@ public class LogParams {
     private int          maxCount;
 
     private LogParams() {
+        fileFilter = emptyList();
     }
 
     /**
