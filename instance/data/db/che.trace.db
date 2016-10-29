@@ -1,0 +1,96 @@
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "ACCOUNT" not found; SQL statement:
+SELECT ID FROM ACCOUNT WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "USR" not found; SQL statement:
+SELECT ID FROM USR WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROFILE" not found; SQL statement:
+SELECT USERID FROM PROFILE WHERE USERID <> USERID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PREFERENCE" not found; SQL statement:
+SELECT USERID FROM PREFERENCE WHERE USERID <> USERID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "WORKSPACE" not found; SQL statement:
+SELECT ID FROM WORKSPACE WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "WORKSPACECONFIG" not found; SQL statement:
+SELECT ID FROM WORKSPACECONFIG WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROJECTCONFIG" not found; SQL statement:
+SELECT ID FROM PROJECTCONFIG WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "ENVIRONMENT" not found; SQL statement:
+SELECT ID FROM ENVIRONMENT WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "EXTERNALMACHINE" not found; SQL statement:
+SELECT ID FROM EXTERNALMACHINE WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROJECTATTRIBUTE" not found; SQL statement:
+SELECT ID FROM PROJECTATTRIBUTE WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SOURCESTORAGE" not found; SQL statement:
+SELECT ID FROM SOURCESTORAGE WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SERVERCONF" not found; SQL statement:
+SELECT ID FROM SERVERCONF WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "STACK" not found; SQL statement:
+SELECT ID FROM STACK WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "COMMAND" not found; SQL statement:
+SELECT ID FROM COMMAND WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SNAPSHOT" not found; SQL statement:
+SELECT ID FROM SNAPSHOT WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "RECIPE" not found; SQL statement:
+SELECT ID FROM RECIPE WHERE ID <> ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SSHKEYPAIR" not found; SQL statement:
+SELECT SERVICE FROM SSHKEYPAIR WHERE SERVICE <> SERVICE [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "USER_ALIASES" not found; SQL statement:
+SELECT user_id FROM user_aliases WHERE user_id <> user_id [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROFILE_ATTRIBUTES" not found; SQL statement:
+SELECT user_id FROM Profile_ATTRIBUTES WHERE user_id <> user_id [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PREFERENCE_PREFERENCES" not found; SQL statement:
+SELECT Preference_USERID FROM Preference_PREFERENCES WHERE Preference_USERID <> Preference_USERID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "WORKSPACE_ATTRIBUTES" not found; SQL statement:
+SELECT Workspace_ID FROM Workspace_ATTRIBUTES WHERE Workspace_ID <> Workspace_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROJECTCONFIG_MIXINS" not found; SQL statement:
+SELECT ProjectConfig_ID FROM ProjectConfig_MIXINS WHERE ProjectConfig_ID <> ProjectConfig_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "EXTERNALMACHINE_AGENTS" not found; SQL statement:
+SELECT ExternalMachine_ID FROM ExternalMachine_AGENTS WHERE ExternalMachine_ID <> ExternalMachine_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "EXTERNALMACHINE_ATTRIBUTES" not found; SQL statement:
+SELECT ExternalMachine_ID FROM ExternalMachine_ATTRIBUTES WHERE ExternalMachine_ID <> ExternalMachine_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "PROJECTATTRIBUTE_VALUES" not found; SQL statement:
+SELECT ProjectAttribute_ID FROM ProjectAttribute_VALUES WHERE ProjectAttribute_ID <> ProjectAttribute_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SOURCESTORAGE_PARAMETERS" not found; SQL statement:
+SELECT SourceStorage_ID FROM SourceStorage_PARAMETERS WHERE SourceStorage_ID <> SourceStorage_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SERVERCONF_PROPERTIES" not found; SQL statement:
+SELECT ServerConf_ID FROM ServerConf_PROPERTIES WHERE ServerConf_ID <> ServerConf_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "STACK_COMPONENTS" not found; SQL statement:
+SELECT NAME FROM Stack_COMPONENTS WHERE NAME <> NAME [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "STACK_TAGS" not found; SQL statement:
+SELECT Stack_ID FROM Stack_TAGS WHERE Stack_ID <> Stack_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "COMMAND_ATTRIBUTES" not found; SQL statement:
+SELECT Command_ID FROM Command_ATTRIBUTES WHERE Command_ID <> Command_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "RECIPE_TAGS" not found; SQL statement:
+SELECT Recipe_ID FROM Recipe_TAGS WHERE Recipe_ID <> Recipe_ID [42102-192]
+2016-10-28 14:50:47 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLException: Table "SEQUENCE" not found; SQL statement:
+SELECT SEQ_NAME FROM SEQUENCE WHERE SEQ_NAME <> SEQ_NAME [42102-192]

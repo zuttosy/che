@@ -1,0 +1,7 @@
+IMAGE_ALPINE=alpine:latest
+IMAGE_CURL=appropriate/curl:latest
+IMAGE_PUPPET=puppet/puppet-agent-alpine:4.6.2
+IMAGE_REGISTRY=registry:2.5.0
+IMAGE_IP=codenvy/che-ip:nightly
+IMAGE_INIT=eclipse/che-init:nightly
+IMAGE_CHE=codenvy/che-server:4.7.2

@@ -9,188 +9,219 @@
 #   Tyler Jewell - Initial Implementation
 #
 
-init_global_variables() {
-  DEFAULT_CHE_PRODUCT_NAME="ECLIPSE CHE"
-  DEFAULT_CHE_LAUNCHER_IMAGE_NAME="codenvy/che-launcher"
-  DEFAULT_CHE_SERVER_IMAGE_NAME="codenvy/che-server"
-  DEFAULT_CHE_DIR_IMAGE_NAME="codenvy/che-dir"
-  DEFAULT_CHE_MOUNT_IMAGE_NAME="codenvy/che-mount"
-  DEFAULT_CHE_ACTION_IMAGE_NAME="codenvy/che-action"
-  DEFAULT_CHE_TEST_IMAGE_NAME="codenvy/che-test"
-  DEFAULT_CHE_DEV_IMAGE_NAME="codenvy/che-dev"
-  DEFAULT_CHE_SERVER_CONTAINER_NAME="che-server"
-  DEFAULT_CHE_VERSION="latest"
-  DEFAULT_CHE_UTILITY_VERSION="nightly"
+# Move this into a dedicated function that is only called when the variable is absolutely
+# needed. This will speed performance for methods that do not need this value set.
+init_host_arch() {
+  GLOBAL_HOST_ARCH=${GLOBAL_HOST_ARCH:=$DEFAULT_GLOBAL_HOST_ARCH}
+}
+
+init_name_map() {
+  GLOBAL_NAME_MAP=${GLOBAL_NAME_MAP:=$(docker info | grep "Name:" | cut -d" " -f2)}
+}
+
+init_host_ip() {
+  GLOBAL_HOST_IP=${GLOBAL_HOST_IP:=$(docker run --net host --rm codenvy/che-ip:nightly)}
+}
+
+init_uname() {
+  GLOBAL_UNAME=${GLOBAL_UNAME:=$(docker run --rm alpine sh -c "uname -r")}
+#  GLOBAL_GET_DOCKER_HOST_IP=$(get_docker_host_ip)
+}
+
+cli_init() {
+#  GLOBAL_NAME_MAP=$(docker info | grep "Name:" | cut -d" " -f2)
+#  GLOBAL_HOST_ARCH=$(docker version --format {{.Client}} | cut -d" " -f5)
+#  GLOBAL_HOST_IP=$(docker run --net host --rm codenvy/che-ip:nightly)
+#  GLOBAL_UNAME=$(docker run --rm alpine sh -c "uname -r")
+#  GLOBAL_GET_DOCKER_HOST_IP=$(get_docker_host_ip)
+
+  # Odd - bash fails if this is embedded, so define it globally once
+  DEFAULT_GLOBAL_HOST_ARCH=$(docker version --format {{.Client}} | cut -d" " -f5)
+
+  DEFAULT_CHE_VERSION="nightly"
   DEFAULT_CHE_CLI_ACTION="help"
-  DEFAULT_IS_INTERACTIVE="true"
-  DEFAULT_IS_PSEUDO_TTY="true"
-  DEFAULT_CHE_DATA_FOLDER="/home/user/che"
+  DEFAULT_CHE_DEVELOPMENT_MODE="off"
+  DEFAULT_CHE_DEVELOPMENT_REPO=$(get_mount_path $PWD)
 
-  CHE_PRODUCT_NAME=${CHE_PRODUCT_NAME:-${DEFAULT_CHE_PRODUCT_NAME}}
-  CHE_LAUNCHER_IMAGE_NAME=${CHE_LAUNCHER_IMAGE_NAME:-${DEFAULT_CHE_LAUNCHER_IMAGE_NAME}}
-  CHE_SERVER_IMAGE_NAME=${CHE_SERVER_IMAGE_NAME:-${DEFAULT_CHE_SERVER_IMAGE_NAME}}
-  CHE_DIR_IMAGE_NAME=${CHE_DIR_IMAGE_NAME:-${DEFAULT_CHE_DIR_IMAGE_NAME}}
-  CHE_MOUNT_IMAGE_NAME=${CHE_MOUNT_IMAGE_NAME:-${DEFAULT_CHE_MOUNT_IMAGE_NAME}}
-  CHE_ACTION_IMAGE_NAME=${CHE_ACTION_IMAGE_NAME:-${DEFAULT_CHE_ACTION_IMAGE_NAME}}
-  CHE_TEST_IMAGE_NAME=${CHE_TEST_IMAGE_NAME:-${DEFAULT_CHE_TEST_IMAGE_NAME}}
-  CHE_DEV_IMAGE_NAME=${CHE_DEV_IMAGE_NAME:-${DEFAULT_CHE_DEV_IMAGE_NAME}}
-  CHE_SERVER_CONTAINER_NAME=${CHE_SERVER_CONTAINER_NAME:-${DEFAULT_CHE_SERVER_CONTAINER_NAME}}
-  CHE_VERSION=${CHE_VERSION:-${DEFAULT_CHE_VERSION}}
-  CHE_UTILITY_VERSION=${CHE_UTILITY_VERSION:-${DEFAULT_CHE_UTILITY_VERSION}}
+  init_host_ip
+  DEFAULT_CHE_HOST=$GLOBAL_HOST_IP
+  DEFAULT_CHE_PORT="8080"
+  DEFAULT_CHE_CONFIG=$(get_mount_path $PWD)/config
+  DEFAULT_CHE_INSTANCE=$(get_mount_path $PWD)/instance
+  DEFAULT_CHE_BACKUP_FOLDER=$(get_mount_path $PWD)
+
+  CHE_VERSION=${CHE_VERSION:-${CHE_VERSION}}
   CHE_CLI_ACTION=${CHE_CLI_ACTION:-${DEFAULT_CHE_CLI_ACTION}}
-  CHE_IS_INTERACTIVE=${CHE_IS_INTERACTIVE:-${DEFAULT_IS_INTERACTIVE}}
-  CHE_IS_PSEUDO_TTY=${CHE_IS_PSEUDO_TTY:-${DEFAULT_IS_PSEUDO_TTY}}
-  CHE_DATA_FOLDER=${CHE_DATA_FOLDER:-${DEFAULT_CHE_DATA_FOLDER}}
+  CHE_DEVELOPMENT_MODE=${CHE_DEVELOPMENT_MODE:-${DEFAULT_CHE_DEVELOPMENT_MODE}}
+  if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
+    CHE_DEVELOPMENT_REPO=$(get_mount_path ${DEFAULT_CHE_DEVELOPMENT_REPO})
+    if [[ ! -d "${CHE_DEVELOPMENT_REPO}"  ]]; then
+      info "cli" "Development mode is on and could not find valid repo or packaged assembly"
+      info "cli" "Set CHE_DEVELOPMENT_REPO to the root of your git clone repo"
+      return 2;
+    fi
+    if [[ ! -d $(echo "${CHE_DEVELOPMENT_REPO}"/assembly/assembly-main/target) ]]; then
+      info "cli" "Development mode is on and could not find assembly target"
+      info "cli" "Have you 'mvn clean install' in /assembly/assembly-main yet?"
+      return 2;
+    else
+      CHE_ASSEMBLY_ROOT=$(get_mount_path $(echo "${CHE_DEVELOPMENT_REPO}"/assembly/assembly-main/target))
 
-  GLOBAL_NAME_MAP=$(docker info | grep "Name:" | cut -d" " -f2)
-  GLOBAL_HOST_ARCH=$(docker version --format {{.Client}} | cut -d" " -f5)
-  GLOBAL_UNAME=$(docker run --rm alpine sh -c "uname -r")
-  GLOBAL_GET_DOCKER_HOST_IP=$(get_docker_host_ip)
+      # Search for a zip file
+      CHE_ASSEMBLY_BASE=$(ls -d "${CHE_ASSEMBLY_ROOT}"/eclipse-che-*.zip | cut -d "-" -f 4-)
+      CHE_ASSEMBLY_VERSION=${CHE_ASSEMBLY_BASE%.zip}
+      CHE_ASSEMBLY="${CHE_ASSEMBLY_ROOT}"/eclipse-che-$CHE_ASSEMBLY_VERSION/eclipse-che-$CHE_ASSEMBLY_VERSION
 
-  if is_boot2docker && has_docker_for_windows_client; then
-    if [[ "${CHE_DATA_FOLDER,,}" != *"${USERPROFILE,,}"* ]]; then
-      CHE_DATA_FOLDER=$(get_mount_path "${USERPROFILE}/.${CHE_MINI_PRODUCT_NAME}/")
-      warning "Boot2docker for Windows - CHE_DATA_FOLDER set to $CHE_DATA_FOLDER"   
+      if [[ ! -d "${CHE_ASSEMBLY}" ]]; then
+        info "cli" "CHE_DEVELOPMENT_MODE=on is on and could not a valid Che assembly"
+        info "cli" "We looked for $CHE_ASSEMBLY"
+        return 2;
+      fi
     fi
   fi
 
-  USAGE="
-Usage: ${CHE_MINI_PRODUCT_NAME} [COMMAND]
-    start                              Starts ${CHE_MINI_PRODUCT_NAME} server
-    stop                               Stops ${CHE_MINI_PRODUCT_NAME} server
-    restart                            Restart ${CHE_MINI_PRODUCT_NAME} server
-    update [--force]                   Installs version, respecting CHE_VERSION & CHE_UTILITY_VERSION
-    profile add <name>                 Add a profile to ~/.${CHE_MINI_PRODUCT_NAME}/ 
-    profile set <name>                 Set this profile as the default for ${CHE_MINI_PRODUCT_NAME} CLI
-    profile unset                      Removes the default profile - leaves it unset
-    profile rm <name>                  Remove this profile from ~/.${CHE_MINI_PRODUCT_NAME}/
-    profile update <name>              Update profile in ~/.${CHE_MINI_PRODUCT_NAME}/
-    profile info <name>                Print the profile configuration
-    profile list                       List available profiles
-    mount [<ws-ssh-port>]              Synchronize workspace with current working directory
-    dir init                           Initialize directory with ${CHE_MINI_PRODUCT_NAME} configuration
-    dir up                             Create workspace from source in current directory
-    dir down                           Stop workspace running in current directory
-    dir status                         Display status of ${CHE_MINI_PRODUCT_NAME} in current directory
-    dir ssh                            Make SSH connection into workspace mapped to current directory
-    action <action-name> [--help]      Start action on ${CHE_MINI_PRODUCT_NAME} instance
-    compile <mvn-command>              SDK - Builds Che source code or modules
-    test <test-name> [--help]          Start test on ${CHE_MINI_PRODUCT_NAME} instance
-    info [ --all                       Run all debugging tests
-           --server                    Run ${CHE_MINI_PRODUCT_NAME} launcher and server debugging tests
-           --networking                Test connectivity between ${CHE_MINI_PRODUCT_NAME} sub-systems
-           --cli                       Print CLI (this program) debugging info
-           --create [<url>]            Test creating a workspace and project in ${CHE_MINI_PRODUCT_NAME}
-                    [<user>] 
-                    [<pass>] ]
+  CHE_HOST=${CHE_HOST:-${DEFAULT_CHE_HOST}}
+  CHE_PORT=${CHE_PORT:-${DEFAULT_CHE_PORT}}
+  CHE_MANIFEST_DIR=$(get_mount_path ~/."${CHE_MINI_PRODUCT_NAME}"/manifests)
 
-Variables:
-    CHE_VERSION                        Version of Che to run
-    CHE_PORT                           External port of Che server
-    CHE_HOST_IP                        IP address Che server binds to - must set for external users
-    CHE_DATA_FOLDER                    Where workspaces and Che prefs are stored
-    CHE_HOSTNAME                       External hostname of Che server
-    CHE_CONF_FOLDER                    Folder for custom che.properties file
-    CHE_RESTART_POLICY                 Che server Docker restart policy if container exited
-    CHE_USER                           User ID of the Che server inside its container
-    CHE_LOCAL_BINARY                   Path to a Che assembly to use instead of binary in container
-    CHE_LOG_LEVEL                      Logging level for Che server - either debug or info
-    CHE_EXTRA_VOLUME_MOUNT             Folders to mount from host into Che workspaces
-    CHE_PROPERTY_<>                    One time use properties passed to Che - see docs
-    CHE_UTILITY_VERSION                Version of Che launcher, mount, dev, action to run
-    CHE_CLI_VERSION                    Version of CLI to run
-    CHE_PRODUCT_NAME                   Pretty name used by CLI in INFO statements
-    CHE_MINI_PRODUCT_NAME              Pretty short name used by CLI in INFO statements
-    CHE_LAUNCHER_IMAGE_NAME            Docker image for the Che launcher
-    CHE_SERVER_IMAGE_NAME              Docker image for the Che server
-    CHE_DIR_IMAGE_NAME                 Docker image for Chedir
-    CHE_MOUNT_IMAGE_NAME               Docker image used for local IDE mount and sync
-    CHE_ACTION_IMAGE_NAME              Docker image used for Che actions
-    CHE_DEV_IMAGE_NAME                 Docker image used to compile and package Che source code
-    CHE_SERVER_CONTAINER_NAME          Pretty container name given for the Che server container
-    CHE_IS_INTERACTIVE                 Passes -i into Docker run
-    CHE_IS_PSEUDO_TTY                  Passes -t into Docker run
-    CHE_DEBUG_SERVER                   Launches Che server with JPDA activated
-    CHE_DEBUG_SERVER_PORT              Port JPDA binds itself to
-"
+  CHE_INSTANCE=${CHE_INSTANCE:-${DEFAULT_CHE_INSTANCE}}
+  CHE_CONFIG=${CHE_CONFIG:-${DEFAULT_CHE_CONFIG}}
+  CHE_BACKUP_FOLDER=${CHE_BACKUP_FOLDER:-${DEFAULT_CHE_BACKUP_FOLDER}}
+  CHE_OFFLINE_FOLDER=$(get_mount_path $PWD)/offline
+
+  CHE_CONFIG_MANIFESTS_FOLDER="$CHE_CONFIG/manifests"
+  CHE_CONFIG_MODULES_FOLDER="$CHE_CONFIG/modules"
+
+  CHE_VERSION_FILE="che.ver"
+  CHE_ENVIRONMENT_FILE="che.env"
+  CHE_COMPOSE_FILE="docker-compose.yml"
+  CHE_SERVER_CONTAINER_NAME="che"
+  CHE_CONFIG_BACKUP_FILE_NAME="che_config_backup.tar"
+  CHE_INSTANCE_BACKUP_FILE_NAME="che_instance_backup.tar"
+  CHE_GLOBAL_VERSION_IMAGE="eclipse/che-version"
+
+  # For some situations, Docker requires a path for volume mount which is posix-based.
+  # In other cases, the same file needs to be in windows format
+  if has_docker_for_windows_client; then
+    REFERENCE_ENVIRONMENT_FILE=$(convert_posix_to_windows $(echo "${CHE_CONFIG}/${CHE_ENVIRONMENT_FILE}"))
+    REFERENCE_COMPOSE_FILE=$(convert_posix_to_windows $(echo "${CHE_INSTANCE}/${CHE_COMPOSE_FILE}"))
+  else
+    REFERENCE_ENVIRONMENT_FILE="${CHE_CONFIG}/${CHE_ENVIRONMENT_FILE}"
+    REFERENCE_COMPOSE_FILE="${CHE_INSTANCE}/${CHE_COMPOSE_FILE}"
+  fi
+
+  DOCKER_CONTAINER_NAME_PREFIX="che_"
+
+  # TODO: Change this to use the current folder or perhaps ~?
+  if is_boot2docker && has_docker_for_windows_client; then
+    if [[ "${CHE_INSTANCE,,}" != *"${USERPROFILE,,}"* ]]; then
+      CHE_INSTANCE=$(get_mount_path "${USERPROFILE}/.${CHE_MINI_PRODUCT_NAME}/")
+      warning "Boot2docker for Windows - CHE_INSTANCE set to $CHE_INSTANCE"
+    fi
+    if [[ "${CHE_CONFIG,,}" != *"${USERPROFILE,,}"* ]]; then
+      CHE_CONFIG=$(get_mount_path "${USERPROFILE}/.${CHE_MINI_PRODUCT_NAME}/")
+      warning "Boot2docker for Windows - CHE_CONFIG set to $CHE_CONFIG"
+    fi
+  fi
 }
 
-usage () {
-  debug $FUNCNAME
-  printf "%s" "${USAGE}"
-}
+### Should we load profile before we parse the command line?
 
-parse_command_line () {
+cli_parse () {
   debug $FUNCNAME
-  if [ $# -eq 0 ]; then 
+  if [ $# -eq 0 ]; then
     CHE_CLI_ACTION="help"
   else
     case $1 in
-      start|stop|restart|update|info|profile|action|dir|mount|compile|test|help|-h|--help)
+      version|init|config|start|stop|restart|destroy|rmi|config|upgrade|download|backup|restore|offline|update|add-node|remove-node|list-nodes|info|network|debug|help|-h|--help)
         CHE_CLI_ACTION=$1
       ;;
       *)
         # unknown option
         error "You passed an unknown command line option."
+        return 1;
       ;;
     esac
   fi
 }
 
-execute_cli() {
+cli_cli() {
   case ${CHE_CLI_ACTION} in
-    start|stop|restart)
-      shift 
-      load_profile
-      execute_che_launcher "$@"
-    ;;
-    profile)
-      execute_profile "$@"
-    ;;
-    dir)
-      # remove "dir" arg by shifting it
+    download)
       shift
-      load_profile
-      execute_che_dir "$@"
+      cmd_download "$@"
     ;;
-    action)
-      # remove "action" arg by shifting it
+    init)
       shift
-      load_profile
-      execute_che_action "$@"
+      cmd_init "$@"
     ;;
-    update)
+    config)
       shift
-      load_profile
-      update_che_cli
-      update_che_image "$@" ${CHE_SERVER_IMAGE_NAME} ${CHE_VERSION}
-      update_che_image "$@" ${CHE_LAUNCHER_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-      update_che_image "$@" ${CHE_MOUNT_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-      update_che_image "$@" ${CHE_DIR_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-      update_che_image "$@" ${CHE_ACTION_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-      update_che_image "$@" ${CHE_TEST_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-      update_che_image "$@" ${CHE_DEV_IMAGE_NAME} ${CHE_UTILITY_VERSION}
+      cmd_config "$@"
     ;;
-    mount)
+    start)
       shift
-      load_profile
-      execute_che_mount "$@"
+      cmd_start "$@"
     ;;
-    compile)
-      # remove "compile" arg by shifting it
+    stop)
       shift
-      load_profile
-      execute_che_compile "$@"
+      cmd_stop "$@"
     ;;
-    test)
-      # remove "test" arg by shifting it
+    restart)
       shift
-      load_profile
-      execute_che_test "$@"
+      cmd_restart "$@"
+    ;;
+    destroy)
+      shift
+      cmd_destroy "$@"
+    ;;
+    rmi)
+      shift
+      cmd_rmi "$@"
+    ;;
+    upgrade)
+      shift
+      cmd_upgrade "$@"
+    ;;
+    version)
+      shift
+      cmd_version "$@"
+    ;;
+    backup)
+      shift
+      cmd_backup "$@"
+    ;;
+    restore)
+      shift
+      cmd_restore "$@"
+    ;;
+    offline)
+      shift
+      cmd_offline
     ;;
     info)
-      load_profile
-      execute_che_info "$@"
+      shift
+      cmd_info "$@"
+    ;;
+    debug)
+      shift
+      cmd_debug "$@"
+    ;;
+    network)
+      shift
+      cmd_network "$@"
+    ;;
+    add-node)
+      shift
+      cmd_add_node
+    ;;
+    remove-node)
+      shift
+      cmd_remove_node "$@"
+    ;;
+    list-nodes)
+      shift
+      cmd_list_nodes
     ;;
     help)
       usage
@@ -198,82 +229,52 @@ execute_cli() {
   esac
 }
 
-docker_exec() {
+get_mount_path() {
   debug $FUNCNAME
-  if has_docker_for_windows_client; then
-    MSYS_NO_PATHCONV=1 docker.exe "$@"
-  else
-    "$(which docker)" "$@"
-  fi
+  FULL_PATH=$(get_full_path "${1}")
+  POSIX_PATH=$(convert_windows_to_posix "${FULL_PATH}")
+  CLEAN_PATH=$(get_clean_path "${POSIX_PATH}")
+  echo $CLEAN_PATH
 }
 
-docker_run() {
+get_full_path() {
   debug $FUNCNAME
-  docker_exec run --rm -v /var/run/docker.sock:/var/run/docker.sock "$@"
+  # create full directory path
+  echo "$(cd "$(dirname "${1}")"; pwd)/$(basename "$1")"
 }
 
-docker_run_with_env_file() {
+convert_windows_to_posix() {
   debug $FUNCNAME
-  get_list_of_che_system_environment_variables
-  
-  # Silly issue - docker run --env-file does not accept path to file - must be in same dir
-  cd ~/."${CHE_MINI_PRODUCT_NAME}"
-  docker_run --env-file tmpgibberish "$@"
-  rm -rf ~/."${CHE_MINI_PRODUCT_NAME}"/tmpgibberish > /dev/null
+  echo "/"$(echo "$1" | sed 's/\\/\//g' | sed 's/://')
 }
 
-docker_run_with_pseudo_tty() {
+convert_posix_to_windows() {
   debug $FUNCNAME
-  if has_pseudo_tty; then
-    docker_run_with_env_file -t "$@"
-  else
-    docker_run_with_env_file "$@"
-  fi
+  # Remove leading slash
+  VALUE="${1:1}"
+
+  # Get first character (drive letter)
+  VALUE2="${VALUE:0:1}"
+
+  # Replace / with \
+  VALUE3=$(echo ${VALUE} | tr '/' '\\' | sed 's/\\/\\\\/g')
+
+  # Replace c\ with c:\ for drive letter
+  echo "$VALUE3" | sed "s/./$VALUE2:/1"
 }
 
-docker_run_with_interactive() {
+get_clean_path() {
   debug $FUNCNAME
-  if has_interactive; then
-    docker_run_with_pseudo_tty -i "$@"
-  else
-    docker_run_with_pseudo_tty "$@"
-  fi
-}
-
-docker_run_with_che_properties() {
-  debug $FUNCNAME
-  if [ ! -z ${CHE_CONF_FOLDER+x} ]; then
-
-    # Configuration directory set by user - this has precedence.
-    docker_run_with_interactive -e "CHE_CONF_FOLDER=${CHE_CONF_FOLDER}" "$@"
-  else 
-    if has_che_properties; then
-      # No user configuration directory, but CHE_PROPERTY_ values set
-      generate_temporary_che_properties_file
-      docker_run_with_interactive -e "CHE_CONF_FOLDER=$(get_mount_path ~/.${CHE_MINI_PRODUCT_NAME}/conf)" "$@"
-      rm -rf ~/."${CHE_MINI_PRODUCT_NAME}"/conf/che.properties > /dev/null
-    else
-      docker_run_with_interactive "$@"
-    fi
-  fi
-}
-
-has_interactive() {
-  debug $FUNCNAME
-  if [ "${CHE_IS_INTERACTIVE}" = "true" ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-has_pseudo_tty() {
-  debug $FUNCNAME
-  if [ "${CHE_IS_PSEUDO_TTY}" = "true" ]; then
-    return 0
-  else
-    return 1
-  fi
+  INPUT_PATH=$1
+  # \some\path => /some/path
+  OUTPUT_PATH=$(echo ${INPUT_PATH} | tr '\\' '/')
+  # /somepath/ => /somepath
+  OUTPUT_PATH=${OUTPUT_PATH%/}
+  # /some//path => /some/path
+  OUTPUT_PATH=$(echo ${OUTPUT_PATH} | tr -s '/')
+  # "/some/path" => /some/path
+  OUTPUT_PATH=${OUTPUT_PATH//\"}
+  echo ${OUTPUT_PATH}
 }
 
 get_docker_host_ip() {
@@ -289,13 +290,29 @@ get_docker_host_ip() {
      NETWORK_IF="eth0"
    ;;
   esac
-  
+
+  log "docker run --rm --net host \
+            alpine sh -c \
+            \"ip a show ${NETWORK_IF}\" | \
+            grep 'inet ' | \
+            cut -d/ -f1 | \
+            awk '{ print \$2}'"
   docker run --rm --net host \
             alpine sh -c \
             "ip a show ${NETWORK_IF}" | \
             grep 'inet ' | \
             cut -d/ -f1 | \
             awk '{ print $2}'
+}
+
+has_docker_for_windows_client(){
+  debug $FUNCNAME
+  init_host_arch
+  if [ "${GLOBAL_HOST_ARCH}" = "windows" ]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 get_docker_install_type() {
@@ -313,16 +330,8 @@ get_docker_install_type() {
 
 is_boot2docker() {
   debug $FUNCNAME
+  init_uname
   if echo "$GLOBAL_UNAME" | grep -q "boot2docker"; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-is_docker_for_mac() {
-  debug $FUNCNAME
-  if is_moby_vm && ! has_docker_for_windows_client; then
     return 0
   else
     return 1
@@ -332,6 +341,15 @@ is_docker_for_mac() {
 is_docker_for_windows() {
   debug $FUNCNAME
   if is_moby_vm && has_docker_for_windows_client; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+is_docker_for_mac() {
+  debug $FUNCNAME
+  if is_moby_vm && ! has_docker_for_windows_client; then
     return 0
   else
     return 1
@@ -349,6 +367,7 @@ is_native() {
 
 is_moby_vm() {
   debug $FUNCNAME
+  init_name_map
   if echo "$GLOBAL_NAME_MAP" | grep -q "moby"; then
     return 0
   else
@@ -358,6 +377,7 @@ is_moby_vm() {
 
 has_docker_for_windows_client(){
   debug $FUNCNAME
+  init_host_arch
   if [ "${GLOBAL_HOST_ARCH}" = "windows" ]; then
     return 0
   else
@@ -365,239 +385,310 @@ has_docker_for_windows_client(){
   fi
 }
 
-get_full_path() {
+docker_exec() {
   debug $FUNCNAME
-  # "/some/path" => /some/path
-  #OUTPUT_PATH=${1//\"}
-
-  # create full directory path
-  echo "$(cd "$(dirname "${1}")"; pwd)/$(basename "$1")"
-}
-
-convert_windows_to_posix() {
-  debug $FUNCNAME
-  echo "/"$(echo "$1" | sed 's/\\/\//g' | sed 's/://')
-}
-
-get_clean_path() {
-  debug $FUNCNAME
-  INPUT_PATH=$1
-  # \some\path => /some/path
-  OUTPUT_PATH=$(echo ${INPUT_PATH} | tr '\\' '/')
-  # /somepath/ => /somepath
-  OUTPUT_PATH=${OUTPUT_PATH%/}
-  # /some//path => /some/path
-  OUTPUT_PATH=$(echo ${OUTPUT_PATH} | tr -s '/')
-  # "/some/path" => /some/path
-  OUTPUT_PATH=${OUTPUT_PATH//\"}
-  echo ${OUTPUT_PATH}
-}
-
-get_mount_path() {
-  debug $FUNCNAME
-  FULL_PATH=$(get_full_path "${1}")
-
-  POSIX_PATH=$(convert_windows_to_posix "${FULL_PATH}")
-
-  CLEAN_PATH=$(get_clean_path "${POSIX_PATH}")
-  echo $CLEAN_PATH
-}
-
-has_docker_for_windows_ip() {
-  debug $FUNCNAME
-  if [ "${GLOBAL_GET_DOCKER_HOST_IP}" = "10.0.75.2" ]; then
-    return 0
+  if has_docker_for_windows_client; then
+    log "MSYS_NO_PATHCONV=1 docker.exe \"$@\""
+    MSYS_NO_PATHCONV=1 docker.exe "$@"
   else
-    return 1
+    log "$(which docker) \$@\""
+    "$(which docker)" "$@"
   fi
 }
 
-get_che_hostname() {
-  debug $FUNCNAME
-  INSTALL_TYPE=$(get_docker_install_type)
-  if [ "${INSTALL_TYPE}" = "boot2docker" ]; then
-    echo $GLOBAL_GET_DOCKER_HOST_IP
-  else
-    echo "localhost"
-  fi
-}
-
-has_che_env_variables() {
-  debug $FUNCNAME
-  PROPERTIES=$(env | grep CHE_)
-
-  if [ "$PROPERTIES" = "" ]; then
-    return 1
-  else 
-    return 0
-  fi 
-}
-
-get_list_of_che_system_environment_variables() {
+update_image_if_not_found() {
   debug $FUNCNAME
 
-  # See: http://stackoverflow.com/questions/4128235/what-is-the-exact-meaning-of-ifs-n
-  IFS=$'\n'
-  
-  TMP_DIR=~/."${CHE_MINI_PRODUCT_NAME}"
-  TMP_FILE="${TMP_DIR}"/tmpgibberish
-
-  test -d "${TMP_DIR}" || mkdir -p "${TMP_DIR}"
-  touch "${TMP_FILE}"
-
-  if has_default_profile; then
-    cat "${TMP_DIR}"/profiles/"${CHE_PROFILE}" | sed 's/\"//g' >> "${TMP_FILE}"
-  else
-
-    # Grab these values to send to other utilities - they need to know the values  
-    echo "CHE_SERVER_CONTAINER_NAME=${CHE_SERVER_CONTAINER_NAME}" >> "${TMP_FILE}"
-    echo "CHE_SERVER_IMAGE_NAME=${CHE_SERVER_IMAGE_NAME}" >> "${TMP_FILE}"
-    echo "CHE_PRODUCT_NAME=${CHE_PRODUCT_NAME}" >> "${TMP_FILE}"
-    echo "CHE_MINI_PRODUCT_NAME=${CHE_MINI_PRODUCT_NAME}" >> "${TMP_FILE}"
-    echo "CHE_VERSION=${CHE_VERSION}" >> "${TMP_FILE}"
-    echo "CHE_CLI_INFO=${CHE_CLI_INFO}" >> "${TMP_FILE}"
-    echo "CHE_CLI_DEBUG=${CHE_CLI_DEBUG}" >> "${TMP_FILE}"
-    echo "CHE_DATA_FOLDER=${CHE_DATA_FOLDER}" >> "${TMP_FILE}"
-
-    CHE_VARIABLES=$(env | grep CHE_)
-
-    if [ ! -z ${CHE_VARIABLES+x} ]; then
-      env | grep CHE_ >> "${TMP_FILE}"
-    fi
-
-    # Add in known proxy variables
-    if [ ! -z ${http_proxy+x} ]; then
-      echo "http_proxy=${http_proxy}" >> "${TMP_FILE}"
-    fi
-
-    if [ ! -z ${https_proxy+x} ]; then
-      echo "https_proxy=${https_proxy}" >> "${TMP_FILE}"
-    fi
-
-    if [ ! -z ${no_proxy+x} ]; then
-      echo "no_proxy=${no_proxy}" >> "${TMP_FILE}"
-    fi
-  fi
-}
-
-check_current_image_and_update_if_not_found() {
-  debug $FUNCNAME
-
-  CURRENT_IMAGE=$(docker images -q "$1":"$2")
-
+  text "${GREEN}INFO:${NC} (${CHE_MINI_PRODUCT_NAME} download): Checking for image '$1'..."
+  CURRENT_IMAGE=$(docker images -q "$1")
   if [ "${CURRENT_IMAGE}" == "" ]; then
-    update_che_image $1 $2
-  fi
-}
-
-has_che_properties() {
-  debug $FUNCNAME
-  PROPERTIES=$(env | grep CHE_PROPERTY_)
-
-  if [ "$PROPERTIES" = "" ]; then
-    return 1
-  else 
-    return 0
-  fi 
-}
-
-generate_temporary_che_properties_file() {
-  debug $FUNCNAME
-  if has_che_properties; then
-    test -d ~/."${CHE_MINI_PRODUCT_NAME}"/conf || mkdir -p ~/."${CHE_MINI_PRODUCT_NAME}"/conf
-    touch ~/."${CHE_MINI_PRODUCT_NAME}"/conf/che.properties
-
-    # Get list of properties
-    PROPERTIES_ARRAY=($(env | grep CHE_PROPERTY_))
-    for PROPERTY in "${PROPERTIES_ARRAY[@]}"
-    do
-      # CHE_PROPERTY_NAME=value ==> NAME=value
-      PROPERTY_WITHOUT_PREFIX=${PROPERTY#CHE_PROPERTY_}
-
-      # NAME=value ==> separate name / value into different variables
-      PROPERTY_NAME=$(echo $PROPERTY_WITHOUT_PREFIX | cut -f1 -d=)
-      PROPERTY_VALUE=$(echo $PROPERTY_WITHOUT_PREFIX | cut -f2 -d=)
-     
-      # Replace "_" in names to periods
-      CONVERTED_PROPERTY_NAME=$(echo "$PROPERTY_NAME" | tr _ .)
-
-      # Replace ".." in names to "_"
-      SUPER_CONVERTED_PROPERTY_NAME="${CONVERTED_PROPERTY_NAME//../_}"
-
-      echo "$SUPER_CONVERTED_PROPERTY_NAME=$PROPERTY_VALUE" >> ~/."${CHE_MINI_PRODUCT_NAME}"/conf/che.properties
-    done
-  fi
-}
-
-contains() {
-  string="$1"
-  substring="$2"
-  if test "${string#*$substring}" != "$string"
-  then
-    return 0    # $substring is in $string
+    text "not found\n"
+    update_image $1
   else
-    return 1    # $substring is not in $string
+    text "found\n"
   fi
 }
 
-get_container_ssh() {
-  CURRENT_CHE_DEBUG=$(docker inspect --format='{{.NetworkSettings.Ports}}' ${1})
-  IFS=$' '
-  for SINGLE_BIND in $CURRENT_CHE_DEBUG; do
-    case $SINGLE_BIND in
-      *22/tcp:*)
-        echo $SINGLE_BIND | cut -f2 -d":"
-        return
-      ;;
-      *)
-      ;;
-    esac
+update_image() {
+  debug $FUNCNAME
+
+  if [ "${1}" == "--force" ]; then
+    shift
+    info "download" "Removing image $1"
+    log "docker rmi -f $1 >> \"${LOGS}\""
+    docker rmi -f $1 >> "${LOGS}" 2>&1 || true
+  fi
+
+  if [ "${1}" == "--pull" ]; then
+    shift
+  fi
+
+  info "download" "Pulling image $1"
+  text "\n"
+  docker pull $1 || true
+  text "\n"
+}
+
+port_open(){
+  log "netstat -an | grep 0.0.0.0:$1 >> \"${LOGS}\" 2>&1"
+  netstat -an | grep 0.0.0.0:$1 >> "${LOGS}" 2>&1
+  NETSTAT_EXIT=$?
+
+  if [ $NETSTAT_EXIT = 0 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+container_exist_by_name(){
+  docker inspect ${1} > /dev/null 2>&1
+  if [ "$?" == "0" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+get_server_container_id() {
+  log "docker inspect -f '{{.Id}}' ${1}"
+  docker inspect -f '{{.Id}}' ${1}
+}
+
+wait_until_container_is_running() {
+  CONTAINER_START_TIMEOUT=${1}
+
+  ELAPSED=0
+  until container_is_running ${2} || [ ${ELAPSED} -eq "${CONTAINER_START_TIMEOUT}" ]; do
+    log "sleep 1"
+    sleep 1
+    ELAPSED=$((ELAPSED+1))
   done
-  echo "<nil>"
 }
 
-has_ssh () {
-  if $(contains $(get_container_ssh $1) "<nil>"); then
+container_is_running() {
+  if [ "$(docker ps -qa -f "status=running" -f "id=${1}" | wc -l)" -eq 0 ]; then
     return 1
   else
     return 0
   fi
 }
 
-has_default_profile() {
-  debug $FUNCNAME
-  if [ -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile ]; then
-    return 0
-  else 
-    return 1
-  fi 
+wait_until_server_is_booted () {
+  SERVER_BOOT_TIMEOUT=${1}
+
+  ELAPSED=0
+  until server_is_booted ${2} || [ ${ELAPSED} -eq "${SERVER_BOOT_TIMEOUT}" ]; do
+    log "sleep 2"
+    sleep 2
+    # Total hack - having to restart haproxy for some reason on windows
+    ELAPSED=$((ELAPSED+1))
+  done
 }
 
-get_default_profile() {
-  debug $FUNCNAME
-  if [ has_default_profile ]; then
-    source ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile
-    echo "${CHE_PROFILE}"
+server_is_booted() {
+  HTTP_STATUS_CODE=$(curl -I -k $CHE_HOST:$CHE_PORT/api/ \
+                     -s -o "${LOGS}" --write-out "%{http_code}")
+  if [[ "${HTTP_STATUS_CODE}" = "200" ]] || [[ "${HTTP_STATUS_CODE}" = "302" ]]; then
+    return 0
   else
-    echo ""
+    return 1
   fi
 }
 
-load_profile() {
+check_if_booted() {
+  CURRENT_CHE_SERVER_CONTAINER_ID=$(get_server_container_id $CHE_SERVER_CONTAINER_NAME)
+  wait_until_container_is_running 20 ${CURRENT_CHE_SERVER_CONTAINER_ID}
+  if ! container_is_running ${CURRENT_CHE_SERVER_CONTAINER_ID}; then
+    error "(${CHE_MINI_PRODUCT_NAME} start): Timeout waiting for ${CHE_MINI_PRODUCT_NAME} container to start."
+    return 1
+  fi
+
+  info "start" "Server logs at \"docker logs -f ${CHE_SERVER_CONTAINER_NAME}\""
+  info "start" "Server booting..."
+  wait_until_server_is_booted 60 ${CURRENT_CHE_SERVER_CONTAINER_ID}
+
+  if server_is_booted ${CURRENT_CHE_SERVER_CONTAINER_ID}; then
+    info "start" "Booted and reachable"
+    info "start" "Ver: $(get_installed_version)"
+    info "start" "Use: http://${CHE_HOST}:${CHE_PORT}"
+    info "start" "API: http://${CHE_HOST}:${CHE_PORT}/swagger"
+  else
+    error "(${CHE_MINI_PRODUCT_NAME} start): Timeout waiting for server. Run \"docker logs ${CHE_SERVER_CONTAINER_NAME}\" to inspect the issue."
+    return 1
+  fi
+}
+
+#TODO - is_initialized will return as initialized with empty directories
+is_initialized() {
   debug $FUNCNAME
-  if has_default_profile; then
+  if [[ -d "${CHE_CONFIG_MANIFESTS_FOLDER}" ]] && \
+     [[ -d "${CHE_CONFIG_MODULES_FOLDER}" ]] && \
+     [[ -f "${REFERENCE_ENVIRONMENT_FILE}" ]] && \
+     [[ -f "${CHE_CONFIG}/${CHE_VERSION_FILE}" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
 
-    source ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile
+has_version_registry() {
+  if [ -d ~/."${CHE_MINI_PRODUCT_NAME}"/manifests/$1 ]; then
+    return 0;
+  else
+    return 1;
+  fi
+}
 
-    if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${CHE_PROFILE}" ]; then
-      error ""
-      error "${CHE_MINI_PRODUCT_NAME} CLI profile set in ~/.${CHE_MINI_PRODUCT_NAME}/profiles/.profile to '${CHE_PROFILE}' but ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${CHE_PROFILE} does not exist."
-      error ""
-      return
+get_version_registry() {
+  info "cli" "Downloading version registry..."
+
+  ### Remove these comments once in production
+  log "docker pull ${CHE_GLOBAL_VERSION_IMAGE} >> \"${LOGS}\" 2>&1 || true"
+  docker pull ${CHE_GLOBAL_VERSION_IMAGE} >> "${LOGS}" 2>&1 || true
+  log "docker_exec run --rm -v \"${CHE_MANIFEST_DIR}\":/copy ${CHE_GLOBAL_VERSION_IMAGE}"
+  docker_exec run --rm -v "${CHE_MANIFEST_DIR}":/copy ${CHE_GLOBAL_VERSION_IMAGE}
+}
+
+list_versions(){
+  # List all subdirectories and then print only the file name
+  for version in "${CODENVY_MANIFEST_DIR}"/* ; do
+    text " ${version##*/}\n"
+  done
+}
+
+version_error(){
+  text "\nWe could not find version '$1'. Available versions:\n"
+  list_versions
+  text "\nSet CHE_VERSION=<version> and rerun.\n\n"
+}
+
+### Returns the list of Codenvy images for a particular version of Codenvy
+### Sets the images as environment variables after loading from file
+get_image_manifest() {
+  info "cli" "Checking registry for version '$1' images"
+  if ! has_version_registry $1; then
+    version_error $1
+    return 1;
+  fi
+
+  IMAGE_LIST=$(cat "$CHE_MANIFEST_DIR"/$1/images)
+  IFS=$'\n'
+  for SINGLE_IMAGE in $IMAGE_LIST; do
+    log "eval $SINGLE_IMAGE"
+    eval $SINGLE_IMAGE
+  done
+}
+
+can_upgrade() {
+  #  4.7.2 -> 5.0.0-M2-SNAPSHOT  <insert-syntax>
+  #  4.7.2 -> 4.7.3              <insert-syntax>
+  while IFS='' read -r line || [[ -n "$line" ]]; do
+    VER=$(echo $line | cut -d ' ' -f1)
+    UPG=$(echo $line | cut -d ' ' -f2)
+
+    # Loop through and find all matching versions
+    if [[ "${VER}" == "${1}" ]]; then
+      if [[ "${UPG}" == "${2}" ]]; then
+        return 0
+      fi
     fi
+  done < "$CODENVY_MANIFEST_DIR"/upgrades
 
-    source ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${CHE_PROFILE}"
+  return 1
+}
+
+print_upgrade_manifest() {
+  #  4.7.2 -> 5.0.0-M2-SNAPSHOT  <insert-syntax>
+  #  4.7.2 -> 4.7.3              <insert-syntax>
+  while IFS='' read -r line || [[ -n "$line" ]]; do
+    VER=$(echo $line | cut -d ' ' -f1)
+    UPG=$(echo $line | cut -d ' ' -f2)
+    text "  "
+    text "%s" $VER
+    for i in `seq 1 $((25-${#VER}))`; do text " "; done
+    text "%s" $UPG
+    text "\n"
+  done < "$CODENVY_MANIFEST_DIR"/upgrades
+}
+
+print_version_manifest() {
+  while IFS='' read -r line || [[ -n "$line" ]]; do
+    VER=$(echo $line | cut -d ' ' -f1)
+    CHA=$(echo $line | cut -d ' ' -f2)
+    UPG=$(echo $line | cut -d ' ' -f3)
+    text "  "
+    text "%s" $VER
+    for i in `seq 1 $((25-${#VER}))`; do text " "; done
+    text "%s" $CHA
+    for i in `seq 1 $((18-${#CHA}))`; do text " "; done
+    text "%s" $UPG
+    text "\n"
+  done < "$CODENVY_MANIFEST_DIR"/versions
+}
+
+get_installed_version() {
+  if ! is_initialized; then
+    echo "<not-installed>"
+  else
+    cat "${CHE_CONFIG}"/$CHE_VERSION_FILE
   fi
+}
+
+get_installed_installdate() {
+  if ! is_initialized; then
+    echo "<not-installed>"
+  else
+    cat "${CHE_CONFIG}"/$CHE_VERSION_FILE
+  fi
+}
+
+# Usage:
+#   confirm_operation <Warning message> [--force|--no-force]
+confirm_operation() {
+  debug $FUNCNAME
+
+  FORCE_OPERATION=${2:-"--no-force"}
+
+  if [ ! "${FORCE_OPERATION}" == "--force" ]; then
+  
+    # Warn user with passed message
+    info "${1}"
+
+    text "\n"
+    read -p "      Are you sure? [N/y] " -n 1 -r
+    text "\n\n"
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      return 1;
+    else
+      return 0;
+    fi
+  fi
+}
+
+# Runs puppet image to generate configuration
+generate_configuration_with_puppet() {
+  debug $FUNCNAME
+  info "config" "Generating ${CHE_MINI_PRODUCT_NAME} configuration..."
+  # Note - bug in docker requires relative path for env, not absolute
+  log "docker_exec run -it --rm \
+                  --env-file=\"${REFERENCE_ENVIRONMENT_FILE}\" \
+                  -v \"${CHE_INSTANCE}\":/opt/${CHE_MINI_PRODUCT_NAME}:rw \
+                  -v \"${CHE_CONFIG_MANIFESTS_FOLDER}\":/etc/puppet/manifests:ro \
+                  -v \"${CHE_CONFIG_MODULES_FOLDER}\":/etc/puppet/modules:ro \
+                      $IMAGE_PUPPET \
+                          apply --modulepath \
+                                /etc/puppet/modules/ \
+                                /etc/puppet/manifests/${CHE_MINI_PRODUCT_NAME}.pp --show_diff \"$@\""
+  docker_exec run -it --rm \
+                  --env-file="${REFERENCE_ENVIRONMENT_FILE}" \
+                  -v "${CHE_INSTANCE}":/opt/${CHE_MINI_PRODUCT_NAME}:rw \
+                  -v "${CHE_CONFIG_MANIFESTS_FOLDER}":/etc/puppet/manifests:ro \
+                  -v "${CHE_CONFIG_MODULES_FOLDER}":/etc/puppet/modules:ro \
+                      $IMAGE_PUPPET \
+                          apply --modulepath \
+                                /etc/puppet/modules/ \
+                                /etc/puppet/manifests/${CHE_MINI_PRODUCT_NAME}.pp --show_diff "$@"
 }
 
 ###########################################################################
@@ -605,396 +696,583 @@ load_profile() {
 ###
 ### START CLI COMMANDS
 ###########################################################################
+cmd_download() {
+  FORCE_UPDATE=${1:-"--no-force"}
 
-execute_che_launcher() {
+  get_version_registry
+  get_image_manifest $CHE_VERSION
+
+  IFS=$'\n'
+  for SINGLE_IMAGE in $IMAGE_LIST; do
+    VALUE_IMAGE=$(echo $SINGLE_IMAGE | cut -d'=' -f2)
+    if [[ $FORCE_UPDATE == "--force" ]] ||
+       [[ $FORCE_UPDATE == "--pull" ]]; then
+      update_image $FORCE_UPDATE $VALUE_IMAGE
+    else
+      update_image_if_not_found $VALUE_IMAGE
+    fi
+  done
+}
+
+cmd_init() {
+  FORCE_UPDATE=${1:-"--no-force"}
+  if [ "${FORCE_UPDATE}" == "--no-force" ]; then
+    # If codenvy.environment file exists, then fail
+    if is_initialized; then
+      info "init" "Already initialized."
+      return 1
+    fi
+  fi
+
+  cmd_download $FORCE_UPDATE
+
+  if [ -z ${IMAGE_INIT+x} ]; then
+    get_image_manifest $CHE_VERSION
+  fi
+
+  info "init" "Installing configuration and bootstrap variables:"
+  log "mkdir -p \"${CHE_CONFIG}\""
+  mkdir -p "${CHE_CONFIG}"
+  log "mkdir -p \"${CHE_INSTANCE}\""
+  mkdir -p "${CHE_INSTANCE}"
+
+  if [ ! -w "${CHE_CONFIG}" ]; then
+    error "CHE_CONFIG is not writable. Aborting."
+    return 1;
+  fi
+
+  if [ ! -w "${CHE_INSTANCE}" ]; then
+    error "CHE_INSTANCE is not writable. Aborting."
+    return 1;
+  fi
+
+  if [ "${CHE_DEVELOPMENT_MODE}" = "on" ]; then
+    # docker pull codenvy/bootstrap with current directory as volume mount.
+    docker_exec run --rm \
+                    -v "${CHE_CONFIG}":/copy \
+                    -v "${CHE_DEVELOPMENT_REPO}":/files \
+                       $IMAGE_INIT #> /dev/null 2>&1
+  else
+    # docker pull the bootstrap image with current directory as volume mount.
+    docker_exec run --rm -v "${CHE_CONFIG}":/copy $IMAGE_INIT #> /dev/null 2>&1
+  fi
+
+  # After initialization, add che.env with self-discovery.
+  sed -i'.bak' "s|#CHE_HOST=.*|CHE_HOST=${CHE_HOST}|" "${REFERENCE_ENVIRONMENT_FILE}"
+  info "init" "  CHE_HOST=${CHE_HOST}"
+  sed -i'.bak' "s|#CHE_PORT=.*|CHE_PORT=${CHE_PORT}|" "${REFERENCE_ENVIRONMENT_FILE}"
+  info "init" "  CHE_PORT=${CHE_PORT}"
+  sed -i'.bak' "s|#CHE_VERSION=.*|CHE_VERSION=${CHE_VERSION}|" "${REFERENCE_ENVIRONMENT_FILE}"
+  info "init" "  CHE_VERSION=${CHE_VERSION}"
+  sed -i'.bak' "s|#CHE_CONFIG=.*|CHE_CONFIG=${CHE_CONFIG}|" "${REFERENCE_ENVIRONMENT_FILE}"
+  info "init" "  CHE_CONFIG=${CHE_CONFIG}"
+  sed -i'.bak' "s|#CHE_INSTANCE=.*|CHE_INSTANCE=${CHE_INSTANCE}|" "${REFERENCE_ENVIRONMENT_FILE}"
+  info "init" "  CHE_INSTANCE=${CHE_INSTANCE}"
+
+  if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
+    sed -i'.bak' "s|#CHE_ENVIRONMENT=.*|CHE_ENVIRONMENT=development|" "${REFERENCE_ENVIRONMENT_FILE}"
+    info "init" "  CHE_ENVIRONMENT=development"
+    sed -i'.bak' "s|#CHE_DEVELOPMENT_REPO=.*|CHE_DEVELOPMENT_REPO=${CHE_DEVELOPMENT_REPO}|" "${REFERENCE_ENVIRONMENT_FILE}"
+    info "init" "  CHE_DEVELOPMENT_REPO=${CHE_DEVELOPMENT_REPO}"
+    sed -i'.bak' "s|#CHE_ASSEMBLY=.*|CHE_ASSEMBLY=${CHE_ASSEMBLY}|" "${REFERENCE_ENVIRONMENT_FILE}"
+    info "init" "  CHE_ASSEMBLY=${CHE_ASSEMBLY}"
+  else
+    sed -i'.bak' "s|#CHE_ENVIRONMENT=.*|CHE_ENVIRONMENT=production|" "${REFERENCE_ENVIRONMENT_FILE}"
+    info "init" "  CHE_ENVIRONMENT=production"
+  fi
+
+  rm -rf "${REFERENCE_ENVIRONMENT_FILE}".bak > /dev/null 2>&1
+
+  # Write the Codenvy version to codenvy.ver
+  echo "$CHE_VERSION" > "${CHE_CONFIG}/${CHE_VERSION_FILE}"
+}
+
+cmd_config() {
+
+  # If the system is not initialized, initalize it.
+  # If the system is already initialized, but a user wants to update images, then re-download.
+  FORCE_UPDATE=${1:-"--no-force"}
+  if ! is_initialized; then
+    cmd_init $FORCE_UPDATE
+  elif [[ "${FORCE_UPDATE}" == "--pull" ]] || \
+       [[ "${FORCE_UPDATE}" == "--force" ]]; then
+    cmd_download $FORCE_UPDATE
+  fi
+
+  # If the CHE_VERSION set by an environment variable does not match the value of
+  # the codenvy.ver file of the installed instance, then do not proceed as there is a
+  # confusion between what the user has set and what the instance expects.
+  INSTALLED_VERSION=$(get_installed_version)
+  if [[ $CHE_VERSION != $INSTALLED_VERSION ]]; then
+    info "config" "CHE_VERSION=$CHE_VERSION does not match ${CODENVY_ENVIRONMENT_FILE}=$INSTALLED_VERSION. Aborting."
+    return 1
+  fi
+
+  if [ -z ${IMAGE_PUPPET+x} ]; then
+    get_image_manifest $CHE_VERSION
+  fi
+
+  # if dev mode is on, pick configuration sources from repo.
+  # please note that in production mode update of configuration sources must be only on update.
+  if [ "${CHE_DEVELOPMENT_MODE}" = "on" ]; then
+    docker_exec run --rm \
+                    -v "${CHE_CONFIG}":/copy \
+                    -v "${CHE_DEVELOPMENT_REPO}":/files \
+                       $IMAGE_INIT
+  fi
+
+  # print puppet output logs to console if dev mode is on
+  if [ "${CHE_DEVELOPMENT_MODE}" = "on" ]; then
+     generate_configuration_with_puppet
+  else
+     generate_configuration_with_puppet >> "${LOGS}"
+  fi
+
+  # Replace certain environment file lines with wind
+  if has_docker_for_windows_client; then
+    info "config" "Customizing docker-compose for Windows"
+    CHE_ENVFILE_CHE=$(convert_posix_to_windows $(echo \
+                                   "${CHE_INSTANCE}/config/che/che.env"))
+    sed "s|^.*${CHE_MINI_PRODUCT_NAME}\.env.*$|\ \ \ \ \ \ \-\ \'${CHE_ENVFILE_CHE}\'|" -i "${REFERENCE_COMPOSE_FILE}"
+  fi
+}
+
+cmd_start() {
+  debug $FUNCNAME
+
+  # If Codenvy is already started or booted, then terminate early.
+  if container_exist_by_name $CHE_SERVER_CONTAINER_NAME; then
+    CURRENT_CHE_SERVER_CONTAINER_ID=$(get_server_container_id $CHE_SERVER_CONTAINER_NAME)
+    if container_is_running ${CURRENT_CHE_SERVER_CONTAINER_ID} && \
+       server_is_booted ${CURRENT_CHE_SERVER_CONTAINER_ID}; then
+       info "start" "Codenvy is already running"
+       info "start" "Server logs at \"docker logs -f ${CHE_SERVER_CONTAINER_NAME}\""
+       info "start" "Ver: $(get_installed_version)"
+       info "start" "Use: http://${CHE_HOST}"
+       info "start" "API: http://${CHE_HOST}/swagger"
+       return
+    fi
+  fi
+
+  # To protect users from accidentally updating their Codenvy servers when they didn't mean
+  # to, which can happen if CHE_VERSION=latest
+  FORCE_UPDATE=${1:-"--no-force"}
+  # Always regenerate puppet configuration from environment variable source, whether changed or not.
+  # If the current directory is not configured with an .env file, it will initialize
+  cmd_config $FORCE_UPDATE
+
+  # Begin tests of open ports that we require
+  info "start" "Preflight checks"
+  text   "         port $CHE_PORT (http):       $(port_open $CHE_PORT && echo "${GREEN}[AVAILABLE]${NC}" || echo "${RED}[ALREADY IN USE]${NC}") \n"
+  if ! $(port_open $CHE_PORT); then
+    error "Ports required to run $CHE_MINI_PRODUCT_NAME are used by another program. Aborting..."
+    return 1;
+  fi
+  text "\n"
+
+  # Start Codenvy
+  # Note bug in docker requires relative path, not absolute path to compose file
+  info "start" "Starting containers..."
+  log "docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME up -d >> \"${LOGS}\" 2>&1"
+  docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME up -d >> "${LOGS}" 2>&1
+  check_if_booted
+}
+
+cmd_stop() {
   debug $FUNCNAME
 
   if [ $# -gt 0 ]; then
-    error "${CHE_MINI_PRODUCT_NAME} start/stop/start: You passed unknown options."
+    error "${CHE_MINI_PRODUCT_NAME} stop: You passed unknown options. Aborting."
     return
   fi
 
-  check_current_image_and_update_if_not_found ${CHE_LAUNCHER_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-  docker_run_with_che_properties "${CHE_LAUNCHER_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" "${CHE_CLI_ACTION}" || true
+  info "stop" "Stopping containers..."
+  log "docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME stop >> \"${LOGS}\" 2>&1 || true"
+  docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME stop >> "${LOGS}" 2>&1 || true
+  info "stop" "Removing containers"
+  log "yes | docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME rm >> \"${LOGS}\" 2>&1 || true"
+  yes | docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME rm >> "${LOGS}" 2>&1 || true
 }
 
-execute_profile(){
+cmd_restart() {
   debug $FUNCNAME
 
-  if [ ! $# -ge 2 ]; then 
-    error "Wrong number of arguments."
-    return
-  fi
-
-  case ${2} in
-    add|rm|set|info|update)
-    if [ ! $# -eq 3 ]; then 
-      error "Wrong number of arguments."
-      return
-    fi
-    ;;
-    unset|list)
-    if [ ! $# -eq 2 ]; then 
-      error "Wrong number of arguments."
-      return
-    fi
-    ;;
-  esac
-
-  case ${2} in
-    add)
-      if [ -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" ]; then
-        error "Profile ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3} already exists. Nothing to do. Exiting."
-        return
-      fi
-
-      PROFILE_DIR=~/."${CHE_MINI_PRODUCT_NAME}"/profiles
-      PROFILE_FILE="${PROFILE_DIR}"/"${3}"
-      test -d "${PROFILE_DIR}" || mkdir -p "${PROFILE_DIR}"
-      touch "${PROFILE_FILE}"
-
-      echo "CHE_PRODUCT_NAME=\"""${CHE_PRODUCT_NAME}""\"" >> "${PROFILE_FILE}"
-      echo "CHE_MINI_PRODUCT_NAME=\"""${CHE_MINI_PRODUCT_NAME}""\"" >> "${PROFILE_FILE}"
-      echo "CHE_LAUNCHER_IMAGE_NAME=$CHE_LAUNCHER_IMAGE_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_SERVER_IMAGE_NAME=$CHE_SERVER_IMAGE_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_DIR_IMAGE_NAME=$CHE_DIR_IMAGE_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_MOUNT_IMAGE_NAME=$CHE_MOUNT_IMAGE_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_TEST_IMAGE_NAME=$CHE_TEST_IMAGE_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_SERVER_CONTAINER_NAME=$CHE_SERVER_CONTAINER_NAME" >> "${PROFILE_FILE}"
-      echo "CHE_VERSION=$CHE_VERSION" >> "${PROFILE_FILE}"
-
-      # Add all other variables to the profile
-      env | grep CHE_ >> "${PROFILE_FILE}" || true
-
-      # Remove duplicates, if any
-      cat "${PROFILE_FILE}" | sort | uniq > "${PROFILE_DIR}"/tmp
-      mv -f "${PROFILE_DIR}"/tmp "${PROFILE_FILE}"
-
-
-      info "profile" "Added new ${CHE_MINI_PRODUCT_NAME} CLI profile ${PROFILE_FILE}."
-    ;;
-    update)
-      if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" ]; then
-        error "Profile ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3} does not exist. Nothing to update. Exiting."
-        return
-      fi
-
-      execute_profile profile rm "${3}"
-      execute_profile profile add "${3}"
-    ;;
-    rm)
-      if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" ]; then
-        error "Profile ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3} does not exist. Nothing to do. Exiting."
-        return
-      fi
-
-      rm ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" > /dev/null
-
-      info "profile" "Removed ${CHE_MINI_PRODUCT_NAME} CLI profile ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3}."
-    ;;
-    info)
-      if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" ]; then
-        error "Profile ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3} does not exist. Nothing to do. Exiting."
-        return
-      fi
- 
-      while IFS= read line
-      do
-        # display $line or do somthing with $line
-        info "profile" "$line"
-      done <~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}"
-    ;;
-    set)
-      if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/"${3}" ]; then
-        error "Profile ~/.${CHE_MINI_PRODUCT_NAME}/${3} does not exist. Nothing to do. Exiting."
-        return
-      fi
-      
-      echo "CHE_PROFILE=${3}" > ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile
-
-      info "profile" "Set active ${CHE_MINI_PRODUCT_NAME} CLI profile to ~/.${CHE_MINI_PRODUCT_NAME}/profiles/${3}."
-    ;;
-    unset)
-      if [ ! -f ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile ]; then
-        error "Default profile not set. Nothing to do. Exiting."
-        return
-      fi
-      
-      rm -rf ~/."${CHE_MINI_PRODUCT_NAME}"/profiles/.profile
-
-      info "profile" "Unset the default ${CHE_MINI_PRODUCT_NAME} CLI profile. No profile currently set."
-    ;;
-    list)
-      if [ -d ~/."${CHE_MINI_PRODUCT_NAME}"/profiles ]; then
-        info "profile" "Available ${CHE_MINI_PRODUCT_NAME} CLI profiles:"
-        ls ~/."${CHE_MINI_PRODUCT_NAME}"/profiles
-      else
-        info "profile" "No ${CHE_MINI_PRODUCT_NAME} CLI profiles currently set."
-      fi
-
-      if has_default_profile; then
-        info "profile" "Default profile set to:"
-        get_default_profile
-      else
-        info "profile" "Default profile currently unset."
-      fi
-    ;;
-  esac
-}
-
-execute_che_dir() {
-  debug $FUNCNAME
-  check_current_image_and_update_if_not_found ${CHE_DIR_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-  CURRENT_DIRECTORY=$(get_mount_path "${PWD}")
-  docker_run_with_che_properties -v "$CURRENT_DIRECTORY":"$CURRENT_DIRECTORY" "${CHE_DIR_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" "${CURRENT_DIRECTORY}" "$@"
-}
-
-execute_che_action() {
-  debug $FUNCNAME
-  check_current_image_and_update_if_not_found ${CHE_ACTION_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-  docker_run_with_che_properties "${CHE_ACTION_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" "$@"
-}
-
-update_che_image() {
-  debug $FUNCNAME
-  if [ "${1}" == "--force" ]; then
-    shift
-    info "update" "Removing image $1:$2"
-    docker rmi -f $1:$2 > /dev/null
-  fi
-
-  info "update" "Pulling image $1:$2"
-  docker pull $1:$2
-  echo ""
-}
-
-execute_che_mount() {
-  debug $FUNCNAME
-
-  # Determine the mount path to do the mount
-  info "mount" "Setting local mount path to ${PWD}"
-  MOUNT_PATH=$(get_mount_path "${PWD}")
-  HOME_PATH=$(get_mount_path "${HOME}")
-
-  # If extra parameter provided, then this is the port to connect to
-  if [ $# -eq 1 ]; then
-    info "mount" "Connecting to remote workspace on port ${1}"
-    WS_PORT=${1}
-
-  # Port not provided, let's do a simple discovery of running workspaces
-  else 
-    info "mount" "Searching for running workspaces with open SSH port..."
-
-    CURRENT_WS_INSTANCES=$(docker ps -aq --filter "name=workspace")
-    CURRENT_WS_COUNT=$(echo $CURRENT_WS_INSTANCES | wc -w)
-    
-    # No running workspaces
-    if [ $CURRENT_WS_COUNT -eq 0 ]; then
-      error "We could not find any running workspaces"
-      return
-
-    # Exactly 1 running workspace
-    elif [ $CURRENT_WS_COUNT -eq 1 ]; then
-
-      if has_ssh ${CURRENT_WS_INSTANCES}; then
-        RUNNING_WS_PORT=$(docker inspect --format='{{ (index (index .NetworkSettings.Ports "22/tcp") 0).HostPort }}' ${CURRENT_WS_INSTANCES})
-        info "mount" "Connecting to remote workspace on port $RUNNING_WS_PORT"
-        WS_PORT=$RUNNING_WS_PORT
-      else
-        error "We found 1 running workspace, but it does not have an SSH agent"
-        return
-      fi
-
-    # 2+ running workspace
-    else 
-      info "mount" "Re-run with 'che mount <ssh-port>'"
-      IFS=$'\n'
-
-      echo "WS CONTAINER ID    HAS SSH?    SSH PORT"
-      for CHE_WS_CONTAINER_ID in $CURRENT_WS_INSTANCES; do
-        CURRENT_WS_PORT=""
-        if has_ssh ${CHE_WS_CONTAINER_ID}; then 
-          CURRENT_WS_PORT=$(docker inspect --format='{{ (index (index .NetworkSettings.Ports "22/tcp") 0).HostPort }}' ${CHE_WS_CONTAINER_ID})
-        fi
-        echo "$CHE_WS_CONTAINER_ID       $(has_ssh ${CHE_WS_CONTAINER_ID} && echo "y" || echo "n")           $CURRENT_WS_PORT"
-      done
-      return
-    fi
-  fi
-  
-  if is_native; then
-    docker_run_with_che_properties --cap-add SYS_ADMIN \
-                                   --device /dev/fuse \
-                                   --name che-mount \
-                                   -v ${HOME}/.ssh:${HOME}/.ssh \
-                                   -v /etc/group:/etc/group:ro \
-                                   -v /etc/passwd:/etc/passwd:ro \
-                                   -u $(id -u ${USER}) \
-                                   -v ~/.che/unison:/profile \
-                                   -v "${MOUNT_PATH}":/mnthost \
-                                   "${CHE_MOUNT_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" \
-                                        "${GLOBAL_GET_DOCKER_HOST_IP}" $WS_PORT
-    
+  FORCE_UPDATE=${1:-"--no-force"}
+  if [[ "${FORCE_UPDATE}" == "--force" ]] ||\
+     [[ "${FORCE_UPDATE}" == "--pull" ]]; then
+    info "restart" "Stopping and removing containers..."
+    cmd_stop
+    info "restart" "Initiating clean start"
+    cmd_start ${FORCE_UPDATE}
   else
-    docker_run_with_che_properties --cap-add SYS_ADMIN \
-                                   --device /dev/fuse \
-                                   --name che-mount \
-                                   -v ~/.che/unison:/profile \
-                                   -v "${MOUNT_PATH}":/mnthost \
-                                   "${CHE_MOUNT_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" \
-                                        "${GLOBAL_GET_DOCKER_HOST_IP}" $WS_PORT
+    info "restart" "Generating updated config..."
+    cmd_config
+    info "restart" "Restarting services..."
+    log "docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME restart >> \"${LOGS}\" 2>&1"
+    docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME restart >> "${LOGS}" 2>&1 || true
+    check_if_booted
+  fi
+}
+
+cmd_destroy() {
+  debug $FUNCNAME
+
+  WARNING="destroy !!! Stopping services and !!! deleting data !!! this is unrecoverable !!!"
+  if ! confirm_operation "${WARNING}" "$@"; then
+    return;
   fi
 
-  # Docker doesn't seem to normally clean up this container
-  docker rm -f che-mount
+  cmd_stop
+  info "destroy" "Deleting instance"
+  rm -rf "${CHE_INSTANCE}"
+  info "destroy" "Deleting config"
+  log "rm -rf \"${CHE_CONFIG}\""
+  rm -rf "${CHE_CONFIG}"
 }
 
-execute_che_compile() {
-  debug $FUNCNAME
-  if [ $# -eq 0 ]; then 
-    error "Missing argument - pass compilation command as paramters."
-    return
+cmd_rmi() {
+  info "rmi" "Checking registry for version '$CHE_VERSION' images"
+  if ! has_version_registry $CHE_VERSION; then
+    version_error $CHE_VERSION
+    return 1;
   fi
 
-  check_current_image_and_update_if_not_found ${CHE_DEV_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-  CURRENT_DIRECTORY=$(get_mount_path "${PWD}")
-  docker_run_with_che_properties -v "$CURRENT_DIRECTORY":/home/user/che-build \
-                                 -v "$(get_mount_path ~/.m2):/home/user/.m2" \
-                                 -w /home/user/che-build \
-                                 "${CHE_DEV_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" "$@"
+  WARNING="rmi !!! Removing images disables codenvy and forces a pull !!!"
+  if ! confirm_operation "${WARNING}" "$@"; then
+    return;
+  fi
+
+  IMAGE_LIST=$(cat "$CODENVY_MANIFEST_DIR"/$CHE_VERSION/images)
+  IFS=$'\n'
+  info "rmi" "Removing ${CHE_MINI_PRODUCT_NAME} Docker images..."
+
+  for SINGLE_IMAGE in $IMAGE_LIST; do
+    VALUE_IMAGE=$(echo $SINGLE_IMAGE | cut -d'=' -f2)
+    info "rmi" "Removing $VALUE_IMAGE..."
+    log "docker rmi -f ${VALUE_IMAGE} >> \"${LOGS}\" 2>&1 || true"
+    docker rmi -f $VALUE_IMAGE >> "${LOGS}" 2>&1 || true
+  done
+
+  # This is Codenvy's singleton instance with the version registry
+  info "rmi" "Removing eclipse/che-version"
+  docker rmi -f eclipse/che-version >> "${LOGS}" 2>&1 || true
 }
 
-execute_che_test() {
+cmd_upgrade() {
   debug $FUNCNAME
-  check_current_image_and_update_if_not_found ${CHE_TEST_IMAGE_NAME} ${CHE_UTILITY_VERSION}
-  docker_run_with_che_properties "${CHE_TEST_IMAGE_NAME}":"${CHE_UTILITY_VERSION}" "$@"
+  info "upgrade" "Not yet implemented"
+
+  if [ $# -eq 0 ]; then
+    info "upgrade" "No upgrade target provided. Run '${CHE_MINI_PRODUCT_NAME} version' for a list of upgradeable versions."
+    return 2;
+  fi
+
+  if ! can_upgrade $(get_installed_version) ${1}; then
+    info "upgrade" "Your current version $(get_installed_version) is not upgradeable to $1."
+    info "upgrade" "Run '${CHE_MINI_PRODUCT_NAME} version' to see your upgrade options."
+    return 2;
+  fi
+
+  # If here, this version is validly upgradeable.  You can upgrade from
+  # $(get_installed_version) to $1
+  echo "remove me -- you entered a version that you can upgrade to"
+
 }
 
-execute_che_info() {
+cmd_version() {
   debug $FUNCNAME
-  if [ $# -eq 1 ]; then
-    TESTS="--server"
+
+  error "!!! this information is experimental - upgrade not yet available !!!"
+  text "Codenvy:\n"
+  text "  Version:      %s\n" $(get_installed_version)
+  text "  Installed:    %s\n" $(get_installed_installdate)
+  text "  CLI version:  $CHE_CLI_VERSION\n"
+
+  if is_initialized; then
+    text "\n"
+    text "Upgrade Options:\n"
+    text "  INSTALLED VERSION        UPRADEABLE TO\n"
+    print_upgrade_manifest $(get_installed_version)
+  fi
+
+  text "\n"
+  text "Available:\n"
+  text "  VERSION                  CHANNEL           UPGRADEABLE FROM\n"
+  if is_initialized; then
+    print_version_manifest $(get_installed_version)
   else
-    TESTS=$2
+    print_version_manifest $CHE_VERSION
   fi
-  
+}
+
+cmd_backup() {
+  debug $FUNCNAME
+
+  if [[ ! -d "${CHE_CONFIG}" ]] || \
+     [[ ! -d "${CHE_INSTANCE}" ]]; then
+    error "Cannot find existing CHE_CONFIG or CHE_INSTANCE. Aborting."
+    return;
+  fi
+
+  if [[ ! -d "${CODENVY_BACKUP_FOLDER}" ]]; then
+    error "CODENVY_BACKUP_FOLDER does not exist. Aborting."
+    return;
+  fi
+
+  ## TODO: - have backups get time & day for rotational purposes
+  if [[ -f "${CODENVY_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}" ]] || \
+     [[ -f "${CODENVY_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}" ]]; then
+
+    WARNING="Previous backup will be overwritten."
+    if ! confirm_operation "${WARNING}" "$@"; then
+      return;
+    fi
+  fi
+
+  if get_server_container_id "${CHE_SERVER_CONTAINER_NAME}" >> "${LOGS}" 2>&1; then
+    error "Codenvy is running. Stop before performing a backup. Aborting."
+    return;
+  fi
+
+  info "backup" "Saving configuration..."
+  tar -C "${CHE_CONFIG}" -cf "${CODENVY_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}" .
+  info "backup" "Saving instance data..."
+  tar -C "${CHE_INSTANCE}" -cf "${CODENVY_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}" .
+}
+
+cmd_restore() {
+  debug $FUNCNAME
+
+  if [[ -d "${CHE_CONFIG}" ]] || \
+     [[ -d "${CHE_INSTANCE}" ]]; then
+
+    WARNING="Restoration overwrites existing configuration and data. Are you sure?"
+    if ! confirm_operation "${WARNING}" "$@"; then
+      return;
+    fi
+  fi
+
+  if get_server_container_id "${CHE_SERVER_CONTAINER_NAME}" >> "${LOGS}" 2>&1; then
+    error "Codenvy is running. Stop before performing a restore. Aborting"
+    return;
+  fi
+
+  info "restore" "Recovering configuration..."
+  rm -rf "${CHE_INSTANCE}"
+  rm -rf "${CHE_CONFIG}"
+  mkdir -p "${CHE_CONFIG}"
+  tar -C "${CHE_CONFIG}" -xf "${CODENVY_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}"
+  info "restore" "Recovering instance data..."
+  mkdir -p "${CHE_INSTANCE}"
+  tar -C "${CHE_INSTANCE}" -xf "${CODENVY_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}"
+}
+
+cmd_offline() {
+  info "offline" "Checking registry for version '$CHE_VERSION' images"
+  if ! has_version_registry $CHE_VERSION; then
+    version_error $CHE_VERSION
+    return 1;
+  fi
+
+  # Make sure the images have been pulled and are in your local Docker registry
+  cmd_download
+
+  mkdir -p $CODENVY_OFFLINE_FOLDER
+
+  IMAGE_LIST=$(cat "$CODENVY_MANIFEST_DIR"/$CHE_VERSION/images)
+  IFS=$'\n'
+  info "offline" "Saving ${CHE_MINI_PRODUCT_NAME} Docker images as tar files..."
+
+  for SINGLE_IMAGE in $IMAGE_LIST; do
+    VALUE_IMAGE=$(echo $SINGLE_IMAGE | cut -d'=' -f2)
+    TAR_NAME=$(echo $VALUE_IMAGE | sed "s|\/|_|")
+    info "offline" "Saving $CODENVY_OFFLINE_FOLDER/$TAR_NAME.tar..."
+    if ! $(docker save $VALUE_IMAGE > $CODENVY_OFFLINE_FOLDER/$TAR_NAME.tar); then
+      error "Docker was interrupted while saving $CODENVY_OFFLINE_FOLDER/$TAR_NAME.tar"
+      return 1;
+    fi
+  done
+
+  # This is Codenvy's singleton instance with the version registry
+  docker save codenvy/version > "${CODENVY_OFFLINE_FOLDER}"/CHE_VERSION.tar
+  info "offline" "Images saved as tars in $CODENVY_OFFLINE_FOLDER"
+}
+
+cmd_info() {
+  debug $FUNCNAME
+  if [ $# -eq 0 ]; then
+    TESTS="--debug"
+  else
+    TESTS=$1
+  fi
+
   case $TESTS in
     --all|-all)
-      print_che_cli_debug
-      execute_che_launcher
-      run_connectivity_tests
-      execute_che_test post-flight-check "$@"
+      cmd_debug
+      cmd_network
     ;;
-    --cli|-cli)
-      print_che_cli_debug
+    --network|-network)
+      cmd_network
     ;;
-    --networking|-networking)
-      run_connectivity_tests
-    ;;
-    --server|-server)
-      print_che_cli_debug
-      execute_che_launcher
-    ;;
-    --create|-create)
-      execute_che_test "$@"
+    --debug|-debug)
+      cmd_debug
     ;;
     *)
-      error "Unknown info flag passed: $2. Exiting."
+      info "info" "Unknown info flag passed: $1."
+      return;
     ;;
   esac
 }
 
-print_che_cli_debug() {
+cmd_debug() {
   debug $FUNCNAME
   info "---------------------------------------"
-  info "-------------   CLI INFO   ------------"
+  info "------------   CLI INFO   -------------"
   info "---------------------------------------"
   info ""
-  info "---------  PLATFORM INFO  -------------"
-  info "CLI DEFAULT PROFILE       = $(has_default_profile && echo $(get_default_profile) || echo "not set")"
-  info "CHE_VERSION               = ${CHE_VERSION}"
-  info "CHE_CLI_VERSION           = ${CHE_CLI_VERSION}"
-  info "CHE_UTILITY_VERSION       = ${CHE_UTILITY_VERSION}"
+  info "-----------  CODENVY INFO  ------------"
+  info "CHE_VERSION           = ${CHE_VERSION}"
+  info "CHE_INSTANCE          = ${CHE_INSTANCE}"
+  info "CHE_CONFIG            = ${CHE_CONFIG}"
+  info "CHE_HOST              = ${CHE_HOST}"
+  info "CODENVY_REGISTRY          = ${CODENVY_MANIFEST_DIR}"
+  info "CHE_DEVELOPMENT_MODE  = ${CHE_DEVELOPMENT_MODE}"
+  info "CHE_DEVELOPMENT_REPO  = ${CHE_DEVELOPMENT_REPO}"
+  info "CODENVY_BACKUP_FOLDER     = ${CODENVY_BACKUP_FOLDER}"
+  info ""
+  info "-----------  PLATFORM INFO  -----------"
+#  info "CLI DEFAULT PROFILE       = $(has_default_profile && echo $(get_default_profile) || echo "not set")"
+  info "CLI_VERSION               = ${CHE_CLI_VERSION}"
   info "DOCKER_INSTALL_TYPE       = $(get_docker_install_type)"
-  info "DOCKER_HOST_IP            = ${GLOBAL_GET_DOCKER_HOST_IP}"
-  info "IS_NATIVE                 = $(is_native && echo "YES" || echo "NO")"
-  info "IS_WINDOWS                = $(has_docker_for_windows_client && echo "YES" || echo "NO")"
-  info "IS_DOCKER_FOR_WINDOWS     = $(is_docker_for_windows && echo "YES" || echo "NO")"
-  info "IS_DOCKER_FOR_MAC         = $(is_docker_for_mac && echo "YES" || echo "NO")"
-  info "IS_BOOT2DOCKER            = $(is_boot2docker && echo "YES" || echo "NO")"
-  info "HAS_DOCKER_FOR_WINDOWS_IP = $(has_docker_for_windows_ip && echo "YES" || echo "NO")"
-  info "IS_MOBY_VM                = $(is_moby_vm && echo "YES" || echo "NO")"
-  info "HAS_CHE_ENV_VARIABLES     = $(has_che_env_variables && echo "YES" || echo "NO")"
-  info "HAS_TEMP_CHE_PROPERTIES   = $(has_che_properties && echo "YES" || echo "NO")"
-  info "IS_INTERACTIVE            = $(has_interactive && echo "YES" || echo "NO")"
-  info "IS_PSEUDO_TTY             = $(has_pseudo_tty && echo "YES" || echo "NO")"
+  info "IS_NATIVE                 = $(is_native && echo \"YES\" || echo \"NO\")"
+  info "IS_WINDOWS                = $(has_docker_for_windows_client && echo \"YES\" || echo \"NO\")"
+  info "IS_DOCKER_FOR_WINDOWS     = $(is_docker_for_windows && echo \"YES\" || echo \"NO\")"
+  info "HAS_DOCKER_FOR_WINDOWS_IP = $(has_docker_for_windows_client && echo \"YES\" || echo \"NO\")"
+  info "IS_DOCKER_FOR_MAC         = $(is_docker_for_mac && echo \"YES\" || echo \"NO\")"
+  info "IS_BOOT2DOCKER            = $(is_boot2docker && echo \"YES\" || echo \"NO\")"
+  info "IS_MOBY_VM                = $(is_moby_vm && echo \"YES\" || echo \"NO\")"
   info ""
 }
 
-run_connectivity_tests() {
+cmd_network() {
   debug $FUNCNAME
+
+  if [ -z ${IMAGE_PUPPET+x} ]; then
+    get_image_manifest $CHE_VERSION
+  fi
+
   info ""
   info "---------------------------------------"
   info "--------   CONNECTIVITY TEST   --------"
   info "---------------------------------------"
   # Start a fake workspace agent
-  docker_exec run -d -p 12345:80 --name fakeagent alpine httpd -f -p 80 -h /etc/ > /dev/null
+  log "docker_exec run -d -p 12345:80 --name fakeagent alpine httpd -f -p 80 -h /etc/ >> \"${LOGS}\""
+  docker_exec run -d -p 12345:80 --name fakeagent alpine httpd -f -p 80 -h /etc/ >> "${LOGS}"
 
   AGENT_INTERNAL_IP=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' fakeagent)
   AGENT_INTERNAL_PORT=80
-  AGENT_EXTERNAL_IP=$GLOBAL_GET_DOCKER_HOST_IP
+  AGENT_EXTERNAL_IP=$CHE_HOST
   AGENT_EXTERNAL_PORT=12345
 
 
   ### TEST 1: Simulate browser ==> workspace agent HTTP connectivity
-  HTTP_CODE=$(curl -I $(get_che_hostname):${AGENT_EXTERNAL_PORT}/alpine-release \
-                          -s -o /dev/null --connect-timeout 5 \
-                          --write-out "%{http_code}") || echo "28" > /dev/null
+  HTTP_CODE=$(curl -I localhost:${AGENT_EXTERNAL_PORT}/alpine-release \
+                          -s -o "${LOGS}" --connect-timeout 5 \
+                          --write-out "%{http_code}") || echo "28" >> "${LOGS}"
 
   if [ "${HTTP_CODE}" = "200" ]; then
-      info "Browser    => Workspace Agent (Hostname)   : Connection succeeded"
+      info "Browser    => Workspace Agent (localhost): Connection succeeded"
   else
-      info "Browser    => Workspace Agent (Hostname)   : Connection failed"
+      info "Browser    => Workspace Agent (localhost): Connection failed"
   fi
 
   ### TEST 1a: Simulate browser ==> workspace agent HTTP connectivity
   HTTP_CODE=$(curl -I ${AGENT_EXTERNAL_IP}:${AGENT_EXTERNAL_PORT}/alpine-release \
-                          -s -o /dev/null --connect-timeout 5 \
-                          --write-out "%{http_code}") || echo "28" > /dev/null
+                          -s -o "${LOGS}" --connect-timeout 5 \
+                          --write-out "%{http_code}") || echo "28" >> "${LOGS}"
 
   if [ "${HTTP_CODE}" = "200" ]; then
-      info "Browser    => Workspace Agent (External IP): Connection succeeded"
+      info "Browser    => Workspace Agent ($AGENT_EXTERNAL_IP): Connection succeeded"
   else
-      info "Browser    => Workspace Agent (External IP): Connection failed"
+      info "Browser    => Workspace Agent ($AGENT_EXTERNAL_IP): Connection failed"
   fi
 
-  ### TEST 2: Simulate Che server ==> workspace agent (external IP) connectivity 
+  ### TEST 2: Simulate Che server ==> workspace agent (external IP) connectivity
   export HTTP_CODE=$(docker run --rm --name fakeserver \
                                 --entrypoint=curl \
-                                ${CHE_SERVER_IMAGE_NAME}:${CHE_VERSION} \
+                                ${IMAGE_CODENVY} \
                                   -I ${AGENT_EXTERNAL_IP}:${AGENT_EXTERNAL_PORT}/alpine-release \
-                                  -s -o /dev/null \
+                                  -s -o "${LOGS}" \
                                   --write-out "%{http_code}")
-  
+
   if [ "${HTTP_CODE}" = "200" ]; then
-      info "Che Server => Workspace Agent (External IP): Connection succeeded"
+      info "Server     => Workspace Agent (External IP): Connection succeeded"
   else
-      info "Che Server => Workspace Agent (External IP): Connection failed"
+      info "Server     => Workspace Agent (External IP): Connection failed"
   fi
 
-  ### TEST 3: Simulate Che server ==> workspace agent (internal IP) connectivity 
+  ### TEST 3: Simulate Che server ==> workspace agent (internal IP) connectivity
   export HTTP_CODE=$(docker run --rm --name fakeserver \
                                 --entrypoint=curl \
-                                ${CHE_SERVER_IMAGE_NAME}:${CHE_VERSION} \
+                                ${IMAGE_CODENVY} \
                                   -I ${AGENT_INTERNAL_IP}:${AGENT_INTERNAL_PORT}/alpine-release \
-                                  -s -o /dev/null \
+                                  -s -o "${LOGS}" \
                                   --write-out "%{http_code}")
 
   if [ "${HTTP_CODE}" = "200" ]; then
-      info "Che Server => Workspace Agent (Internal IP): Connection succeeded"
+      info "Server     => Workspace Agent (Internal IP): Connection succeeded"
   else
-      info "Che Server => Workspace Agent (Internal IP): Connection failed"
+      info "Server     => Workspace Agent (Internal IP): Connection failed"
   fi
 
-  docker rm -f fakeagent > /dev/null
+  log "docker rm -f fakeagent >> \"${LOGS}\""
+  docker rm -f fakeagent >> "${LOGS}"
+}
+
+# Prints command that should be executed on a node to add it to swarm cluster
+cmd_add_node() {
+  info "add-node" "1. For the node you want to add, verify that Docker is installed."
+  info "add-node" "2. Collect the externally accessible IP address or DNS of the node."
+  info "add-node" "3. Grab your Codenvy admin user name and password."
+  info "add-node" "4. SSH into the remote node and execute:"
+  printf "                             ${YELLOW}bash <(curl -sSL http://${CHE_HOST}/api/nodes/script) --user <admin-user> --password <admin-pass> --ip <node-ip>${NC}"
+  echo ""
+  info "add-node" "5. The node will configure itself and update the Codenvy cluster."
+}
+
+# Removes node from swarm cluster configuration and restarts swarm container
+cmd_remove_node() {
+  if [ $# -eq 0 ]; then
+    error "No IP provided"
+    return 1
+  fi
+
+  NODE_IP=${1}
+  NODES=$(grep "^CODENVY_SWARM_NODES=" "${CHE_CONFIG}/codenvy.env" | sed "s/.*=//")
+  NODES_ARRAY=(${NODES//,/ })
+  REMOVE_NODE="CODENVY_SWARM_NODES="
+  for NODE in "${NODES_ARRAY[@]}"; do
+    if [ "${NODE/$NODE_IP}" = "$NODE" ] ; then
+      REMOVE_NODE+=${NODE}","
+    fi
+  done
+
+  # remove trailing coma
+  REMOVE_NODE=$(echo "${REMOVE_NODE}" | sed 's/\(.*\),/\1/g')
+
+  ## TODO added "" for OSX - find portable solution
+  sed -i'.bak' -e "s|^CODENVY_SWARM_NODES=.*|${REMOVE_NODE}|" "${CHE_CONFIG}/codenvy.env"
+
+  # TODO: Restart should not be needed.  Find way to deregister nodes.
+  cmd_restart
+}
+
+# Shows list of the docker nodes in the swarm cluster
+cmd_list_nodes() {
+  ## TODO use
+  ## - config to get all configured nodes
+  ## - instance to get all registered nodes
+  ## - call to swarm api to get all enabled nodes
+  ## Print output that marks all the nodes in accordance to it state
+  cat "${CHE_INSTANCE}/config/swarm/node_list"
 }

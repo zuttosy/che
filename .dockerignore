@@ -2,3 +2,10 @@
 !assembly/assembly-main/target/eclipse-che-*
 assembly/assembly-main/target/eclipse-che-*.tar.gz
 assembly/assembly-main/target/eclipse-che-*.zip
+!dockerfiles/*
+!version
+!manifests
+!modules
+!README.md
+!DOCS.md
+!che.env
