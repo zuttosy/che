@@ -109,8 +109,22 @@ init() {
 
   # Move files from /lib to /lib-copy.  This puts files onto the host.
   rm -rf ${CHE_DATA}/lib/*
-  mkdir -p ${CHE_DATA}/lib
+  mkdir -p ${CHE_DATA}/lib  
   cp -rf ${CHE_HOME}/lib/* ${CHE_DATA}/lib
+
+  # If there are no templates or stacks in /data, then copy them from the assembly
+  # area into the section.
+  if [ ! -f ${CHE_DATA}/templates/samples.json ]; then
+    rm -rf ${CHE_DATA}/templates/*
+    mkdir -p ${CHE_DATA}/templates
+    cp -rf ${CHE_HOME}/templates/* ${CHE_DATA}/templates
+  fi
+
+  if [ ! -f ${CHE_DATA}/stacks/stacks.json ]; then
+    rm -rf ${CHE_DATA}/stacks/*
+    mkdir -p ${CHE_DATA}/stacks
+    cp -rf ${CHE_HOME}/stacks/* ${CHE_DATA}/stacks
+  fi
 
   # A che property, which names the Docker network used for che + ws to communicate
   export JAVA_OPTS="${JAVA_OPTS} -Dche.docker.network=bridge"

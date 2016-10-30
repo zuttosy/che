@@ -87,15 +87,15 @@ che.agent.dev.ping_delay_ms=2000
 
 ### TEMPLATES
 # Folder that contains JSON files with code templates and samples
-che.template.storage=<%= scope.lookupvar('che::che_assembly') %>/templates
+che.template.storage=/data/templates
 
 ### STACKS
 # File name containing default stacks definitions
-che.stacks.storage=<%= scope.lookupvar('che::che_assembly') %>/stacks/stacks.json
+che.stacks.storage=/data/stacks/stacks.json
 
 # che.stacks.default=${che.home}/stacks/stacks.json
 # Folder name where stack images are stored
-che.stacks.images=<%= scope.lookupvar('che::che_assembly') %>/stacks/images
+che.stacks.images=/data/stacks/images
 
 ### AUTHENTICATION PARAMETERS
 # Che has a single identity implementation, so this does not change the user experience.
