@@ -47,7 +47,7 @@ import static org.eclipse.che.ide.api.parts.PartStackType.NAVIGATION;
  */
 @Singleton
 public class CommandsExplorerPresenter extends BasePresenter implements CommandsExplorerView.ActionDelegate,
-                                                                        WsAgentStateHandler {
+                                                                        WsAgentStateHandler, CommandManager.CommandChangedListener {
 
     private final CommandsExplorerView view;
     private final WorkspaceAgent       workspaceAgent;
@@ -77,53 +77,12 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
 
         eventBus.addHandler(WsAgentStateEvent.TYPE, this);
 
+        commandManager.addCommandChangedListener(this);
+
         pages = new ArrayList<>();
         pages.add(infoPage);
         pages.add(argumentsPage);
         pages.add(previewUrlPage);
-    }
-
-    public void open() {
-        workspaceAgent.openPart(this, NAVIGATION);
-
-        // group of workspace commands in map
-        Map<CommandType, List<CommandImpl>> workspaceCommands = new HashMap<>();
-        for (CommandImpl command : commandManager.getWorkspaceCommands()) {
-            final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
-
-            List<CommandImpl> commands = workspaceCommands.get(commandType);
-            if (commands == null) {
-                commands = new ArrayList<>();
-                workspaceCommands.put(commandType, commands);
-            }
-
-            commands.add(command);
-        }
-
-        // group of project commands in map
-        Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands = new HashMap<>();
-
-        for (Project project : appContext.getProjects()) {
-            Map<CommandType, List<CommandImpl>> projectCommands = projectsCommands.get(project);
-            if (projectCommands == null) {
-                projectCommands = new HashMap<>();
-                projectsCommands.put(project, projectCommands);
-            }
-
-            for (CommandImpl command : commandManager.getProjectCommands(project)) {
-                final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
-
-                List<CommandImpl> commands = projectCommands.get(commandType);
-                if (commands == null) {
-                    commands = new ArrayList<>();
-                    projectCommands.put(commandType, commands);
-                }
-
-                commands.add(command);
-            }
-        }
-
-        view.setCommands(workspaceCommands, projectsCommands);
     }
 
     @Override
@@ -183,10 +142,67 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
 
     @Override
     public void onWsAgentStarted(WsAgentStateEvent event) {
-        open();
+        workspaceAgent.openPart(this, NAVIGATION);
+
+        refreshView();
     }
 
     @Override
     public void onWsAgentStopped(WsAgentStateEvent event) {
+    }
+
+    @Override
+    public void onCommandAdded(CommandImpl command) {
+        refreshView();
+    }
+
+    @Override
+    public void onCommandUpdated(CommandImpl command) {
+        refreshView();
+    }
+
+    @Override
+    public void onCommandRemoved(CommandImpl command) {
+        refreshView();
+    }
+
+    private void refreshView() {
+        // group of workspace commands in map
+        Map<CommandType, List<CommandImpl>> workspaceCommands = new HashMap<>();
+        for (CommandImpl command : commandManager.getWorkspaceCommands()) {
+            final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
+
+            List<CommandImpl> commands = workspaceCommands.get(commandType);
+            if (commands == null) {
+                commands = new ArrayList<>();
+                workspaceCommands.put(commandType, commands);
+            }
+
+            commands.add(command);
+        }
+
+        // group of project commands in map
+        Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands = new HashMap<>();
+        for (Project project : appContext.getProjects()) {
+            Map<CommandType, List<CommandImpl>> projectCommands = projectsCommands.get(project);
+            if (projectCommands == null) {
+                projectCommands = new HashMap<>();
+                projectsCommands.put(project, projectCommands);
+            }
+
+            for (CommandImpl command : commandManager.getProjectCommands(project)) {
+                final CommandType commandType = commandTypeRegistry.getCommandTypeById(command.getType());
+
+                List<CommandImpl> commands = projectCommands.get(commandType);
+                if (commands == null) {
+                    commands = new ArrayList<>();
+                    projectCommands.put(commandType, commands);
+                }
+
+                commands.add(command);
+            }
+        }
+
+        view.setCommands(workspaceCommands, projectsCommands);
     }
 }

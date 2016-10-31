@@ -21,6 +21,8 @@ import org.eclipse.che.ide.ui.smartTree.Tree;
 import org.eclipse.che.ide.ui.smartTree.TreeStyles;
 import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer;
 
+import static com.google.gwt.user.client.Event.ONCLICK;
+
 /**
  * //
  *
@@ -47,11 +49,11 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
 
             final SpanElement removeCommandButton = Document.get().createSpanElement();
             removeCommandButton.appendChild(resources.removeCommandButton().getSvg().getElement());
-            Event.sinkEvents(removeCommandButton, Event.ONCLICK);
+            Event.sinkEvents(removeCommandButton, ONCLICK);
             Event.setEventListener(removeCommandButton, new EventListener() {
                 @Override
                 public void onBrowserEvent(Event event) {
-                    if (Event.ONCLICK == event.getTypeInt()) {
+                    if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
                         delegate.onRemoveClicked();
                     }
@@ -61,11 +63,11 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
 
             final SpanElement duplicateCommandButton = Document.get().createSpanElement();
             duplicateCommandButton.appendChild(resources.duplicateCommandButton().getSvg().getElement());
-            Event.sinkEvents(duplicateCommandButton, Event.ONCLICK);
+            Event.sinkEvents(duplicateCommandButton, ONCLICK);
             Event.setEventListener(duplicateCommandButton, new EventListener() {
                 @Override
                 public void onBrowserEvent(Event event) {
-                    if (Event.ONCLICK == event.getTypeInt()) {
+                    if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
 //                        delegate.onDuplicateClicked();
                     }
@@ -85,11 +87,11 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
 
             final SpanElement buttonElement = Document.get().createSpanElement();
             buttonElement.appendChild(resources.addCommandButton().getSvg().getElement());
-            Event.sinkEvents(buttonElement, Event.ONCLICK);
+            Event.sinkEvents(buttonElement, ONCLICK);
             Event.setEventListener(buttonElement, new EventListener() {
                 @Override
                 public void onBrowserEvent(Event event) {
-                    if (Event.ONCLICK == event.getTypeInt()) {
+                    if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
 //                        namePanel.setVisible(true);
 //                        previewUrlPanel.setVisible(true);
