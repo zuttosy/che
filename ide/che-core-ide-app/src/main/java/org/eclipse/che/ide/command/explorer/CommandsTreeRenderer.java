@@ -47,6 +47,7 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
         if (node instanceof CommandNode) {
             element.addClassName(resources.styles().categorySubElementHeader());
 
+            // create 'Remove Command' button
             final SpanElement removeCommandButton = Document.get().createSpanElement();
             removeCommandButton.appendChild(resources.removeCommandButton().getSvg().getElement());
             Event.sinkEvents(removeCommandButton, ONCLICK);
@@ -60,7 +61,7 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
                 }
             });
 
-
+            // create 'Duplicate Command' button
             final SpanElement duplicateCommandButton = Document.get().createSpanElement();
             duplicateCommandButton.appendChild(resources.duplicateCommandButton().getSvg().getElement());
             Event.sinkEvents(duplicateCommandButton, ONCLICK);
@@ -74,7 +75,6 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
                 }
             });
 
-
             final SpanElement buttonsPanel = Document.get().createSpanElement();
             buttonsPanel.setClassName(resources.styles().buttonArea());
 
@@ -85,24 +85,21 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
         } else if (node instanceof CommandTypeNode) {
             element.getFirstChildElement().addClassName(resources.styles().categoryHeader());
 
-            final SpanElement buttonElement = Document.get().createSpanElement();
-            buttonElement.appendChild(resources.addCommandButton().getSvg().getElement());
-            Event.sinkEvents(buttonElement, ONCLICK);
-            Event.setEventListener(buttonElement, new EventListener() {
+            // create 'Add Command' button
+            final SpanElement addCommandButton = Document.get().createSpanElement();
+            addCommandButton.appendChild(resources.addCommandButton().getSvg().getElement());
+            Event.sinkEvents(addCommandButton, ONCLICK);
+            Event.setEventListener(addCommandButton, new EventListener() {
                 @Override
                 public void onBrowserEvent(Event event) {
                     if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
-//                        namePanel.setVisible(true);
-//                        previewUrlPanel.setVisible(true);
-//                        selectedType = commandTypeId;
                         delegate.onAddClicked();
-//                        resetFilter();
                     }
                 }
             });
 
-            element.getFirstChildElement().appendChild(buttonElement);
+            element.getFirstChildElement().appendChild(addCommandButton);
         }
 
         return element;
