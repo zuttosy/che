@@ -889,7 +889,7 @@ cmd_stop() {
   info "stop" "Stopping containers..."
   log "docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME stop >> \"${LOGS}\" 2>&1 || true"
   docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME stop >> "${LOGS}" 2>&1 || true
-  info "stop" "Removing containers"
+  info "stop" "Removing containers..."
   log "yes | docker-compose --file=\"${REFERENCE_COMPOSE_FILE}\" -p=$CHE_MINI_PRODUCT_NAME rm >> \"${LOGS}\" 2>&1 || true"
   yes | docker-compose --file="${REFERENCE_COMPOSE_FILE}" -p=$CHE_MINI_PRODUCT_NAME rm >> "${LOGS}" 2>&1 || true
 }
@@ -923,9 +923,9 @@ cmd_destroy() {
   fi
 
   cmd_stop
-  info "destroy" "Deleting instance"
+  info "destroy" "Deleting instance..."
   rm -rf "${CHE_INSTANCE}"
-  info "destroy" "Deleting config"
+  info "destroy" "Deleting config..."
   log "rm -rf \"${CHE_CONFIG}\""
   rm -rf "${CHE_CONFIG}"
 }

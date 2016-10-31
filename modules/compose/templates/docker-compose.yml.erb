@@ -11,7 +11,7 @@ services:
   che:
     image: eclipse/che-server:<%= scope.lookupvar('compose::che_version') %>
     env_file:
-      - '<%= scope.lookupvar('compose::che_config') -%>/config/che/che.env'
+      - '<%= scope.lookupvar('compose::che_instance') -%>/config/che/che.env'
     volumes:
        - '/var/run/docker.sock:/var/run/docker.sock'
        - '<%= scope.lookupvar('compose::che_instance') -%>/data:/data'
