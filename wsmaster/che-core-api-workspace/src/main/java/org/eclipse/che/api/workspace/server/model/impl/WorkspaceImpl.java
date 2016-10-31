@@ -12,7 +12,7 @@ package org.eclipse.che.api.workspace.server.model.impl;
 
 import org.eclipse.che.account.shared.model.Account;
 import org.eclipse.che.account.spi.AccountImpl;
-import org.eclipse.che.api.core.jdbc.jpa.eclipselink.DescriptorEventAdapter;
+import org.eclipse.che.core.db.jpa.eclipselink.DescriptorEventAdapter;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceConfig;
 import org.eclipse.che.api.core.model.workspace.WorkspaceRuntime;
