@@ -62,14 +62,19 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
     private int pageCounter;
 
     @Inject
-    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources) {
+    public CommandsExplorerViewImpl(org.eclipse.che.ide.Resources coreResources,
+                                    CommandsExplorerResources resources) {
         super(coreResources);
+
+        resources.styles().ensureInjected();
 
         setTitle("Commands Explorer");
 
         workspaceCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
         workspaceCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
-        workspaceCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(workspaceCommandsTree.getTreeStyles(), coreResources));
+        workspaceCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(workspaceCommandsTree.getTreeStyles(),
+                                                                               resources,
+                                                                               delegate));
         workspaceCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
@@ -82,7 +87,9 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
         projectCommandsTree = new Tree(new NodeStorage(), new NodeLoader());
         projectCommandsTree.getSelectionModel().setSelectionMode(SINGLE);
-        projectCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(projectCommandsTree.getTreeStyles(), coreResources));
+        projectCommandsTree.setPresentationRenderer(new CommandsTreeRenderer(projectCommandsTree.getTreeStyles(),
+                                                                             resources,
+                                                                             delegate));
         projectCommandsTree.getSelectionModel().addSelectionHandler(new SelectionHandler<Node>() {
             @Override
             public void onSelection(SelectionEvent<Node> event) {
@@ -133,9 +140,11 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
                 commandNodes.add(new CommandNode(command));
             }
 
-            CommandTypeNode commandTypeNode = new CommandTypeNode(entry.getKey().getDisplayName(), commandNodes);
+            CommandTypeNode commandTypeNode = new CommandTypeNode(entry.getKey(), commandNodes);
             workspaceCommandsTree.getNodeStorage().add(commandTypeNode);
         }
+
+        workspaceCommandsTree.expandAll();
     }
 
     private void renderProjectsCommands(Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
@@ -153,12 +162,14 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
                 }
 
                 CommandType commandType = entry2.getKey();
-                commandTypeNodes.add(new CommandTypeNode(commandType.getDisplayName(), commandNodes));
+                commandTypeNodes.add(new CommandTypeNode(commandType, commandNodes));
             }
 
             ProjectNode projectNode = new ProjectNode(project.getName(), commandTypeNodes);
             projectCommandsTree.getNodeStorage().add(projectNode);
         }
+
+        projectCommandsTree.expandAll();
     }
 
     interface CommandsExplorerViewImplUiBinder extends UiBinder<Widget, CommandsExplorerViewImpl> {

@@ -19,7 +19,7 @@
     <!--<ui:with field="datasourceUiResources" type="org.eclipse.che.ide.ext.datasource.client.DatasourceUiResources"/>-->
 
     <g:DockLayoutPanel unit="PX" ui:field="mainContainer">
-        <g:west size="300">
+        <g:west size="400">
             <g:SplitLayoutPanel ui:field="splitPanel">
                 <g:north size="300">
                     <che:smartTree.Tree ui:field="workspaceCommandsTree"/>
@@ -31,7 +31,7 @@
         </g:west>
         <g:center>
             <g:DockLayoutPanel>
-                <g:north size="20">
+                <g:north size="30">
                     <che:radiobuttongroup.RadioButtonGroup ui:field="pagesSwitcher"/>
                 </g:north>
                 <g:center>

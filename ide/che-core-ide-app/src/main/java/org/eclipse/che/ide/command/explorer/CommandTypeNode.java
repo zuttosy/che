@@ -12,6 +12,7 @@ package org.eclipse.che.ide.command.explorer;
 
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.js.Promises;
+import org.eclipse.che.ide.api.command.CommandType;
 import org.eclipse.che.ide.api.data.tree.AbstractTreeNode;
 import org.eclipse.che.ide.api.data.tree.Node;
 
@@ -25,17 +26,17 @@ import java.util.List;
  */
 class CommandTypeNode extends AbstractTreeNode {
 
-    private final String            name;
+    private final CommandType       commandType;
     private final List<CommandNode> commands;
 
-    CommandTypeNode(String typeName, List<CommandNode> commands) {
-        this.name = typeName;
+    CommandTypeNode(CommandType commandType, List<CommandNode> commands) {
+        this.commandType = commandType;
         this.commands = commands;
     }
 
     @Override
     public String getName() {
-        return name;
+        return commandType.getDisplayName();
     }
 
     @Override

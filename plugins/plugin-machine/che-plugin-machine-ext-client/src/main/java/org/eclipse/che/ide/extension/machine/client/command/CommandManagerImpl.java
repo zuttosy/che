@@ -55,6 +55,7 @@ import java.util.Set;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Collections.emptyList;
 import static org.eclipse.che.api.project.shared.Constants.COMMANDS_ATTRIBUTE_NAME;
+import static org.eclipse.che.api.workspace.shared.Constants.COMMAND_PREVIEW_URL_ATTRIBUTE_NAME;
 
 /**
  * Implementation of {@link CommandManager}.
@@ -62,8 +63,6 @@ import static org.eclipse.che.api.project.shared.Constants.COMMANDS_ATTRIBUTE_NA
  * @author Artem Zatsarynnyi
  */
 public class CommandManagerImpl implements CommandManager {
-
-    public static final String PREVIEW_URL_ATTRIBUTE_NAME = "previewUrl";
 
     private final CommandTypeRegistry     commandTypeRegistry;
     private final AppContext              appContext;
@@ -158,7 +157,7 @@ public class CommandManagerImpl implements CommandManager {
             return Promises.reject(JsPromiseError.create("Unknown command type: " + type));
         }
 
-        attributes.put(PREVIEW_URL_ATTRIBUTE_NAME, commandType.getPreviewUrlTemplate());
+        attributes.put(COMMAND_PREVIEW_URL_ATTRIBUTE_NAME, commandType.getPreviewUrlTemplate());
 
         return createWorkspaceCommand(new CommandImpl(getUniqueCommandName(type, desirableName),
                                                       commandLine,
@@ -270,7 +269,7 @@ public class CommandManagerImpl implements CommandManager {
             return Promises.reject(JsPromiseError.create("Unknown command type: " + type));
         }
 
-        attributes.put(PREVIEW_URL_ATTRIBUTE_NAME, commandType.getPreviewUrlTemplate());
+        attributes.put(COMMAND_PREVIEW_URL_ATTRIBUTE_NAME, commandType.getPreviewUrlTemplate());
 
         return createProjectCommand(project, new CommandImpl(getUniqueCommandName(type, desirableName),
                                                              commandLine,
@@ -405,14 +404,15 @@ public class CommandManagerImpl implements CommandManager {
                     attributes = new HashMap<>(1);
                     attributes.put("shell", "/bin/bash");
                     toExecute.setAttributes(attributes);
-                } else if (!attributes.containsKey("shell")){
+                } else if (!attributes.containsKey("shell")) {
                     attributes = new HashMap<>(attributes.size() + 1);
                     attributes.put("shell", "/bin/bash");
                     attributes.putAll(toExecute.getAttributes());
                     toExecute.setAttributes(attributes);
                 }
 
-                Log.info(CommandManagerImpl.class, "Using shell " + toExecute.getAttributes().get("shell") + " for invoking command '" + command.getName() + "'");
+                Log.info(CommandManagerImpl.class,
+                         "Using shell " + toExecute.getAttributes().get("shell") + " for invoking command '" + command.getName() + "'");
 
                 Promise<MachineProcessDto> processPromise = machineServiceClient.executeCommand(machine.getWorkspaceId(),
                                                                                                 machine.getId(),

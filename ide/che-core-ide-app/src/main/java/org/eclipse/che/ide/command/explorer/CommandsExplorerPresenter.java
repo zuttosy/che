@@ -27,7 +27,6 @@ import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
 import org.eclipse.che.ide.api.parts.base.BasePresenter;
 import org.eclipse.che.ide.api.resources.Project;
-import org.eclipse.che.ide.api.workspace.event.WorkspaceStartedEvent;
 import org.eclipse.che.ide.command.explorer.page.ArgumentsPage;
 import org.eclipse.che.ide.command.explorer.page.CommandsExplorerPage;
 import org.eclipse.che.ide.command.explorer.page.InfoPage;
