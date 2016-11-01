@@ -8,46 +8,35 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.arguments;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.eclipse.che.ide.api.command.CommandImpl;
-
-import static org.eclipse.che.api.workspace.shared.Constants.COMMAND_PREVIEW_URL_ATTRIBUTE_NAME;
+import org.eclipse.che.ide.command.explorer.page.AbstractCommandsExplorerPage;
 
 /**
- * //
+ * Presenter for Arguments page.
  *
  * @author Artem Zatsarynnyi
  */
 @Singleton
-public class PreviewUrlPage implements CommandsExplorerPage, PreviewUrlPageView.ActionDelegate {
+public class ArgumentsPage extends AbstractCommandsExplorerPage implements ArgumentsPageView.ActionDelegate {
 
-    private final PreviewUrlPageView view;
+    private final ArgumentsPageView view;
 
-    private CommandImpl editedCommand;
-
-    // initial value of the command's preview URL
-    private String previewUrlInitial;
+    // initial value of the command's name
+    private String commandLineInitial;
 
     @Inject
-    public PreviewUrlPage(PreviewUrlPageView view) {
+    public ArgumentsPage(ArgumentsPageView view) {
+        super("Arguments", "Command arguments");
+
         this.view = view;
 
         view.setDelegate(this);
-    }
-
-    @Override
-    public String getTitle() {
-        return "Preview URL";
-    }
-
-    @Override
-    public String getTooltip() {
-        return "Command preview URL";
     }
 
     @Override
@@ -57,11 +46,17 @@ public class PreviewUrlPage implements CommandsExplorerPage, PreviewUrlPageView.
 
     @Override
     public void resetFrom(CommandImpl command) {
-        editedCommand = command;
+        super.resetFrom(command);
 
-        final String previewUrl = command.getAttributes().get(COMMAND_PREVIEW_URL_ATTRIBUTE_NAME);
-        previewUrlInitial = previewUrl != null ? previewUrl : "";
+        commandLineInitial = command.getCommandLine();
 
-        view.setUrl(previewUrlInitial);
+        view.setCommandLine(command.getCommandLine());
+    }
+
+    @Override
+    public void onCommandLineChanged() {
+        editedCommand.setCommandLine(view.getCommandLine());
+
+        notifyDirtyStateChanged();
     }
 }

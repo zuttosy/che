@@ -8,24 +8,35 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.info;
 
 import com.google.inject.ImplementedBy;
 
 import org.eclipse.che.ide.api.mvp.View;
 
 /**
- * The view of Preview URL page.
+ * The view of Info page.
  *
  * @author Artem Zatsarynnyi
  */
-@ImplementedBy(PreviewUrlPageViewImpl.class)
-public interface PreviewUrlPageView extends View<PreviewUrlPageView.ActionDelegate> {
+@ImplementedBy(InfoPageViewImpl.class)
+public interface InfoPageView extends View<InfoPageView.ActionDelegate> {
 
-    /** Sets the preview URL value. */
-    void setUrl(String previewUrl);
+    /** Returns the command's name value. */
+    String getName();
+
+    /** Sets the command's name value. */
+    void setName(String name);
 
     /** The action delegate for this view. */
     interface ActionDelegate {
+
+        /**
+         * Called when command's name has been changed.
+         *
+         * @param name
+         *         changed value of the command's name
+         */
+        void onNameChanged(String name);
     }
 }

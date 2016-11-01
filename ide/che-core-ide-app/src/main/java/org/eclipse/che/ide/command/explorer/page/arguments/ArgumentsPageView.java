@@ -8,27 +8,35 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.arguments;
 
 import com.google.inject.ImplementedBy;
 
 import org.eclipse.che.ide.api.mvp.View;
 
 /**
- * The view of Info page.
+ * The view of Arguments page.
  *
  * @author Artem Zatsarynnyi
  */
-@ImplementedBy(InfoPageViewImpl.class)
-public interface InfoPageView extends View<InfoPageView.ActionDelegate> {
+@ImplementedBy(ArgumentsPageViewImpl.class)
+public interface ArgumentsPageView extends View<ArgumentsPageView.ActionDelegate> {
 
-    /** Returns the command's name value. */
-    String getName();
+    /** Returns the command line value. */
+    String getCommandLine();
 
-    /** Sets the command's name value. */
-    void setName(String name);
+    /**
+     * Sets the command line value.
+     *
+     * @param commandLine
+     *         command line value to set
+     */
+    void setCommandLine(String commandLine);
 
     /** The action delegate for this view. */
     interface ActionDelegate {
+
+        /** Called when command line value has been changed. */
+        void onCommandLineChanged();
     }
 }

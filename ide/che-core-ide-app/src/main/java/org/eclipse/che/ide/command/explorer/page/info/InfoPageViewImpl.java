@@ -8,35 +8,45 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.info;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * Implementation of {@link PreviewUrlPageView}.
+ * Implementation of {@link InfoPageView}.
  *
  * @author Artem Zatsarynnyi
  */
 @Singleton
-public class PreviewUrlPageViewImpl extends Composite implements PreviewUrlPageView {
+public class InfoPageViewImpl extends Composite implements InfoPageView {
 
-    private static final PreviewUrlPageViewImplUiBinder UI_BINDER = GWT.create(PreviewUrlPageViewImplUiBinder.class);
+    private static final InfoPageViewImplUiBinder UI_BINDER = GWT.create(InfoPageViewImplUiBinder.class);
 
     @UiField
-    TextArea editorPanel;
+    TextBox commandName;
 
     private ActionDelegate delegate;
 
     @Inject
-    public PreviewUrlPageViewImpl() {
+    public InfoPageViewImpl() {
         initWidget(UI_BINDER.createAndBindUi(this));
+    }
+
+    @Override
+    public String getName() {
+        return commandName.getValue();
+    }
+
+    @Override
+    public void setName(String name) {
+        commandName.setValue(name);
     }
 
     @Override
@@ -44,11 +54,6 @@ public class PreviewUrlPageViewImpl extends Composite implements PreviewUrlPageV
         this.delegate = delegate;
     }
 
-    @Override
-    public void setUrl(String previewUrl) {
-        editorPanel.setValue(previewUrl);
-    }
-
-    interface PreviewUrlPageViewImplUiBinder extends UiBinder<Widget, PreviewUrlPageViewImpl> {
+    interface InfoPageViewImplUiBinder extends UiBinder<Widget, InfoPageViewImpl> {
     }
 }

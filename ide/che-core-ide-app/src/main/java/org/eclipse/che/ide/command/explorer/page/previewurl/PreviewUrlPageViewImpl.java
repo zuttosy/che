@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.previewurl;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -20,14 +20,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * Implementation of {@link ArgumentsPageView}.
+ * Implementation of {@link PreviewUrlPageView}.
  *
  * @author Artem Zatsarynnyi
  */
 @Singleton
-public class ArgumentsPageViewImpl extends Composite implements ArgumentsPageView {
+public class PreviewUrlPageViewImpl extends Composite implements PreviewUrlPageView {
 
-    private static final ArgumentsPageViewImplUiBinder UI_BINDER = GWT.create(ArgumentsPageViewImplUiBinder.class);
+    private static final PreviewUrlPageViewImplUiBinder UI_BINDER = GWT.create(PreviewUrlPageViewImplUiBinder.class);
 
     @UiField
     TextArea editorPanel;
@@ -35,7 +35,7 @@ public class ArgumentsPageViewImpl extends Composite implements ArgumentsPageVie
     private ActionDelegate delegate;
 
     @Inject
-    public ArgumentsPageViewImpl() {
+    public PreviewUrlPageViewImpl() {
         initWidget(UI_BINDER.createAndBindUi(this));
     }
 
@@ -45,10 +45,15 @@ public class ArgumentsPageViewImpl extends Composite implements ArgumentsPageVie
     }
 
     @Override
-    public void setCommandLine(String commandLine) {
-        editorPanel.setValue(commandLine);
+    public String getPreviewUrl() {
+        return editorPanel.getValue();
     }
 
-    interface ArgumentsPageViewImplUiBinder extends UiBinder<Widget, ArgumentsPageViewImpl> {
+    @Override
+    public void setPreviewUrl(String previewUrl) {
+        editorPanel.setValue(previewUrl);
+    }
+
+    interface PreviewUrlPageViewImplUiBinder extends UiBinder<Widget, PreviewUrlPageViewImpl> {
     }
 }

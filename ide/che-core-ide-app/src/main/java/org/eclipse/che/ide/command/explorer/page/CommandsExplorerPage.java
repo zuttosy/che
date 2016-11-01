@@ -15,17 +15,35 @@ import com.google.gwt.user.client.ui.IsWidget;
 import org.eclipse.che.ide.api.command.CommandImpl;
 
 /**
- * //
+ * Page for editing command.
  *
  * @author Artem Zatsarynnyi
  */
+// TODO: consider to extending org.eclipse.che.ide.api.command.CommandPage
 public interface CommandsExplorerPage {
 
+    /** Returns page's title. */
     String getTitle();
 
+    /** Returns page's tooltip. */
     String getTooltip();
 
+    /** Returns page's view. */
     IsWidget getView();
 
+    /**
+     * Resets the page with the given {@code command}.
+     * <p>Typically, implementor should hold the given {@code command}
+     * instance for subsequent modifying it directly and show the page's view.
+     * <p>This method is called every time when page should be initialized by an edited command.
+     */
     void resetFrom(CommandImpl command);
+
+    /** Sets {@link DirtyStateListener}. */
+    void setDirtyStateListener(DirtyStateListener listener);
+
+    /** Listener that should be called by page every time when any command modifications on the page have been performed. */
+    interface DirtyStateListener {
+        void onDirtyStateChanged();
+    }
 }

@@ -8,45 +8,35 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.ide.command.explorer.page;
+package org.eclipse.che.ide.command.explorer.page.arguments;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * Implementation of {@link InfoPageView}.
+ * Implementation of {@link ArgumentsPageView}.
  *
  * @author Artem Zatsarynnyi
  */
 @Singleton
-public class InfoPageViewImpl extends Composite implements InfoPageView {
+public class ArgumentsPageViewImpl extends Composite implements ArgumentsPageView {
 
-    private static final InfoPageViewImplUiBinder UI_BINDER = GWT.create(InfoPageViewImplUiBinder.class);
+    private static final ArgumentsPageViewImplUiBinder UI_BINDER = GWT.create(ArgumentsPageViewImplUiBinder.class);
 
     @UiField
-    TextBox commandName;
+    TextArea editorPanel;
 
     private ActionDelegate delegate;
 
     @Inject
-    public InfoPageViewImpl() {
+    public ArgumentsPageViewImpl() {
         initWidget(UI_BINDER.createAndBindUi(this));
-    }
-
-    @Override
-    public String getName() {
-        return commandName.getValue();
-    }
-
-    @Override
-    public void setName(String name) {
-        commandName.setValue(name);
     }
 
     @Override
@@ -54,6 +44,16 @@ public class InfoPageViewImpl extends Composite implements InfoPageView {
         this.delegate = delegate;
     }
 
-    interface InfoPageViewImplUiBinder extends UiBinder<Widget, InfoPageViewImpl> {
+    @Override
+    public String getCommandLine() {
+        return editorPanel.getValue();
+    }
+
+    @Override
+    public void setCommandLine(String commandLine) {
+        editorPanel.setValue(commandLine);
+    }
+
+    interface ArgumentsPageViewImplUiBinder extends UiBinder<Widget, ArgumentsPageViewImpl> {
     }
 }
