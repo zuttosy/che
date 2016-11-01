@@ -21,7 +21,7 @@ import org.eclipse.che.api.environment.server.model.CheServiceBuildContextImpl;
 import org.eclipse.che.api.environment.server.model.CheServiceImpl;
 import org.eclipse.che.api.environment.server.model.CheServicesEnvironmentImpl;
 import org.eclipse.che.api.machine.server.util.RecipeDownloader;
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.eclipse.che.compose.parser.EnvironmentFileParser;
 import org.eclipse.che.compose.parser.ComposeServiceImpl;
 
@@ -158,12 +158,12 @@ public class EnvironmentParser {
     private CheServicesEnvironmentImpl parseCompose(EnvironmentFileParser environmentFileParser, EnvironmentRecipe recipe) throws ServerException {
         String recipeContent = getContentOfRecipe(recipe);
 
-        ComposeEnvironmentImpl composeEnvironment = environmentFileParser.parse(recipeContent, recipe.getContentType());
+        ComposeEnvironment composeEnvironment = environmentFileParser.parse(recipeContent, recipe.getContentType());
 
         return asCheEnvironment(composeEnvironment);
     }
 
-    private CheServicesEnvironmentImpl asCheEnvironment(ComposeEnvironmentImpl composeEnvironment) {
+    private CheServicesEnvironmentImpl asCheEnvironment(ComposeEnvironment composeEnvironment) {
         Map<String, CheServiceImpl> services = Maps.newHashMapWithExpectedSize(composeEnvironment.getServices().size());
         for (Map.Entry<String, ComposeServiceImpl> composeServiceEntry : composeEnvironment.getServices()
                                                                                            .entrySet()) {

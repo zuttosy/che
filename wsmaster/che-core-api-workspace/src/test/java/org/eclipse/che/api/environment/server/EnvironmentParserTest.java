@@ -19,8 +19,8 @@ import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.commons.annotation.Nullable;
-import org.eclipse.che.compose.parser.BuildContextImpl;
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.BuildContext;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.eclipse.che.compose.parser.ComposeServiceImpl;
 import org.eclipse.che.compose.parser.yaml.ComposeFileParser;
 import org.mockito.Mock;
@@ -228,7 +228,7 @@ public class EnvironmentParserTest {
         CheServicesEnvironmentImpl expected = new CheServicesEnvironmentImpl();
         expected.getServices().put("machine1", createCheService(false));
         expected.getServices().put("machine2", createCheService(true));
-        ComposeEnvironmentImpl composeEnvironment = toCompose(expected);
+        ComposeEnvironment composeEnvironment = toCompose(expected);
         when(composeFileParser.parse(eq(environment.getRecipe().getContent()),
                                      eq("application/x-yaml"))).thenReturn(composeEnvironment);
 
@@ -258,7 +258,7 @@ public class EnvironmentParserTest {
         CheServicesEnvironmentImpl expected = new CheServicesEnvironmentImpl();
         expected.getServices().put("machine1", createCheService(false));
         expected.getServices().put("machine2", createCheService(true));
-        ComposeEnvironmentImpl composeEnvironment = toCompose(expected);
+        ComposeEnvironment composeEnvironment = toCompose(expected);
         when(recipeDownloader.getRecipe(eq(environment.getRecipe().getLocation()))).thenReturn("content");
         when(composeFileParser.parse(eq("content"), eq("application/x-yaml"))).thenReturn(composeEnvironment);
 
@@ -287,7 +287,7 @@ public class EnvironmentParserTest {
         CheServicesEnvironmentImpl expected = new CheServicesEnvironmentImpl();
         expected.getServices().put("machine1", createCheService(false).withMemLimit(101010L));
         expected.getServices().put("machine2", createCheService(true));
-        ComposeEnvironmentImpl composeEnvironment = toCompose(expected);
+        ComposeEnvironment composeEnvironment = toCompose(expected);
         when(composeFileParser.parse(eq(environment.getRecipe().getContent()),
                                      eq("application/x-yaml"))).thenReturn(composeEnvironment);
 
@@ -301,7 +301,7 @@ public class EnvironmentParserTest {
     @Test(dataProvider = "environmentWithServersProvider")
     public void shouldAddPortsAndLabelsFromExtendedMachineServers(EnvironmentImpl environment,
                                                                   CheServicesEnvironmentImpl expectedEnv,
-                                                                  @Nullable ComposeEnvironmentImpl composeEnvironment)
+                                                                  @Nullable ComposeEnvironment composeEnvironment)
             throws Exception {
         when(composeFileParser.parse(anyString(), anyString())).thenReturn(composeEnvironment);
 
@@ -730,7 +730,7 @@ public class EnvironmentParserTest {
                                                       Map<String, String> composeLabels,
                                                       List<String> expectedExpose,
                                                       Map<String, String> expectedLabels) {
-        ComposeEnvironmentImpl composeEnvironment = create1ServiceComposeEnv();
+        ComposeEnvironment composeEnvironment = create1ServiceComposeEnv();
         ComposeServiceImpl composeService = getService(composeEnvironment);
         composeService.withExpose(new ArrayList<>(composeExpose));
         composeService.withLabels(new HashMap<>(composeLabels));
@@ -812,7 +812,7 @@ public class EnvironmentParserTest {
         return environment;
     }
 
-    private static CheServicesEnvironmentImpl createExpectedEnvFromCompose(ComposeEnvironmentImpl composeEnvironment,
+    private static CheServicesEnvironmentImpl createExpectedEnvFromCompose(ComposeEnvironment composeEnvironment,
                                                                            List<String> expectedExpose,
                                                                            Map<String, String> expectedLabels) {
         CheServicesEnvironmentImpl cheServicesEnvironment = fromCompose(composeEnvironment);
@@ -824,8 +824,8 @@ public class EnvironmentParserTest {
         return cheServicesEnvironment;
     }
 
-    private static ComposeEnvironmentImpl create1ServiceComposeEnv() {
-        ComposeEnvironmentImpl composeEnvironment = new ComposeEnvironmentImpl();
+    private static ComposeEnvironment create1ServiceComposeEnv() {
+        ComposeEnvironment composeEnvironment = new ComposeEnvironment();
         ComposeServiceImpl composeService = new ComposeServiceImpl();
         composeService.withImage(DEFAULT_DOCKER_IMAGE);
         composeEnvironment.getServices().put(DEFAULT_MACHINE_NAME, composeService);
@@ -833,7 +833,7 @@ public class EnvironmentParserTest {
         return composeEnvironment;
     }
 
-    private static ComposeServiceImpl getService(ComposeEnvironmentImpl composeEnvironment) {
+    private static ComposeServiceImpl getService(ComposeEnvironment composeEnvironment) {
         return composeEnvironment.getServices().values().iterator().next();
     }
 
@@ -841,8 +841,8 @@ public class EnvironmentParserTest {
         return environmentConfig.getMachines().values().iterator().next();
     }
 
-    private static ComposeEnvironmentImpl toCompose(CheServicesEnvironmentImpl environment) {
-        ComposeEnvironmentImpl composeEnvironment = new ComposeEnvironmentImpl();
+    private static ComposeEnvironment toCompose(CheServicesEnvironmentImpl environment) {
+        ComposeEnvironment composeEnvironment = new ComposeEnvironment();
         Map<String, ComposeServiceImpl> services = environment.getServices()
                                                               .entrySet()
                                                               .stream()
@@ -854,11 +854,11 @@ public class EnvironmentParserTest {
     }
 
     private static ComposeServiceImpl toCompose(CheServiceImpl service) {
-        BuildContextImpl buildContext = null;
+        BuildContext buildContext = null;
         if (service.getBuild() != null) {
-            buildContext = new BuildContextImpl().withContext(service.getBuild().getContext())
-                                                 .withDockerfile(service.getBuild().getDockerfilePath())
-                                                 .withArgs(service.getBuild().getArgs());
+            buildContext = new BuildContext().withContext(service.getBuild().getContext())
+                                             .withDockerfile(service.getBuild().getDockerfilePath())
+                                             .withArgs(service.getBuild().getArgs());
         }
 
         return new ComposeServiceImpl().withBuild(buildContext)
@@ -878,7 +878,7 @@ public class EnvironmentParserTest {
                                        .withVolumesFrom(service.getVolumesFrom());
     }
 
-    private static CheServicesEnvironmentImpl fromCompose(ComposeEnvironmentImpl environment) {
+    private static CheServicesEnvironmentImpl fromCompose(ComposeEnvironment environment) {
         CheServicesEnvironmentImpl cheServicesEnvironment = new CheServicesEnvironmentImpl();
         Map<String, CheServiceImpl> services = environment.getServices()
                                                           .entrySet()

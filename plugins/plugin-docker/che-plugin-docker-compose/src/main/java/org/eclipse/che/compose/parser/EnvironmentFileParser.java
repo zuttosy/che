@@ -16,6 +16,6 @@ import org.eclipse.che.api.core.ServerException;
  * @author Alexander Andrienko
  */
 public interface EnvironmentFileParser {
-    ComposeEnvironmentImpl parse(String recipeContent, String contentType)throws IllegalArgumentException,
-                                                                                 ServerException;
+    ComposeEnvironment parse(String recipeContent, String contentType) throws IllegalArgumentException,
+                                                                              ServerException;
 }

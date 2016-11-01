@@ -13,7 +13,7 @@ package org.eclipse.che.compose.parser.yaml;
 import com.google.common.collect.ImmutableMap;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -34,7 +34,7 @@ public class EnvironmentContextTest {
     @Test(dataProvider = "correctContentTestData")
     public void testCorrectContentParsing(String content, Map<String, String> expected) throws ServerException {
         // when
-        ComposeEnvironmentImpl composeEnvironment = parser.parse(content, "application/x-yaml");
+        ComposeEnvironment composeEnvironment = parser.parse(content, "application/x-yaml");
 
         // then
         assertEquals(composeEnvironment.getServices().get("dev-machine").getEnvironment(), expected);

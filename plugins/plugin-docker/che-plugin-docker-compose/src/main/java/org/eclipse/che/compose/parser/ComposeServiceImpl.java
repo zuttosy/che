@@ -47,7 +47,7 @@ public class ComposeServiceImpl {
     private List<String>        volumesFrom;
     @JsonProperty("mem_limit")
     private Long                memLimit;
-    private BuildContextImpl    build;
+    private BuildContext        build;
     private List<String>        networks;
 
     public ComposeServiceImpl() {}
@@ -55,7 +55,7 @@ public class ComposeServiceImpl {
     public ComposeServiceImpl(ComposeServiceImpl service) {
         image = service.getImage();
         if (service.getBuild() != null) {
-            build = new BuildContextImpl(service.getBuild());
+            build = new BuildContext(service.getBuild());
         }
         if (service.getEntrypoint() != null) {
             entrypoint = new ArrayList<>(service.getEntrypoint());
@@ -113,15 +113,15 @@ public class ComposeServiceImpl {
     /**
      * Build context for container image creation.
      */
-    public BuildContextImpl getBuild() {
+    public BuildContext getBuild() {
         return build;
     }
 
-    public void setBuild(BuildContextImpl build) {
+    public void setBuild(BuildContext build) {
         this.build = build;
     }
 
-    public ComposeServiceImpl withBuild(BuildContextImpl build) {
+    public ComposeServiceImpl withBuild(BuildContext build) {
         this.build = build;
         return this;
     }

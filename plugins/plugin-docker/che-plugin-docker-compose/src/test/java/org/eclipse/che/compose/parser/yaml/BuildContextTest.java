@@ -11,7 +11,7 @@
 package org.eclipse.che.compose.parser.yaml;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.testng.annotations.Test;
 
 import java.util.Collections;
@@ -47,7 +47,7 @@ public class BuildContextTest {
         };
 
         // when
-        ComposeEnvironmentImpl composeEnvironment = parser.parse(recipeContent, recipeContentType);
+        ComposeEnvironment composeEnvironment = parser.parse(recipeContent, recipeContentType);
 
 
         // then
@@ -64,7 +64,7 @@ public class BuildContextTest {
         String recipeContentType = "application/x-yaml";
 
         // when
-        ComposeEnvironmentImpl composeEnvironment = parser.parse(recipeContent, recipeContentType);
+        ComposeEnvironment composeEnvironment = parser.parse(recipeContent, recipeContentType);
 
         // then
         assertEquals(Collections.emptyMap(), composeEnvironment.getServices().get("dev-machine").getBuild().getArgs());

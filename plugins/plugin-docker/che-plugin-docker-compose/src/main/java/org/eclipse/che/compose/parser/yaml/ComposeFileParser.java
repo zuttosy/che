@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import org.eclipse.che.api.core.ServerException;
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.eclipse.che.compose.parser.EnvironmentFileParser;
 
 import java.io.IOException;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import static java.lang.String.format;
 
 /**
- * Converters compose file to {@link ComposeEnvironmentImpl} and vise versa.
+ * Converters compose file to {@link ComposeEnvironment} and vise versa.
  *
  * @author Alexander Garagatyi
  */
@@ -40,15 +40,15 @@ public class ComposeFileParser implements EnvironmentFileParser {
      *         when environment recipe can not be retrieved
      */
     @Override
-    public ComposeEnvironmentImpl parse(String recipeContent, String contentType) throws IllegalArgumentException,
-                                                                                         ServerException {
-        ComposeEnvironmentImpl composeEnvironment;
+    public ComposeEnvironment parse(String recipeContent, String contentType) throws IllegalArgumentException,
+                                                                                     ServerException {
+        ComposeEnvironment composeEnvironment;
         switch (contentType) {
             case "application/x-yaml":
             case "text/yaml":
             case "text/x-yaml":
                 try {
-                    composeEnvironment = YAML_PARSER.readValue(recipeContent, ComposeEnvironmentImpl.class);
+                    composeEnvironment = YAML_PARSER.readValue(recipeContent, ComposeEnvironment.class);
                 } catch (IOException e) {
                     throw new IllegalArgumentException(
                             "Parsing of environment configuration failed. " + e.getLocalizedMessage());
@@ -69,7 +69,7 @@ public class ComposeFileParser implements EnvironmentFileParser {
      * @throws IllegalArgumentException
      *         when argument is null or conversion to YAML fails
      */
-    public String toYaml(ComposeEnvironmentImpl composeEnvironment) throws IllegalArgumentException {
+    public String toYaml(ComposeEnvironment composeEnvironment) throws IllegalArgumentException {
         checkNotNull(composeEnvironment, "Compose environment should not be null");
         try {
             return YAML_PARSER.writeValueAsString(composeEnvironment);

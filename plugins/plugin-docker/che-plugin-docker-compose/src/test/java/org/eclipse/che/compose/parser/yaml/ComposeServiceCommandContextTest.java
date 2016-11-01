@@ -11,7 +11,7 @@ package org.eclipse.che.compose.parser.yaml; /**********************************
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.reader.ReaderException;
 
-import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironment;
 import org.eclipse.che.compose.parser.ComposeServiceImpl;
 import org.mockito.InjectMocks;
 import org.mockito.testng.MockitoTestNGListener;
@@ -54,7 +54,7 @@ public class ComposeServiceCommandContextTest {
                                                                 List<String> commandWords,
                                                                 int commandNumberOfWords) throws Exception {
         String recipe = format(RECIPE_WITHOUT_COMMAND_VALUE, command);
-        ComposeEnvironmentImpl composeEnvironment = composeFileParser.parse(recipe, "text/x-yaml");
+        ComposeEnvironment composeEnvironment = composeFileParser.parse(recipe, "text/x-yaml");
 
         assertEquals(composeEnvironment.getServices().size(), 1);
         ComposeServiceImpl service = composeEnvironment.getServices().get("machine1");
