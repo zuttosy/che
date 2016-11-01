@@ -17,15 +17,16 @@ import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.model.workspace.EnvironmentRecipe;
 import org.eclipse.che.api.core.model.workspace.ExtendedMachine;
-import org.eclipse.che.api.environment.server.compose.ComposeEnvironmentImpl;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
-import org.eclipse.che.api.environment.server.compose.ComposeServiceImpl;
 import org.eclipse.che.api.environment.server.model.CheServiceBuildContextImpl;
 import org.eclipse.che.api.environment.server.model.CheServiceImpl;
 import org.eclipse.che.api.environment.server.model.CheServicesEnvironmentImpl;
 import org.eclipse.che.api.machine.server.util.RecipeDownloader;
+import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.EnvironmentFileParser;
+import org.eclipse.che.compose.parser.ComposeServiceImpl;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -48,13 +49,13 @@ public class EnvironmentParser {
     protected static final String SERVER_CONF_LABEL_PROTOCOL_SUFFIX = ":protocol";
     protected static final String SERVER_CONF_LABEL_PATH_SUFFIX     = ":path";
 
-    private final ComposeFileParser composeFileParser;
-    private final RecipeDownloader  recipeDownloader;
+    private final  Map<String, EnvironmentFileParser> composeFileParsers;
+    private final RecipeDownloader                    recipeDownloader;
 
     @Inject
-    public EnvironmentParser(ComposeFileParser composeFileParser,
+    public EnvironmentParser(@Named("machine.docker.compose.parsers") Map<String, EnvironmentFileParser> composeFileParsers,
                              RecipeDownloader recipeDownloader) {
-        this.composeFileParser = composeFileParser;
+        this.composeFileParsers = composeFileParsers;
         this.recipeDownloader = recipeDownloader;
     }
 
@@ -89,7 +90,7 @@ public class EnvironmentParser {
         String envType = environment.getRecipe().getType();
         switch (envType) {
             case "compose":
-                cheServicesEnvironment = parseCompose(environment.getRecipe());
+                cheServicesEnvironment = parseCompose(composeFileParsers.get("compose"), environment.getRecipe());
                 break;
             case "dockerimage":
             case "dockerfile":
@@ -154,10 +155,10 @@ public class EnvironmentParser {
         });
     }
 
-    private CheServicesEnvironmentImpl parseCompose(EnvironmentRecipe recipe) throws ServerException {
+    private CheServicesEnvironmentImpl parseCompose(EnvironmentFileParser environmentFileParser, EnvironmentRecipe recipe) throws ServerException {
         String recipeContent = getContentOfRecipe(recipe);
 
-        ComposeEnvironmentImpl composeEnvironment = composeFileParser.parse(recipeContent, recipe.getContentType());
+        ComposeEnvironmentImpl composeEnvironment = environmentFileParser.parse(recipeContent, recipe.getContentType());
 
         return asCheEnvironment(composeEnvironment);
     }

@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.api.environment.server;
 
-import org.eclipse.che.api.environment.server.compose.BuildContextImpl;
-import org.eclipse.che.api.environment.server.compose.ComposeEnvironmentImpl;
-import org.eclipse.che.api.environment.server.compose.ComposeFileParser;
-import org.eclipse.che.api.environment.server.compose.ComposeServiceImpl;
 import org.eclipse.che.api.environment.server.model.CheServiceBuildContextImpl;
 import org.eclipse.che.api.environment.server.model.CheServiceImpl;
 import org.eclipse.che.api.environment.server.model.CheServicesEnvironmentImpl;
@@ -23,9 +19,13 @@ import org.eclipse.che.api.workspace.server.model.impl.EnvironmentRecipeImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ExtendedMachineImpl;
 import org.eclipse.che.api.workspace.server.model.impl.ServerConf2Impl;
 import org.eclipse.che.commons.annotation.Nullable;
-import org.mockito.InjectMocks;
+import org.eclipse.che.compose.parser.BuildContextImpl;
+import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.ComposeServiceImpl;
+import org.eclipse.che.compose.parser.yaml.ComposeFileParser;
 import org.mockito.Mock;
 import org.mockito.testng.MockitoTestNGListener;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
@@ -64,13 +64,17 @@ public class EnvironmentParserTest {
     private static String DEFAULT_DOCKER_IMAGE = "codenvy/ubuntu_jdk8";
 
     @Mock
-    ComposeFileParser composeFileParser;
+    private ComposeFileParser composeFileParser;
 
     @Mock
-    RecipeDownloader recipeDownloader;
+    private RecipeDownloader recipeDownloader;
 
-    @InjectMocks
-    EnvironmentParser parser;
+    private EnvironmentParser parser;
+
+    @BeforeMethod
+    public void setUp() {
+        parser = new EnvironmentParser(singletonMap("compose", composeFileParser), recipeDownloader);
+    }
 
     @Test
     public void shouldReturnEnvTypesCoveredByTests() throws Exception {

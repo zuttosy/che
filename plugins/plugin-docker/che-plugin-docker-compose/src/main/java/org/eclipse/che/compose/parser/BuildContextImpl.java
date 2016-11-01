@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server.compose;
+package org.eclipse.che.compose.parser;
 
 import java.util.HashMap;
 import java.util.Map;

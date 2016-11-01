@@ -8,13 +8,15 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server.compose;
+package org.eclipse.che.compose.parser.yaml;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
+import org.eclipse.che.compose.parser.EnvironmentFileParser;
 
 import java.io.IOException;
 
@@ -25,7 +27,7 @@ import static java.lang.String.format;
  *
  * @author Alexander Garagatyi
  */
-public class ComposeFileParser {
+public class ComposeFileParser implements EnvironmentFileParser {
     private static final ObjectMapper YAML_PARSER = new ObjectMapper(new YAMLFactory());
 
     /**
@@ -37,6 +39,7 @@ public class ComposeFileParser {
      * @throws ServerException
      *         when environment recipe can not be retrieved
      */
+    @Override
     public ComposeEnvironmentImpl parse(String recipeContent, String contentType) throws IllegalArgumentException,
                                                                                          ServerException {
         ComposeEnvironmentImpl composeEnvironment;

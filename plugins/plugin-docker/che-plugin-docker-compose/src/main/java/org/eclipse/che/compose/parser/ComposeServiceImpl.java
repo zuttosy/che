@@ -8,11 +8,13 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server.compose;
+package org.eclipse.che.compose.parser;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import org.eclipse.che.api.environment.server.compose.deserializer.EnvironmentDeserializer;
+
+import org.eclipse.che.compose.parser.yaml.deserializer.CommandDeserializer;
+import org.eclipse.che.compose.parser.yaml.deserializer.EnvironmentDeserializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -64,6 +64,7 @@ public class LocalDockerModule extends AbstractModule {
                          .toProvider(org.eclipse.che.plugin.docker.machine.local.provider.DockerApiHostEnvVariableProvider.class);
 
         install(new org.eclipse.che.plugin.docker.machine.DockerMachineModule());
+        install(new org.eclipse.che.compose.parser.ComposeModule());
 
         Multibinder<String> devMachineVolumes = Multibinder.newSetBinder(binder(),
                                                                          String.class,

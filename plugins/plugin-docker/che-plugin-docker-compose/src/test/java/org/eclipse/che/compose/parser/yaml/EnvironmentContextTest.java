@@ -8,10 +8,12 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.environment.server.compose;
+package org.eclipse.che.compose.parser.yaml;
 
 import com.google.common.collect.ImmutableMap;
+
 import org.eclipse.che.api.core.ServerException;
+import org.eclipse.che.compose.parser.ComposeEnvironmentImpl;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
