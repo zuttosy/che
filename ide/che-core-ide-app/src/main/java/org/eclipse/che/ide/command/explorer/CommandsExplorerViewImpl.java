@@ -17,6 +17,7 @@ import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DeckPanel;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
@@ -58,6 +59,12 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
 
     @UiField
     DeckPanel pagesPanel;
+
+    @UiField
+    Button saveButton;
+
+    @UiField
+    Button cancelButton;
 
     private int pageCounter;
 
@@ -101,6 +108,13 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
         });
 
         setContentWidget(UI_BINDER.createAndBindUi(this));
+
+        saveButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                delegate.onCommandSave(getSelectedCommand());
+            }
+        });
     }
 
     @Override
@@ -129,6 +143,12 @@ public class CommandsExplorerViewImpl extends BaseView<CommandsExplorerView.Acti
                             Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands) {
         renderWorkspaceCommands(workspaceCommands);
         renderProjectsCommands(projectsCommands);
+    }
+
+    @Override
+    public CommandImpl getSelectedCommand() {
+        // TODO
+        return null;
     }
 
     private void renderWorkspaceCommands(Map<CommandType, List<CommandImpl>> workspaceCommands) {

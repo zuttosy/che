@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * //
+ * Implementation of {@link ArgumentsPageView}.
  *
  * @author Artem Zatsarynnyi
  */

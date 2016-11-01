@@ -23,18 +23,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * View for {@link CommandsExplorerPresenter}.
+ * The view of Commands Explorer.
  *
  * @author Artem Zatsarynnyi
  */
 @ImplementedBy(CommandsExplorerViewImpl.class)
 public interface CommandsExplorerView extends View<CommandsExplorerView.ActionDelegate> {
 
+    /**
+     * Adds page for editing command. The pages will be shown in order of adding.
+     *
+     * @param page
+     *         page to add
+     * @param title
+     *         text that should be used as page's title
+     * @param tooltip
+     *         text that should be used as page's tooltip
+     */
     void addPage(IsWidget page, String title, String tooltip);
 
+    /**
+     * Sets the commands to show in the view.
+     *
+     * @param workspaceCommands
+     *         workspace commands grouped by type
+     * @param projectsCommands
+     *         workspace commands grouped by project and type
+     */
     void setCommands(Map<CommandType, List<CommandImpl>> workspaceCommands,
                      Map<Project, Map<CommandType, List<CommandImpl>>> projectsCommands);
 
+    /** Returns the currently selected command. */
+    CommandImpl getSelectedCommand();
+
+    /** The action delegate for this view. */
     interface ActionDelegate extends BaseActionDelegate {
 
         /**
@@ -45,10 +67,23 @@ public interface CommandsExplorerView extends View<CommandsExplorerView.ActionDe
          */
         void onCommandSelected(CommandImpl command);
 
-        /** Called when 'Add' button is clicked. */
-        void onAddClicked();
+        /**
+         * Called when saving command is requested.
+         *
+         * @param command
+         *         command saving of which is requested
+         */
+        void onCommandSave(CommandImpl command);
 
-        /** Called when 'Remove' button is clicked. */
-        void onRemoveClicked();
+        /** Called when adding new command is requested. */
+        void onCommandAdd();
+
+        /**
+         * Called when removing command is requested.
+         *
+         * @param command
+         *         command removing of which is requested
+         */
+        void onCommandRemove(CommandImpl command);
     }
 }

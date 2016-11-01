@@ -24,7 +24,7 @@ import org.eclipse.che.ide.ui.smartTree.presentation.DefaultPresentationRenderer
 import static com.google.gwt.user.client.Event.ONCLICK;
 
 /**
- * //
+ * Renderer for the commands tree.
  *
  * @author Artem Zatsarynnyi
  */
@@ -41,7 +41,7 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
     }
 
     @Override
-    public Element render(Node node, String domID, Tree.Joint joint, int depth) {
+    public Element render(final Node node, String domID, Tree.Joint joint, int depth) {
         Element element = super.render(node, domID, joint, depth);
 
         if (node instanceof CommandNode) {
@@ -56,7 +56,7 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
                 public void onBrowserEvent(Event event) {
                     if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
-                        delegate.onRemoveClicked();
+                        delegate.onCommandRemove(((CommandNode)node).getCommand());
                     }
                 }
             });
@@ -94,7 +94,7 @@ class CommandsTreeRenderer extends DefaultPresentationRenderer<Node> {
                 public void onBrowserEvent(Event event) {
                     if (ONCLICK == event.getTypeInt()) {
                         event.stopPropagation();
-                        delegate.onAddClicked();
+                        delegate.onCommandAdd();
                     }
                 }
             });

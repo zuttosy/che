@@ -16,7 +16,7 @@ import com.google.gwt.resources.client.CssResource;
 import org.vectomatic.dom.svg.ui.SVGResource;
 
 /**
- * //
+ * Client bundle interface for Commands Explorer resources.
  *
  * @author Artem Zatsarynnyi
  */

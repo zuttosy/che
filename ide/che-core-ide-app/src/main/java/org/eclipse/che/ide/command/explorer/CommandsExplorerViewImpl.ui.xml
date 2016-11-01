@@ -32,7 +32,11 @@
         <g:center>
             <g:DockLayoutPanel>
                 <g:north size="30">
-                    <che:radiobuttongroup.RadioButtonGroup ui:field="pagesSwitcher"/>
+                    <g:FlowPanel>
+                        <che:radiobuttongroup.RadioButtonGroup ui:field="pagesSwitcher"/>
+                        <g:Button ui:field="cancelButton" text="Cancel"/>
+                        <g:Button ui:field="saveButton" text="Save"/>
+                    </g:FlowPanel>
                 </g:north>
                 <g:center>
                     <g:DeckPanel ui:field="pagesPanel"/>

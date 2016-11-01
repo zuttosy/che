@@ -133,11 +133,15 @@ public class CommandsExplorerPresenter extends BasePresenter implements Commands
     }
 
     @Override
-    public void onAddClicked() {
+    public void onCommandSave(CommandImpl command) {
     }
 
     @Override
-    public void onRemoveClicked() {
+    public void onCommandAdd() {
+    }
+
+    @Override
+    public void onCommandRemove(CommandImpl command) {
     }
 
     @Override
