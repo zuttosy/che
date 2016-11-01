@@ -348,7 +348,7 @@ update_cli() {
     GITHUB_VERSION=$CHE_CLI_VERSION
   fi
 
-  URL=https://raw.githubusercontent.com/${CHE_MINI_PRODUCT_NAME}/${CHE_MINI_PRODUCT_NAME}/$GITHUB_VERSION/cli.sh
+  URL=https://raw.githubusercontent.com/eclipse/${CHE_MINI_PRODUCT_NAME}/$GITHUB_VERSION/cli.sh
 
   if ! curl --output /dev/null --silent --head --fail "$URL"; then
     error "CLI download error. Bad network or version."

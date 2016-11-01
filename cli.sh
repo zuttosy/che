@@ -52,6 +52,7 @@ cli_init() {
 
   CHE_VERSION=${CHE_VERSION:-${DEFAULT_CHE_VERSION}}
   CHE_CLI_ACTION=${CHE_CLI_ACTION:-${DEFAULT_CHE_CLI_ACTION}}
+
   CHE_DEVELOPMENT_MODE=${CHE_DEVELOPMENT_MODE:-${DEFAULT_CHE_DEVELOPMENT_MODE}}
   if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
     CHE_DEVELOPMENT_REPO=$(get_mount_path ${DEFAULT_CHE_DEVELOPMENT_REPO})
@@ -688,7 +689,7 @@ generate_configuration_with_puppet() {
                       $IMAGE_PUPPET \
                           apply --modulepath \
                                 /etc/puppet/modules/ \
-                                /etc/puppet/manifests/${CHE_MINI_PRODUCT_NAME}.pp --show_diff "$@"
+                                /etc/puppet/manifests/${CHE_MINI_PRODUCT_NAME}.pp --show_diff "$@" >> "${LOGS}"
 }
 
 ###########################################################################
@@ -814,7 +815,7 @@ cmd_config() {
 
   # if dev mode is on, pick configuration sources from repo.
   # please note that in production mode update of configuration sources must be only on update.
-  if [ "${CHE_DEVELOPMENT_MODE}" = "on" ]; then
+  if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
     docker_exec run --rm \
                     -v "${CHE_CONFIG}":/copy \
                     -v "${CHE_DEVELOPMENT_REPO}":/files \
@@ -822,10 +823,10 @@ cmd_config() {
   fi
 
   # print puppet output logs to console if dev mode is on
-  if [ "${CHE_DEVELOPMENT_MODE}" = "on" ]; then
+  if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
      generate_configuration_with_puppet
   else
-     generate_configuration_with_puppet >> "${LOGS}"
+     generate_configuration_with_puppet 
   fi
 
   # Replace certain environment file lines with wind
