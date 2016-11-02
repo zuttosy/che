@@ -67,7 +67,7 @@ init() {
   if [ ! -f $CHE_HOME/bin/che.sh ]; then
     echo "!!!"
     echo "!!! Error: Could not find $CHE_HOME/bin/che.sh."
-    echo "!!! Error: Did you use CHE_ASSEMBLY with a typo?"
+    echo "!!! Error: Did you use mount the wrong folder to :/assembly?"
     echo "!!!"
     exit 1
   fi
@@ -88,7 +88,7 @@ init() {
     echo "Found custom che.properties..."
     export CHE_LOCAL_CONF_DIR="/conf"
   else
-    echo "Using embedded che.properties... Copying template to ${CHE_DATA_HOST}/conf."
+    echo "Copying embedded che.properties to ${CHE_DATA_HOST}/conf..."
     mkdir -p /data/conf
     cp -rf "${CHE_HOME}/conf/che.properties" /data/conf/che.properties
     export CHE_LOCAL_CONF_DIR="/data/conf"
@@ -241,8 +241,13 @@ has_external_hostname() {
 responsible_shutdown() {
   echo ""
   echo "Received SIGTERM"
-  "${CHE_HOME}"/bin/che.sh stop
-  exit;
+  "${CHE_HOME}"/bin/che.sh stop &
+  PID=$!
+
+  # See: http://veithen.github.io/2014/11/16/sigterm-propagation.html
+  wait $PID
+  wait $PID
+  return 1;
 }
 
 # setup handlers

@@ -39,20 +39,35 @@ cli_init() {
   DEFAULT_GLOBAL_HOST_ARCH=$(docker version --format {{.Client}} | cut -d" " -f5)
 
   DEFAULT_CHE_VERSION="nightly"
-  DEFAULT_CHE_CLI_ACTION="help"
-  DEFAULT_CHE_DEVELOPMENT_MODE="off"
-  DEFAULT_CHE_DEVELOPMENT_REPO=$(get_mount_path $PWD)
-
-  init_host_ip
-  DEFAULT_CHE_HOST=$GLOBAL_HOST_IP
-  DEFAULT_CHE_PORT="8080"
-  DEFAULT_CHE_CONFIG=$(get_mount_path $PWD)/config
-  DEFAULT_CHE_INSTANCE=$(get_mount_path $PWD)/instance
-  DEFAULT_CHE_BACKUP_FOLDER=$(get_mount_path $PWD)
-
   CHE_VERSION=${CHE_VERSION:-${DEFAULT_CHE_VERSION}}
+
+  DEFAULT_CHE_CLI_ACTION="help"
   CHE_CLI_ACTION=${CHE_CLI_ACTION:-${DEFAULT_CHE_CLI_ACTION}}
 
+  # This is the IP address that Che is binding itself to.
+  init_host_ip
+  DEFAULT_CHE_HOST=$GLOBAL_HOST_IP
+  CHE_HOST=${CHE_HOST:-${DEFAULT_CHE_HOST}}
+
+  # This is the accessible hostname.
+  # If Che is on docker for mac / windows, then this is set to localhost
+  DEFAULT_CHE_HOSTNAME=$(get_docker_external_hostname)
+  CHE_HOSTNAME=${CHE_HOSTNAME:-${DEFAULT_CHE_HOSTNAME}}
+
+  DEFAULT_CHE_PORT="8080"
+  CHE_PORT=${CHE_PORT:-${DEFAULT_CHE_PORT}}
+
+  DEFAULT_CHE_CONFIG=$(get_mount_path $PWD)/config
+  CHE_CONFIG=${CHE_CONFIG:-${DEFAULT_CHE_CONFIG}}
+
+  DEFAULT_CHE_INSTANCE=$(get_mount_path $PWD)/instance
+  CHE_INSTANCE=${CHE_INSTANCE:-${DEFAULT_CHE_INSTANCE}}
+
+  DEFAULT_CHE_BACKUP_FOLDER=$(get_mount_path $PWD)
+  CHE_BACKUP_FOLDER=${CHE_BACKUP_FOLDER:-${DEFAULT_CHE_BACKUP_FOLDER}}
+
+  DEFAULT_CHE_DEVELOPMENT_MODE="off"
+  DEFAULT_CHE_DEVELOPMENT_REPO=$(get_mount_path $PWD)
   CHE_DEVELOPMENT_MODE=${CHE_DEVELOPMENT_MODE:-${DEFAULT_CHE_DEVELOPMENT_MODE}}
   if [ "${CHE_DEVELOPMENT_MODE}" == "on" ]; then
     CHE_DEVELOPMENT_REPO=$(get_mount_path ${DEFAULT_CHE_DEVELOPMENT_REPO})
@@ -81,16 +96,16 @@ cli_init() {
     fi
   fi
 
-  CHE_HOST=${CHE_HOST:-${DEFAULT_CHE_HOST}}
-  CHE_PORT=${CHE_PORT:-${DEFAULT_CHE_PORT}}
+  ## Location where version manifests that list images are stored
   CHE_MANIFEST_DIR=$(get_mount_path ~/."${CHE_MINI_PRODUCT_NAME}"/manifests)
 
-  CHE_INSTANCE=${CHE_INSTANCE:-${DEFAULT_CHE_INSTANCE}}
-  CHE_CONFIG=${CHE_CONFIG:-${DEFAULT_CHE_CONFIG}}
-  CHE_BACKUP_FOLDER=${CHE_BACKUP_FOLDER:-${DEFAULT_CHE_BACKUP_FOLDER}}
+  ## Where images to be used offline are saved to
   CHE_OFFLINE_FOLDER=$(get_mount_path $PWD)/offline
 
+  # Manifests files to be used by puppet when generating a configuration
   CHE_CONFIG_MANIFESTS_FOLDER="$CHE_CONFIG/manifests"
+
+  # Modules to be used by puppet when generating a configuration
   CHE_CONFIG_MODULES_FOLDER="$CHE_CONFIG/modules"
 
   CHE_VERSION_FILE="che.ver"
@@ -134,7 +149,7 @@ cli_parse () {
     CHE_CLI_ACTION="help"
   else
     case $1 in
-      version|init|config|start|stop|restart|destroy|rmi|config|upgrade|download|backup|restore|offline|update|add-node|remove-node|list-nodes|info|network|debug|help|-h|--help)
+      version|init|config|start|stop|restart|destroy|rmi|config|download|offline|info|network|debug|help|-h|--help)
         CHE_CLI_ACTION=$1
       ;;
       *)
@@ -180,21 +195,9 @@ cli_cli() {
       shift
       cmd_rmi "$@"
     ;;
-    upgrade)
-      shift
-      cmd_upgrade "$@"
-    ;;
     version)
       shift
       cmd_version "$@"
-    ;;
-    backup)
-      shift
-      cmd_backup "$@"
-    ;;
-    restore)
-      shift
-      cmd_restore "$@"
     ;;
     offline)
       shift
@@ -211,18 +214,6 @@ cli_cli() {
     network)
       shift
       cmd_network "$@"
-    ;;
-    add-node)
-      shift
-      cmd_add_node
-    ;;
-    remove-node)
-      shift
-      cmd_remove_node "$@"
-    ;;
-    list-nodes)
-      shift
-      cmd_list_nodes
     ;;
     help)
       usage
@@ -386,6 +377,22 @@ has_docker_for_windows_client(){
   fi
 }
 
+get_docker_external_hostname() {
+  if is_docker_for_mac || is_docker_for_windows; then
+    echo "localhost"
+  else
+    echo ""
+  fi
+}
+
+has_external_hostname() {
+  if [ "${HOSTNAME}" = "" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
 docker_exec() {
   debug $FUNCNAME
   if has_docker_for_windows_client; then
@@ -487,8 +494,17 @@ wait_until_server_is_booted () {
   done
 }
 
+get_hostname(){
+  if has_external_hostname; then
+    echo $CHE_HOSTNAME
+  else
+    echo $CHE_HOST
+  fi  
+}
+
 server_is_booted() {
-  HTTP_STATUS_CODE=$(curl -I -k $CHE_HOST:$CHE_PORT/api/ \
+  log "curl -I -k $(get_hostname):$CHE_PORT/api/"
+  HTTP_STATUS_CODE=$(curl -I -k $(get_hostname):$CHE_PORT/api/ \
                      -s -o "${LOGS}" --write-out "%{http_code}")
   if [[ "${HTTP_STATUS_CODE}" = "200" ]] || [[ "${HTTP_STATUS_CODE}" = "302" ]]; then
     return 0
@@ -512,15 +528,14 @@ check_if_booted() {
   if server_is_booted ${CURRENT_CHE_SERVER_CONTAINER_ID}; then
     info "start" "Booted and reachable"
     info "start" "Ver: $(get_installed_version)"
-    info "start" "Use: http://${CHE_HOST}:${CHE_PORT}"
-    info "start" "API: http://${CHE_HOST}:${CHE_PORT}/swagger"
+    info "start" "Use: http://$(get_hostname):${CHE_PORT}"
+    info "start" "API: http://$(get_hostname):${CHE_PORT}/swagger"
   else
     error "(${CHE_MINI_PRODUCT_NAME} start): Timeout waiting for server. Run \"docker logs ${CHE_SERVER_CONTAINER_NAME}\" to inspect the issue."
     return 1
   fi
 }
 
-#TODO - is_initialized will return as initialized with empty directories
 is_initialized() {
   debug $FUNCNAME
   if [[ -d "${CHE_CONFIG_MANIFESTS_FOLDER}" ]] && \
@@ -544,7 +559,6 @@ has_version_registry() {
 get_version_registry() {
   info "cli" "Downloading version registry..."
 
-  ### Remove these comments once in production
   log "docker pull ${CHE_GLOBAL_VERSION_IMAGE} >> \"${LOGS}\" 2>&1 || true"
   docker pull ${CHE_GLOBAL_VERSION_IMAGE} >> "${LOGS}" 2>&1 || true
   log "docker_exec run --rm -v \"${CHE_MANIFEST_DIR}\":/copy ${CHE_GLOBAL_VERSION_IMAGE}"
@@ -923,11 +937,19 @@ cmd_destroy() {
     return;
   fi
 
+  # Stop alls services
   cmd_stop
-  info "destroy" "Deleting instance..."
+  info "destroy" "Deleting instance and config..."
+
+  # This is a tactic to remove files on the host when we do not have 
+  # root permissions on the host. Using containers to destroy files created
+  # inside of containers avoids certain ownership permission issues.
+  docker run --rm -v "${CHE_CONFIG}":/root/che-config \
+                  -v "${CHE_INSTANCE}":/root/che-instance \
+                      alpine sh -c "rm -rf /root/che-instance/* && rm -rf /root/che-config/*"
+
+
   rm -rf "${CHE_INSTANCE}"
-  info "destroy" "Deleting config..."
-  log "rm -rf \"${CHE_CONFIG}\""
   rm -rf "${CHE_CONFIG}"
 }
 
@@ -959,112 +981,13 @@ cmd_rmi() {
   docker rmi -f $CHE_GLOBAL_VERSION_IMAGE >> "${LOGS}" 2>&1 || true
 }
 
-cmd_upgrade() {
-  debug $FUNCNAME
-  info "upgrade" "Not yet implemented"
-
-  if [ $# -eq 0 ]; then
-    info "upgrade" "No upgrade target provided. Run '${CHE_MINI_PRODUCT_NAME} version' for a list of upgradeable versions."
-    return 2;
-  fi
-
-  if ! can_upgrade $(get_installed_version) ${1}; then
-    info "upgrade" "Your current version $(get_installed_version) is not upgradeable to $1."
-    info "upgrade" "Run '${CHE_MINI_PRODUCT_NAME} version' to see your upgrade options."
-    return 2;
-  fi
-
-  # If here, this version is validly upgradeable.  You can upgrade from
-  # $(get_installed_version) to $1
-  echo "remove me -- you entered a version that you can upgrade to"
-}
-
 cmd_version() {
   debug $FUNCNAME
 
-  error "!!! this information is experimental - upgrade not yet available !!!"
   text "$CHE_PRODUCT_NAME:\n"
   text "  Version:      %s\n" $(get_installed_version)
   text "  Installed:    %s\n" $(get_installed_installdate)
   text "  CLI version:  $CHE_CLI_VERSION\n"
-
-  if is_initialized; then
-    text "\n"
-    text "Upgrade Options:\n"
-    text "  INSTALLED VERSION        UPRADEABLE TO\n"
-    print_upgrade_manifest $(get_installed_version)
-  fi
-
-  text "\n"
-  text "Available:\n"
-  text "  VERSION                  CHANNEL           UPGRADEABLE FROM\n"
-  if is_initialized; then
-    print_version_manifest $(get_installed_version)
-  else
-    print_version_manifest $CHE_VERSION
-  fi
-}
-
-cmd_backup() {
-  debug $FUNCNAME
-
-  if [[ ! -d "${CHE_CONFIG}" ]] || \
-     [[ ! -d "${CHE_INSTANCE}" ]]; then
-    error "Cannot find existing CHE_CONFIG or CHE_INSTANCE. Aborting."
-    return;
-  fi
-
-  if [[ ! -d "${CHE_BACKUP_FOLDER}" ]]; then
-    error "CHE_BACKUP_FOLDER does not exist. Aborting."
-    return;
-  fi
-
-  ## TODO: - have backups get time & day for rotational purposes
-  if [[ -f "${CHE_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}" ]] || \
-     [[ -f "${CHE_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}" ]]; then
-
-    WARNING="Previous backup will be overwritten."
-    if ! confirm_operation "${WARNING}" "$@"; then
-      return;
-    fi
-  fi
-
-  if get_server_container_id "${CHE_SERVER_CONTAINER_NAME}" >> "${LOGS}" 2>&1; then
-    error "$CHE_MINI_PRODUCT_NAME is running. Stop before performing a backup. Aborting."
-    return;
-  fi
-
-  info "backup" "Saving configuration..."
-  tar -C "${CHE_CONFIG}" -cf "${CHE_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}" .
-  info "backup" "Saving instance data..."
-  tar -C "${CHE_INSTANCE}" -cf "${CHE_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}" .
-}
-
-cmd_restore() {
-  debug $FUNCNAME
-
-  if [[ -d "${CHE_CONFIG}" ]] || \
-     [[ -d "${CHE_INSTANCE}" ]]; then
-
-    WARNING="Restoration overwrites existing configuration and data. Are you sure?"
-    if ! confirm_operation "${WARNING}" "$@"; then
-      return;
-    fi
-  fi
-
-  if get_server_container_id "${CHE_SERVER_CONTAINER_NAME}" >> "${LOGS}" 2>&1; then
-    error "$CHE_MINI_PRODUCT_NAME is running. Stop before performing a restore. Aborting"
-    return;
-  fi
-
-  info "restore" "Recovering configuration..."
-  rm -rf "${CHE_INSTANCE}"
-  rm -rf "${CHE_CONFIG}"
-  mkdir -p "${CHE_CONFIG}"
-  tar -C "${CHE_CONFIG}" -xf "${CHE_BACKUP_FOLDER}/${CHE_CONFIG_BACKUP_FILE_NAME}"
-  info "restore" "Recovering instance data..."
-  mkdir -p "${CHE_INSTANCE}"
-  tar -C "${CHE_INSTANCE}" -xf "${CHE_BACKUP_FOLDER}/${CHE_INSTANCE_BACKUP_FILE_NAME}"
 }
 
 cmd_offline() {
